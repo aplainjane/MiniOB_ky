@@ -28,6 +28,10 @@ bool LogicalOperator::can_generate_vectorized_operator(const LogicalOperatorType
         bool_ret = false;
         break;
     
+    case LogicalOperatorType::UPDATE:
+        bool_ret = true;
+        break;
+    
     default:
         bool_ret = true;
         break;

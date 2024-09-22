@@ -1,4 +1,4 @@
-# pragma once
+
 
 #include "common/type/data_type.h"
 

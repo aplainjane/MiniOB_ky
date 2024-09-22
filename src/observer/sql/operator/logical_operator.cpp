@@ -30,6 +30,7 @@ bool LogicalOperator::can_generate_vectorized_operator(const LogicalOperatorType
     case LogicalOperatorType::UPDATE:
         bool_ret = true;
         //存疑
+        break;
     default:
         bool_ret = true;
         break;

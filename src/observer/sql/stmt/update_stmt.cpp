@@ -16,19 +16,30 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
-
 UpdateStmt::UpdateStmt(Table *table, Value *values, int value_amount)
     : table_(table), values_(values), value_amount_(value_amount)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 {
-  
-  // TODO
+  const char *table_name = update.relation_name.c_str();
+  if (nullptr == db || nullptr == table_name) {
+    LOG_WARN("invalid argument. db=%p, table_name=%p",
+        db, table_name);
+    return RC::INVALID_ARGUMENT;
+  }
 
-
-
-  stmt = nullptr;
-  return RC::INTERNAL;
-
+  // check whether the table exists
+  Table *table = db->find_table(table_name);
+  if (nullptr == table) {
+    LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+  Value     *values     = const_cast<Value *>(&update.value);;
+  int value_amount = 1;
+  stmt = new UpdateStmt(table, values, value_amount);
+  return RC::SUCCESS;
+  // // TODO
+  // stmt = nullptr;
+  // return RC::INTERNAL;
 }

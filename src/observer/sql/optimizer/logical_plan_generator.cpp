@@ -246,11 +246,10 @@ RC LogicalPlanGenerator::create_plan(InsertStmt *insert_stmt, unique_ptr<Logical
 
 RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
-  Table        *table = update_stmt->table();
-  Value        value=update_stmt->values();
-  string        attr_name=update_stmt->attr_name();
-
-  UpdateLogicalOperator *update_operator = new UpdateLogicalOperator(table, value,attr_name);
+  Table                  *table           = update_stmt->table();
+  Value                  values           = update_stmt->value();
+  Field                   field           = update_stmt->field();
+  UpdateLogicalOperator *update_operator = new UpdateLogicalOperator(table, field,values);
   logical_operator.reset(update_operator);
   return RC::SUCCESS;
 }

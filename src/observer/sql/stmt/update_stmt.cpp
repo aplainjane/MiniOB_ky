@@ -16,30 +16,74 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
-UpdateStmt::UpdateStmt(Table *table, const Value values, string attr_name)
-    : table_(table), value_(values), attr_name_(attr_name)
+#include "sql/stmt/filter_stmt.h"
+#include "sql/parser/parse_defs.h"
+
+
+UpdateStmt::UpdateStmt(Table *table, Field field, Value value, FilterStmt *filter_stmt)
+    : table_(table), field_(field), value_(value), filter_stmt_(filter_stmt)
 {}
 
-RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
+RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
 {
-  const char *table_name = update.relation_name.c_str();
-  if (nullptr == db || nullptr == table_name) {
-    LOG_WARN("invalid argument. db=%p, table_name=%p",
-        db, table_name);
+  // check dbb
+  if (nullptr == db) {
+    LOG_WARN("invalid argument. db is null");
     return RC::INVALID_ARGUMENT;
   }
 
+  const char *table_name = update_sql.relation_name.c_str();
   // check whether the table exists
-  Table *table = db->find_table(table_name);
-  if (nullptr == table) {
-    LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
-    return RC::SCHEMA_TABLE_NOT_EXIST;
+  if (nullptr == table_name) {
+    LOG_WARN("invalid argument. relation name is null.");
+    return RC::INVALID_ARGUMENT;
   }
-  const Value     values     = update.value;
-  string attr_name            = update.attribute_name;
-  stmt = new UpdateStmt(table, values, attr_name);
+  
+  Table *table = db->find_table(table_name);
+
+ /*
+  struct RelAttrSqlNode *relation_attr;
+  relation_attr->attribute_name = update_sql.attribute_name;
+  relation_attr->relation_name = update_sql.relation_name;
+ */
+
+  if (nullptr == table) {
+      LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
+      return RC::SCHEMA_TABLE_NOT_EXIST;
+    }
+  
+  const FieldMeta *field_meta = table->table_meta().field(update_sql.attribute_name.c_str());
+
+  if (nullptr == field_meta) {
+      LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), update_sql.attribute_name.c_str());
+      return RC::SCHEMA_FIELD_MISSING;
+    }
+
+  // 过滤算子
+  std::unordered_map<std::string, Table *> table_map;
+  table_map.insert(std::pair<std::string, Table *>(table_name, table));
+  FilterStmt *filter_stmt = nullptr;
+  RC rc = FilterStmt::create(
+      db, 
+      table,
+      &table_map,
+      update_sql.conditions.data(),
+      static_cast<int>(update_sql.conditions.size()),
+      filter_stmt
+    );
+
+  if (rc != RC::SUCCESS){
+    LOG_WARN("cannot construct filter stmt");
+    return rc;
+  }
+
+  UpdateStmt *update_stmt = new UpdateStmt(table,
+      Field(table, field_meta), 
+      update_sql.value, 
+      filter_stmt
+    );
+  // std::cout<<"update!"<<std::endl;
+  stmt = update_stmt;
   return RC::SUCCESS;
-  // // TODO
-  // stmt = nullptr;
-  // return RC::INTERNAL;
+  
 }

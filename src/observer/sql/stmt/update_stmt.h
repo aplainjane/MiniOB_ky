@@ -16,31 +16,51 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/rc.h"
 #include "sql/stmt/stmt.h"
+#include "storage/db/db.h"
+#include "sql/stmt/filter_stmt.h"
+
 
 class Table;
+class Db;
 
 /**
  * @brief 更新语句
  * @ingroup Statement
  */
-class UpdateStmt : public Stmt
+class UpdateStmt : public Stmt 
 {
 public:
   UpdateStmt() = default;
-  UpdateStmt(Table *table, const Value values, string attr_name_);
-  
-  StmtType type() const override { return StmtType::UPDATE; }
+  UpdateStmt(Table *table, Field field, Value value, FilterStmt *filter_stmt);
+
+  StmtType type() const override{
+    return StmtType::UPDATE;
+  }
+
 public:
   static RC create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt);
 
 public:
-  Table *table() const { return table_; }
-  const Value values() const { return value_; }
+  Table *table() const
+  {
+    return table_;
+  }
+  const Field field() const
+  {
+    return field_;
+  }
+  const Value value() const{
+    return value_;
+  }
 
-  string attr_name() const { return attr_name_; }
+  FilterStmt *filter_stmt() const{
+    return filter_stmt_;
+  }
 
 private:
-  Table *table_        = nullptr;
-  const Value value_;
-  string attr_name_ ;
+  Table *table_ = nullptr;
+  Field field_;
+  Value value_;
+  FilterStmt *filter_stmt_ = nullptr;
+  
 };

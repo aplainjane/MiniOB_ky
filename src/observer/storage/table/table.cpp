@@ -230,7 +230,11 @@ RC Table::insert_record(Record &record)
   }
   return rc;
 }
-
+RC Table::update_record(Record &record)
+{
+  RC rc = RC::SUCCESS;
+  return rc;
+}
 RC Table::visit_record(const RID &rid, function<bool(Record &)> visitor)
 {
   return record_handler_->visit_record(rid, visitor);

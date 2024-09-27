@@ -27,7 +27,7 @@ class UpdateStmt : public Stmt
 {
 public:
   UpdateStmt() = default;
-  UpdateStmt(Table *table, Value *values, int value_amount);
+  UpdateStmt(Table *table, const Value values, string attr_name_);
   
   StmtType type() const override { return StmtType::UPDATE; }
 public:
@@ -35,11 +35,12 @@ public:
 
 public:
   Table *table() const { return table_; }
-  Value *values() const { return values_; }
-  int    value_amount() const { return value_amount_; }
+  const Value values() const { return value_; }
+
+  string attr_name() const { return attr_name_; }
 
 private:
   Table *table_        = nullptr;
-  Value *values_       = nullptr;
-  int    value_amount_ = 0;
+  const Value value_;
+  string attr_name_ ;
 };

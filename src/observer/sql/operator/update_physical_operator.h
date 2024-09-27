@@ -27,7 +27,7 @@ class UpdateStmt;
 class UpdatePhysicalOperator : public PhysicalOperator
 {
 public:
-  UpdatePhysicalOperator(Table *table, std::vector<Value> &&values);
+  UpdatePhysicalOperator(Table *table, Value values,string attr_name);
 
   virtual ~UpdatePhysicalOperator() = default;
 
@@ -41,5 +41,6 @@ public:
 
 private:
   Table             *table_ = nullptr;
-  std::vector<Value> values_;
+  Value  values_;
+  string attr_name_;
 };

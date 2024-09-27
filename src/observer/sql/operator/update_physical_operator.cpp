@@ -19,14 +19,14 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, vector<Value> &&values)
-    : table_(table), values_(std::move(values))
+UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, Value values,string attr_name)
+    : table_(table), values_(values),attr_name_(attr_name)
 {}
 
 RC UpdatePhysicalOperator::open(Trx *trx)
 {
   Record record;
-  RC     rc = table_->make_record(static_cast<int>(values_.size()), values_.data(), record);
+  RC     rc = table_->set_value_to_record(static_cast<int>(values_.size()), values_.data(), record);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to make record. rc=%s", strrc(rc));
     return rc;

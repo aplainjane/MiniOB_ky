@@ -16,8 +16,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
-UpdateStmt::UpdateStmt(Table *table, Value *values, int value_amount)
-    : table_(table), values_(values), value_amount_(value_amount)
+UpdateStmt::UpdateStmt(Table *table, const Value values, string attr_name)
+    : table_(table), value_(values), attr_name_(attr_name)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
@@ -35,9 +35,9 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
     LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
-  Value     *values     = const_cast<Value *>(&update.value);;
-  int value_amount = 1;
-  stmt = new UpdateStmt(table, values, value_amount);
+  const Value     values     = update.value;
+  string attr_name            = update.attribute_name;
+  stmt = new UpdateStmt(table, values, attr_name);
   return RC::SUCCESS;
   // // TODO
   // stmt = nullptr;

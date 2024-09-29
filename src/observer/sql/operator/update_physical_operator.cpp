@@ -18,8 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 
 using namespace std;
-std::vector<Record> insert_records;
-std::vector<Record> delete_records;
+
 
 UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, Field field, Value value)
     : table_(table), field_(field), value_(value)
@@ -54,6 +53,7 @@ RC UpdatePhysicalOperator::next()
   PhysicalOperator *child = children_[0].get();
 
   std::vector<Record> insert_records;
+  std::vector<Record> delete_records;
   while (RC::SUCCESS == (rc = child->next())) {
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
@@ -110,13 +110,20 @@ RC UpdatePhysicalOperator::next()
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
         return rc;
       }
-      //new_record.set_rid(delete_records[delete_records.size()-1].rid());
+      new_record.set_rid(delete_records[delete_records.size()-1].rid());
       insert_records.emplace_back(new_record);
     }
 
     std::cout << "insert_record:" << insert_records.size() << std::endl;
   }
-
+  //for (int i = 0; i < delete_records.size(); ++i) {
+    
+  //  rc = trx_->delete_record(table_, delete_records[i]);
+  //  if (rc != RC::SUCCESS) {
+  //    LOG_WARN("failed to insert record: %s", strrc(rc));
+  //    return rc;
+  //  }
+  //}
   for (int i = 0; i < insert_records.size(); ++i) {
     
     rc = trx_->update_record(table_, delete_records[i], insert_records[i]);

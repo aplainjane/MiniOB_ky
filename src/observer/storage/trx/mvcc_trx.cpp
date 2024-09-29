@@ -154,9 +154,9 @@ RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
   Field end_field;
   trx_fields(table, begin_field, end_field);
 
-  RC update_result = RC::SUCCESS;
+  RC update_result = table->recover_insert_record(new_record);
 
-  old_record.set_data(new_record.data(), new_record.len());
+  //old_record.set_data(new_record.data(), new_record.len());
 
   return update_result;
 }

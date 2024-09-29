@@ -36,9 +36,11 @@ RC VacuousTrx::insert_record(Table *table, Record &record) { return table->inser
 
 RC VacuousTrx::update_record(Table *table, Record &old_record, Record &new_record){
 
-  RC update_result = RC::SUCCESS;
+  RC update_result = table->recover_insert_record(new_record);
 
-  old_record.set_data(new_record.data(), new_record.len());
+  //old_record.set_data(new_record.data(), new_record.len());
+
+  
 
  return update_result;
 }

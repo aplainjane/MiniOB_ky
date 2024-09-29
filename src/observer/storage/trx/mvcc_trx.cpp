@@ -148,6 +148,19 @@ RC MvccTrx::insert_record(Table *table, Record &record)
   return rc;
 }
 
+RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
+{
+  Field begin_field;
+  Field end_field;
+  trx_fields(table, begin_field, end_field);
+
+  RC update_result = RC::SUCCESS;
+
+  old_record.set_data(new_record.data(), new_record.len());
+
+  return update_result;
+}
+
 RC MvccTrx::delete_record(Table *table, Record &record)
 {
   Field begin_field;

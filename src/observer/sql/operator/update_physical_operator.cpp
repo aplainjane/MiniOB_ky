@@ -40,21 +40,9 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
   trx_ = trx;
 
-  return RC::SUCCESS;
-}
-
-RC UpdatePhysicalOperator::next()
-{
-  RC rc = RC::SUCCESS;
-  if (children_.empty()) {
-    return RC::RECORD_EOF;
-  }
-
-  PhysicalOperator *child = children_[0].get();
-
   std::vector<Record> insert_records;
   std::vector<Record> delete_records;
-  while (RC::SUCCESS == (rc = child->next())) {
+  while(OB_SUCC(rc = child->next())) {
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
       LOG_WARN("failed to get current record: %s", strrc(rc));
@@ -76,7 +64,7 @@ RC UpdatePhysicalOperator::next()
       const std::vector<FieldMeta> *table_field_metas = table_->table_meta().field_metas();
       const char                   *target_field_name = field_.field_name();
 
-      std::cout << "target field_name \t" << target_field_name << std::endl;
+      //std::cout << "target field_name \t" << target_field_name << std::endl;
 
       int meta_num     = table_field_metas->size();
       int target_index = -1;
@@ -114,24 +102,26 @@ RC UpdatePhysicalOperator::next()
       insert_records.emplace_back(new_record);
     }
 
-    std::cout << "insert_record:" << insert_records.size() << std::endl;
+    //std::cout << "insert_record:" << insert_records.size() << std::endl;
   }
-  //for (int i = 0; i < delete_records.size(); ++i) {
-    
-  //  rc = trx_->delete_record(table_, delete_records[i]);
-  //  if (rc != RC::SUCCESS) {
-  //    LOG_WARN("failed to insert record: %s", strrc(rc));
-  //    return rc;
-  //  }
-  //}
-  for (int i = 0; i < insert_records.size(); ++i) {
+
+  child->close();
+
+  for (long unsigned int i = 0; i < insert_records.size(); ++i) {
     
     rc = trx_->update_record(table_, delete_records[i], insert_records[i]);
     if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to insert record: %s", strrc(rc));
+      LOG_WARN("failed to update record: %s", strrc(rc));
       return rc;
     }
   }
+
+  return RC::SUCCESS;
+}
+
+RC UpdatePhysicalOperator::next()
+{
+  
 
   return RC::RECORD_EOF;
 }
@@ -139,8 +129,8 @@ RC UpdatePhysicalOperator::next()
 RC UpdatePhysicalOperator::close()
 {
 
-  if (!children_.empty()) {
-    children_[0]->close();
-  }
+  //if (!children_.empty()) {
+  //  children_[0]->close();
+  //}
   return RC::SUCCESS;
 }

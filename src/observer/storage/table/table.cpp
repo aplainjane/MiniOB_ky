@@ -231,6 +231,57 @@ RC Table::insert_record(Record &record)
   return rc;
 }
 
+
+RC Table::update_record(Record &new_record, Record &old_record)
+{
+  RC rc = RC::SUCCESS;
+
+
+  // 1. 删除旧记录的索引条目
+  for (Index *index : indexes_) {
+    rc = index->delete_entry(old_record.data(), &old_record.rid());
+    ASSERT(RC::SUCCESS == rc, 
+           "failed to delete entry from index. table name=%s, index name=%s, rid=%s, rc=%s",
+           name(), index->index_meta().name(), old_record.rid().to_string().c_str(), strrc(rc));
+  }
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to delete index entries for old record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
+    return rc;
+  }
+
+  // 2. 删除旧记录
+  rc = record_handler_->delete_record(&old_record.rid());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to delete old record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
+    return rc;
+  }
+
+  // 3. 插入新记录
+  rc = record_handler_->insert_record(new_record.data(), table_meta_.record_size(), &new_record.rid());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to insert new record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
+    return rc;
+  }
+
+  // 4. 插入新记录的索引条目
+  rc = insert_entry_of_indexes(new_record.data(), new_record.rid());
+  if (rc != RC::SUCCESS) {  
+    // 插入新记录的索引失败，回滚新插入的记录
+    LOG_ERROR("Failed to insert index entries for new record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
+
+    // 回滚: 删除新插入的记录
+    RC rc2 = record_handler_->delete_record(&new_record.rid());
+    if (rc2 != RC::SUCCESS) {
+      LOG_PANIC("Failed to rollback new record after index insertion failure. table name=%s, rc=%s", table_meta_.name(), strrc(rc2));
+    }
+
+    return rc;  // 返回索引插入失败的错误码
+  }
+
+  return RC::SUCCESS;  // 更新成功
+}
+
+
 RC Table::visit_record(const RID &rid, function<bool(Record &)> visitor)
 {
   return record_handler_->visit_record(rid, visitor);

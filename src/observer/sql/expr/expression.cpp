@@ -512,9 +512,16 @@ RC ArithmeticExpr::try_get_value(Value &value) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, Expression *child)
-    : aggregate_name_(aggregate_name), child_(child)
-{}
+UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, std::vector<std::unique_ptr<Expression> >*child)
+    : aggregate_name_(aggregate_name), childs_(child)
+{
+  if (childs_ && !childs_->empty()) {
+    child_ = std::move((*childs_)[0]);
+  }
+
+  if(child->size()!=1)
+    this->error_ = true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 AggregateExpr::AggregateExpr(Type type, Expression *child) : aggregate_type_(type), child_(child) {}

@@ -408,21 +408,25 @@ private:
 class UnboundAggregateExpr : public Expression
 {
 public:
-  UnboundAggregateExpr(const char *aggregate_name, Expression *child);
+  UnboundAggregateExpr(const char *aggregate_name, std::vector<std::unique_ptr<Expression> >*child);
   virtual ~UnboundAggregateExpr() = default;
 
   ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
 
   const char *aggregate_name() const { return aggregate_name_.c_str(); }
 
-  std::unique_ptr<Expression> &child() { return child_; }
+  std::unique_ptr<Expression>  &child() { return child_; }
 
   RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
   AttrType value_type() const override { return child_->value_type(); }
+  
+  bool is_error(){return error_;}
 
 private:
   std::string                 aggregate_name_;
+  std::vector<std::unique_ptr<Expression> >* childs_;
   std::unique_ptr<Expression> child_;
+  bool                   error_ = false;
 };
 
 class AggregateExpr : public Expression
@@ -443,6 +447,7 @@ public:
   virtual ~AggregateExpr() = default;
 
   bool equal(const Expression &other) const override;
+  
 
   ExprType type() const override { return ExprType::AGGREGATION; }
 

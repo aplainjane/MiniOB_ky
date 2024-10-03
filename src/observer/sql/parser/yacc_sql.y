@@ -42,7 +42,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 }
 
 UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
-                                           Expression *child,
+                                           std::vector<std::unique_ptr<Expression> >*child,
                                            const char *sql_string,
                                            YYLTYPE *llocp)
 {
@@ -538,21 +538,52 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
-    | SUM LBRACE expression RBRACE {
+    | SUM LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("SUM", $3, sql_string, &@$);
     }
-    | AVG LBRACE expression RBRACE {
+    | AVG LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("AVG", $3, sql_string, &@$);
     }
-    | MAX LBRACE expression RBRACE {
+    | MAX LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("MAX", $3, sql_string, &@$);
     }
-    | MIN LBRACE expression RBRACE {
+    | MIN LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("MIN", $3, sql_string, &@$);
     }
-    | COUNT LBRACE expression RBRACE {
+    | COUNT LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("COUNT", $3, sql_string, &@$);
     }
+    | SUM LBRACE RBRACE {
+      std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
+      empty->push_back(std::make_unique<ValueExpr>());
+      empty->push_back(std::make_unique<ValueExpr>());
+      $$ = create_aggregate_expression("SUM", empty, sql_string, &@$);
+    }
+    | AVG LBRACE RBRACE {
+      std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
+      empty->push_back(std::make_unique<ValueExpr>());
+      empty->push_back(std::make_unique<ValueExpr>());
+      $$ = create_aggregate_expression("AVG", empty, sql_string, &@$);
+    }
+    | MIN LBRACE RBRACE {
+      std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
+      empty->push_back(std::make_unique<ValueExpr>());
+      empty->push_back(std::make_unique<ValueExpr>());
+      $$ = create_aggregate_expression("MIN", empty, sql_string, &@$);
+    }
+    | MAX LBRACE RBRACE {
+      std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
+      empty->push_back(std::make_unique<ValueExpr>());
+      empty->push_back(std::make_unique<ValueExpr>());
+      $$ = create_aggregate_expression("MAX", empty, sql_string, &@$);
+    }
+    | COUNT LBRACE RBRACE {
+      std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
+      empty->push_back(std::make_unique<ValueExpr>());
+      empty->push_back(std::make_unique<ValueExpr>());
+      $$ = create_aggregate_expression("COUNT", empty, sql_string, &@$);
+    }
+    
 
 rel_attr:
     ID {

@@ -116,6 +116,7 @@ DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);
 EXPLAIN                                 RETURN_TOKEN(EXPLAIN);
 LIKE                                    RETURN_TOKEN(LIKE);
+"NOT LIKE"                              RETURN_TOKEN(NOT_LIKE);
 GROUP                                   RETURN_TOKEN(GROUP);
 BY                                      RETURN_TOKEN(BY);
 STORAGE                                 RETURN_TOKEN(STORAGE);

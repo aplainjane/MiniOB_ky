@@ -106,6 +106,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         EXPLAIN
         STORAGE
         FORMAT
+        LIKE
         EQ
         LT
         GT
@@ -628,6 +629,7 @@ where:
     {
       $$ = nullptr;
     }
+
     | WHERE condition_list {
       $$ = $2;  
     }
@@ -647,6 +649,7 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
+    
     ;
 condition:
     rel_attr comp_op value
@@ -706,6 +709,7 @@ comp_op:
     | LE { $$ = LESS_EQUAL; }
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
+    | LIKE { $$ = CLIKE; }
     ;
 
 // your code here

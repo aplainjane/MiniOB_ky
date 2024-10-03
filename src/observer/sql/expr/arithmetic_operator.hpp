@@ -127,6 +127,17 @@ struct LessEqual
 #endif
 };
 
+struct Like
+{
+  template <class T>
+  
+  
+  static inline bool operation(const T &left, const T &right)
+  {
+    return left <= right;
+  }
+};
+
 struct AddOperator
 {
   template <class T>

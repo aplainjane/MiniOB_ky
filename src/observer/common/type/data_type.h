@@ -46,6 +46,8 @@ public:
    *  INT32_MAX 表示未实现的比较
    */
   virtual int compare(const Value &left, const Value &right) const { return INT32_MAX; }
+  
+  virtual int like(const Value &left, const Value &right) const { return INT32_MAX; }
 
   /**
    * @brief 计算 left + right，并将结果保存到 result 中

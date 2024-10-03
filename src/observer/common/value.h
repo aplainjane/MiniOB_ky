@@ -99,6 +99,8 @@ public:
   string to_string() const;
 
   int compare(const Value &other) const;
+  
+  int like(const Value &other) const;
 
   const char *data() const;
 

@@ -51,6 +51,7 @@ enum CompOp
   LESS_THAN,    ///< "<"
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
+  CLIKE,
   NO_OP
 };
 
@@ -61,6 +62,8 @@ enum CompOp
  * 一个条件比较是有两部分组成的，称为左边和右边。
  * 左边和右边理论上都可以是任意的数据，比如是字段（属性，列），也可以是数值常量。
  * 这个结构中记录的仅仅支持字段和值。
+ * select * from sblxl where a = "qwer";
+ * select * from sblxl where a like "qwer"
  */
 struct ConditionSqlNode
 {

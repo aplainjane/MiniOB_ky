@@ -93,6 +93,10 @@ int FloatType::cast_cost(AttrType type)
   {
     return 2;
   }
+  else if(type == AttrType::CHARS)
+  {
+    return 3;
+  }
   return INT32_MAX;
 }
 
@@ -115,6 +119,11 @@ RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const {
         case AttrType::FLOATS:
             // 如果目标类型是浮点数，直接赋值
             result.set_float(float_value);
+            break;
+        
+        case AttrType::CHARS:
+            // 如果目标类型是浮点数，直接赋值
+            result.set_string(val.to_string().c_str());
             break;
 
         default:

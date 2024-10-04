@@ -83,3 +83,43 @@ RC FloatType::to_string(const Value &val, string &result) const
   result = ss.str();
   return RC::SUCCESS;
 }
+
+int FloatType::cast_cost(AttrType type)
+{
+  if (type == attr_type_) {
+    return 0;
+  }
+  else if(type == AttrType::INTS)
+  {
+    return 2;
+  }
+  return INT32_MAX;
+}
+
+RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const {
+    // 首先检查输入值的类型
+    if (val.attr_type() != AttrType::FLOATS) {
+        return RC::UNSUPPORTED; // 只支持从浮点数类型转换
+    }
+
+    // 获取浮点数值
+    float float_value = val.get_float();
+
+    // 根据目标类型进行转换
+    switch (type) {
+        case AttrType::INTS:
+            // 转换为整数（向下取整）
+            result.set_int(static_cast<int>(float_value));
+            break;
+
+        case AttrType::FLOATS:
+            // 如果目标类型是浮点数，直接赋值
+            result.set_float(float_value);
+            break;
+
+        default:
+            return RC::UNSUPPORTED; // 不支持的目标类型
+    }
+
+    return RC::SUCCESS; // 转换成功
+}

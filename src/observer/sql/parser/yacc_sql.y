@@ -106,8 +106,10 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         EXPLAIN
         STORAGE
         FORMAT
+        NOT
         LIKE
-        NOT_LIKE
+        INNER
+        JOIN
         EQ
         LT
         GT
@@ -711,7 +713,7 @@ comp_op:
     | GE { $$ = GREAT_EQUAL; }
     | NE { $$ = NOT_EQUAL; }
     | LIKE { $$ = CLIKE; }
-    | NOT_LIKE { $$ = CNLIKE; }
+    | NOT LIKE { $$ = CNLIKE; }
     ;
 
 // your code here

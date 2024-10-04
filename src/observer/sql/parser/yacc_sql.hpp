@@ -96,24 +96,26 @@ extern int yydebug;
     EXPLAIN = 297,                 /* EXPLAIN  */
     STORAGE = 298,                 /* STORAGE  */
     FORMAT = 299,                  /* FORMAT  */
-    LIKE = 300,                    /* LIKE  */
-    NOT_LIKE = 301,                /* NOT_LIKE  */
-    EQ = 302,                      /* EQ  */
-    LT = 303,                      /* LT  */
-    GT = 304,                      /* GT  */
-    LE = 305,                      /* LE  */
-    GE = 306,                      /* GE  */
-    NE = 307,                      /* NE  */
-    SUM = 308,                     /* SUM  */
-    AVG = 309,                     /* AVG  */
-    COUNT = 310,                   /* COUNT  */
-    MAX = 311,                     /* MAX  */
-    MIN = 312,                     /* MIN  */
-    NUMBER = 313,                  /* NUMBER  */
-    FLOAT = 314,                   /* FLOAT  */
-    ID = 315,                      /* ID  */
-    SSS = 316,                     /* SSS  */
-    UMINUS = 317                   /* UMINUS  */
+    NOT = 300,                     /* NOT  */
+    LIKE = 301,                    /* LIKE  */
+    INNER = 302,                   /* INNER  */
+    JOIN = 303,                    /* JOIN  */
+    EQ = 304,                      /* EQ  */
+    LT = 305,                      /* LT  */
+    GT = 306,                      /* GT  */
+    LE = 307,                      /* LE  */
+    GE = 308,                      /* GE  */
+    NE = 309,                      /* NE  */
+    SUM = 310,                     /* SUM  */
+    AVG = 311,                     /* AVG  */
+    COUNT = 312,                   /* COUNT  */
+    MAX = 313,                     /* MAX  */
+    MIN = 314,                     /* MIN  */
+    NUMBER = 315,                  /* NUMBER  */
+    FLOAT = 316,                   /* FLOAT  */
+    ID = 317,                      /* ID  */
+    SSS = 318,                     /* SSS  */
+    UMINUS = 319                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -122,7 +124,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 125 "yacc_sql.y"
+#line 127 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -141,7 +143,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 145 "yacc_sql.hpp"
+#line 147 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -91,7 +91,7 @@ int FloatType::cast_cost(AttrType type)
   }
   else if(type == AttrType::INTS)
   {
-    return 1;
+    return 2;
   }
   return INT32_MAX;
 }

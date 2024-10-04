@@ -113,10 +113,10 @@ RC IntegerType::cast_to(const Value &val, AttrType type, Value &result) const
             result.set_int(int_value);
             break;
 
-          case AttrType::CHARS:
-            // 如果目标类型是整数，直接赋值
-            result.set_string(val.to_string().c_str());
-            break;
+        case AttrType::CHARS:
+          // 如果目标类型是整数，直接赋值
+          result.set_string(val.to_string().c_str());
+          break;
 
         default:
             return RC::UNSUPPORTED; // 不支持的目标类型

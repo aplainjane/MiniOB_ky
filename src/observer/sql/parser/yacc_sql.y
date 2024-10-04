@@ -127,7 +127,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %union {
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
-  Value *                                    value;
+  JoinSqlNode *                              join_sql_node;
+  Value *                                    value;  
   enum CompOp                                comp;
   RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
@@ -147,6 +148,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %token <floats> FLOAT
 %token <string> ID
 %token <string> SSS
+
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -161,6 +163,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <attr_info>           attr_def
 %type <value_list>          value_list
 %type <condition_list>      where
+%type <join_sql_node>       join_list
 %type <condition_list>      condition_list
 %type <string>              storage_format
 %type <relation_list>       rel_list
@@ -459,7 +462,7 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list where group_by
+    SELECT expression_list FROM rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -473,13 +476,19 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
 
       if ($5 != nullptr) {
-        $$->selection.conditions.swap(*$5);
+        $$->selection.relations.insert($$->selection.relations.end(), $5->relations.begin(), $5->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $5->conditions.begin(), $5->conditions.end());
         delete $5;
       }
-
+    
       if ($6 != nullptr) {
-        $$->selection.group_by.swap(*$6);
+        $$->selection.conditions.swap(*$6);
         delete $6;
+      }
+
+      if ($7 != nullptr) {
+        $$->selection.group_by.swap(*$7);
+        delete $7;
       }
     }
     ;
@@ -626,6 +635,33 @@ rel_list:
       free($1);
     }
     ;
+
+join_list:
+    {
+      $$ = nullptr;
+    }
+    | INNER join_list {
+      $$ = $2;
+    }
+    | JOIN ID ON condition_list join_list {
+      $$ = new JoinSqlNode();
+
+      if ($4 != nullptr) {
+        $$->conditions.swap(*$4);
+        delete $4;
+      }
+
+      $$->relations.push_back($2);
+
+      free($2);
+
+      if ($5 != nullptr) {
+        $$->relations.insert($$->relations.end(), $5->relations.begin(), $5->relations.end());
+        $$->conditions.insert($$->conditions.end(), $5->conditions.begin(), $5->conditions.end());
+        delete $5;
+      }
+    }
+    
 
 where:
     /* empty */

@@ -128,7 +128,8 @@ union YYSTYPE
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
-  Value *                                    value;
+  JoinSqlNode *                              join_sql_node;
+  Value *                                    value;  
   enum CompOp                                comp;
   RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
@@ -143,7 +144,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 147 "yacc_sql.hpp"
+#line 148 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

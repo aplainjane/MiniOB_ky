@@ -83,6 +83,10 @@ int IntegerType::cast_cost(AttrType type)
   {
     return 1;
   }
+  else if(type == AttrType::CHARS)
+  {
+    return 2;
+  }
   return INT32_MAX;
 }
 
@@ -107,6 +111,11 @@ RC IntegerType::cast_to(const Value &val, AttrType type, Value &result) const
         case AttrType::INTS:
             // 如果目标类型是整数，直接赋值
             result.set_int(int_value);
+            break;
+
+          case AttrType::CHARS:
+            // 如果目标类型是整数，直接赋值
+            result.set_string(val.to_string().c_str());
             break;
 
         default:

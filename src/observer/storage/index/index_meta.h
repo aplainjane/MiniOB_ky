@@ -35,11 +35,14 @@ class IndexMeta
 public:
   IndexMeta() = default;
 
-  RC init(const char *name, const FieldMeta &field);
+  // 修改 init 方法以接受多个字段
+  RC init(const char *name, const std::vector<const FieldMeta *> &fields);
 
 public:
   const char *name() const;
-  const char *field() const;
+
+  // 修改 field 方法，返回字段名列表
+  const std::vector<std::string> &fields() const;
 
   void desc(ostream &os) const;
 
@@ -48,6 +51,7 @@ public:
   static RC from_json(const TableMeta &table, const Json::Value &json_value, IndexMeta &index);
 
 protected:
-  string name_;   // index's name
-  string field_;  // field's name
+  std::string name_;                        // 索引的名称
+  std::vector<std::string> field_names_;    // 多个字段的名称
 };
+

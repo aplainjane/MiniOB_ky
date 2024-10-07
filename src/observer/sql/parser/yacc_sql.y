@@ -139,6 +139,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   std::vector<ConditionSqlNode> *            condition_list;
   std::vector<RelAttrSqlNode> *              rel_attr_list;
   std::vector<std::string> *                 relation_list;
+  std::vector<std::string> *                 str_list;
   char *                                     string;
   int                                        number;
   float                                      floats;
@@ -163,6 +164,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value_list>          value_list
 %type <condition_list>      where
 %type <join_sql_node>       join_list
+%type <str_list>            id_list
 %type <condition_list>      condition_list
 %type <string>              storage_format
 %type <relation_list>       rel_list
@@ -284,19 +286,36 @@ desc_table_stmt:
     }
     ;
 
-create_index_stmt:    /*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID RBRACE
+create_index_stmt:    /* create index 语句的语法解析树 */
+    CREATE INDEX ID ON ID LBRACE id_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
       CreateIndexSqlNode &create_index = $$->create_index;
-      create_index.index_name = $3;
-      create_index.relation_name = $5;
-      create_index.attribute_name = $7;
-      free($3);
-      free($5);
-      free($7);
+      create_index.index_name = $3;           // 索引名
+      create_index.relation_name = $5;        // 表名
+      
+      // 将属性名列表放入 vector 中
+      for (auto &attr : *$7) {
+          create_index.attribute_names.push_back(attr);
+      }
+
+      // 释放内存
+      free($3); // 释放索引名
+      free($5); // 释放表名
+      delete $7; // 释放属性名列表
     }
-    ;
+
+id_list:
+    ID
+    {
+        $$ = new std::vector<std::string>;
+        $$->push_back($1);
+    }
+    | id_list COMMA ID
+    {
+        $$->push_back($3);
+    }
+
 
 drop_index_stmt:      /*drop index 语句的语法解析树*/
     DROP INDEX ID ON ID
@@ -461,7 +480,15 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-     SELECT expression_list FROM ID rel_list join_list where group_by
+    SELECT expression_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {

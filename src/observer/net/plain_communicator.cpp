@@ -274,6 +274,45 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
 {
   RC rc = RC::SUCCESS;
   Tuple *tuple = nullptr;
+
+  // 处理function的无表查询
+  if(sql_result->has_operator()){
+    if(sql_result->type() == PhysicalOperatorType::PROJECT && sql_result->expr_type() == ExprType::FUNCTION){
+      
+      auto tuple = new ProjectTuple();
+      tuple->set_expressions(sql_result->get_expressions());
+        
+      Value value;
+      rc = tuple->cell_at(0, value);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to get tuple cell value. rc=%s", strrc(rc));
+        sql_result->close();
+        return rc;
+      }
+
+      string cell_str = value.to_string();
+
+      rc = writer_->writen(cell_str.data(), cell_str.size());
+      if (OB_FAIL(rc)) {
+        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+        sql_result->close();
+        return rc;
+      }
+
+      char newline = '\n';
+
+      rc = writer_->writen(&newline, 1);
+      if (OB_FAIL(rc)) {
+        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+        sql_result->close();
+        return rc;
+      }
+      
+      rc = RC::SUCCESS;
+      return rc;
+    }
+  }
+  
   while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
     assert(tuple != nullptr);
 

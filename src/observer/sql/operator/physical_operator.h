@@ -80,6 +80,10 @@ public:
   virtual RC open(Trx *trx) = 0;
   virtual RC next() { return RC::UNIMPLEMENTED; }
   virtual RC next(Chunk &chunk) { return RC::UNIMPLEMENTED; }
+  
+  // 增加传出expressions逻辑
+  virtual auto get_expressions() -> std::vector<std::unique_ptr<Expression>> { return std::move(*(new std::vector<std::unique_ptr<Expression>>)); };
+  virtual ExprType expr_type() const { return ExprType::NONE; }
   virtual RC close() = 0;
 
   virtual Tuple *current_tuple() { return nullptr; }

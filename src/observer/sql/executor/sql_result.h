@@ -43,6 +43,13 @@ public:
 
   bool               has_operator() const { return operator_ != nullptr; }
   const TupleSchema &tuple_schema() const { return tuple_schema_; }
+  
+  // 增加type返回值以执行对ExprType的判断
+  PhysicalOperatorType type() const { return operator_->type(); }
+  // 增加获取expressions逻辑  
+  auto get_expressions() const ->  std::vector<std::unique_ptr<Expression>> { return operator_->get_expressions(); }
+  
+  ExprType expr_type() const { return operator_->expr_type(); }
   RC                 return_code() const { return return_code_; }
   const std::string &state_string() const { return state_string_; }
 

@@ -16,11 +16,19 @@ See the Mulan PSL v2 for more details. */
 
 #include <memory>
 #include <string>
+#include <iomanip> 
 
 #include "common/value.h"
 #include "storage/field/field.h"
 #include "sql/expr/aggregator.h"
 #include "storage/common/chunk.h"
+
+#ifndef MONTH_NAMES_H
+#define MONTH_NAMES_H
+
+extern const std::string NameForMonth[];
+
+#endif // MONTH_NAMES_H
 
 class Tuple;
 
@@ -47,6 +55,7 @@ enum class ExprType
   CONJUNCTION,  ///< 多个表达式使用同一种关系(AND或OR)来联结
   ARITHMETIC,   ///< 算术运算
   AGGREGATION,  ///< 聚合运算
+  FUNCTION,     ///< 函数
 };
 
 /**
@@ -473,3 +482,41 @@ private:
   Type                        aggregate_type_;
   std::unique_ptr<Expression> child_;
 };
+
+class FunctionExpr : public Expression {
+public:
+  FunctionExpr() = default;
+   FunctionExpr(FuncOp func_type, std::vector<Expression*>& params) : func_type_(func_type)
+  {
+    for (auto expr: params) {
+      params_.emplace_back(expr);
+    }
+  }
+  FunctionExpr(FuncOp func_type, std::vector<std::unique_ptr<Expression>> params) : func_type_(func_type), params_(std::move(params)) {}
+  
+  virtual ~FunctionExpr() = default;
+  
+  AttrType value_type() const override;
+  ExprType type() const override { return ExprType::FUNCTION; }
+  
+  FuncOp func_type() const { return func_type_; }
+  std::vector<std::unique_ptr<Expression>> &children() { return params_; }
+
+  RC get_func_length_value(const Tuple &tuple, Value &value) const;
+  RC get_func_round_value(const Tuple &tuple, Value &value) const;
+  RC get_func_data_format_value(const Tuple &tuple, Value &value) const;
+
+  RC get_value(const Tuple &tuple, Value &value) const override;
+
+  RC calc_value(const Value &left_value, const Value &right_value, Value &value) const;
+
+  RC check_param() const;
+
+  std::vector<std::unique_ptr<Expression>> get_params(){return std::move(this->params_);}
+    
+private:
+  FuncOp func_type_;
+  std::vector<std::unique_ptr<Expression>> params_; 
+
+};
+

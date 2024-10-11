@@ -30,6 +30,14 @@ public:
 
   PhysicalOperatorType type() const override { return PhysicalOperatorType::PROJECT; }
 
+  // 增加传出expressions逻辑
+  auto get_expressions() -> std::vector<std::unique_ptr<Expression>> override 
+  {
+    return std::move(expressions_);
+  }
+  
+  ExprType expr_type() const { return expressions_[0].get()->type(); }
+  
   RC open(Trx *trx) override;
   RC next() override;
   RC close() override;

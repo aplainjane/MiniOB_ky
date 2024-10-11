@@ -57,6 +57,16 @@ enum CompOp
 };
 
 /**
+ * @brief 描述一个函数
+ * @ingroup SQLParser
+ */
+enum FuncOp {
+  FLENGTH,
+  FROUND,
+  FDATE_FORMAT
+};
+
+/**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
  * @details 条件比较就是SQL查询中的 where a>b 这种。

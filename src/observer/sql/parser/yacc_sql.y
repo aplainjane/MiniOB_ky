@@ -119,6 +119,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         SUM
         AVG
         COUNT
+        LENGTH
+        ROUND
+        DATE_FORMAT
         MAX
         MIN
 
@@ -130,6 +133,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
@@ -157,6 +161,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
+%type <func>                func_op
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
 %type <attr_info>           attr_def
@@ -461,7 +466,15 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-     SELECT expression_list FROM ID rel_list join_list where group_by
+    SELECT expression_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -592,6 +605,16 @@ expression:
       empty->push_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("COUNT", empty, sql_string, &@$);
     }
+    | func_op LBRACE expression_list RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::move(*$3));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $3;
+    }
+    | func_op LBRACE RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::vector<std::unique_ptr<Expression>>());
+      $$->set_name(token_name(sql_string, &@$));
+    }
+    ;   
     
 
 rel_attr:
@@ -741,6 +764,11 @@ comp_op:
     | LIKE { $$ = CLIKE; }
     | NOT LIKE { $$ = CNLIKE; }
     ;
+    
+func_op:
+      LENGTH { $$ = FLENGTH; }
+    | ROUND { $$ = FROUND; }
+    | DATE_FORMAT { $$ = FDATE_FORMAT; }
 
 // your code here
 group_by:

@@ -257,6 +257,9 @@ int Value::get_int() const
     case AttrType::FLOATS: {
       return (int)(value_.float_value_);
     }
+    case AttrType::DATES: {
+      return value_.int_value_;
+    }
     case AttrType::BOOLEANS: {
       return (int)(value_.bool_value_);
     }

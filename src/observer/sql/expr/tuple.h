@@ -276,9 +276,11 @@ public:
     if (index < 0 || index >= cell_num()) {
       return RC::INTERNAL;
     }
-    if (tuple_ == nullptr) {
-      return RC::INTERNAL;
-    }
+    
+    // 注释掉对tuple的判断，在function中不需要有tuple
+    // if (tuple_ == nullptr) {
+    //   return RC::INTERNAL;
+    // }
 
     Expression *expr = expressions_[index].get();
     return expr->get_value(*tuple_, cell);

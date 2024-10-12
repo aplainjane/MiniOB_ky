@@ -472,23 +472,23 @@ RC ExpressionBinder::bind_function_expression(
     return RC::INVALID_ARGUMENT;
   }
   
-  // // 绑定params 解决传入字段发生undefine
-  // vector<unique_ptr<Expression>>  child_bound_expressions;
-  // vector<unique_ptr<Expression>> &children = func_expr->children();
+  // 绑定params 解决传入字段发生undefine
+  vector<unique_ptr<Expression>>  child_bound_expressions;
+  vector<unique_ptr<Expression>> &children = func_expr->children();
 
-  // for (unique_ptr<Expression> &child_expr : children) {
-  //   child_bound_expressions.clear();
+  for (unique_ptr<Expression> &child_expr : children) {
+    child_bound_expressions.clear();
 
-  //   RC rc = bind_expression(child_expr, child_bound_expressions);
-  //   if (rc != RC::SUCCESS) {
-  //     return rc;
-  //   }
+    RC rc = bind_expression(child_expr, child_bound_expressions);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
 
-  //   unique_ptr<Expression> &child = child_bound_expressions[0];
-  //   if (child.get() != child_expr.get()) {
-  //     child_expr.reset(child.release());
-  //   }
-  // }
+    unique_ptr<Expression> &child = child_bound_expressions[0];
+    if (child.get() != child_expr.get()) {
+      child_expr.reset(child.release());
+    }
+  }
 
   // 验证参数合法性
   RC rc = func_expr->check_param();

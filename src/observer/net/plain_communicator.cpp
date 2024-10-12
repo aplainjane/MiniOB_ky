@@ -283,20 +283,36 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
       tuple->set_expressions(sql_result->get_expressions());
         
       Value value;
-      rc = tuple->cell_at(0, value);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to get tuple cell value. rc=%s", strrc(rc));
-        sql_result->close();
-        return rc;
-      }
+      
+      int cell_num = tuple->cell_num();
+      for (int i = 0; i < cell_num; i++) {
+        if (i != 0) {
+          const char *delim = " | ";
 
-      string cell_str = value.to_string();
+          rc = writer_->writen(delim, strlen(delim));
+          if (OB_FAIL(rc)) {
+            LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+            sql_result->close();
+            return rc;
+          }
+        }
 
-      rc = writer_->writen(cell_str.data(), cell_str.size());
-      if (OB_FAIL(rc)) {
-        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-        sql_result->close();
-        return rc;
+        Value value;
+        rc = tuple->cell_at(i, value);
+        if (rc != RC::SUCCESS) {
+          LOG_WARN("failed to get tuple cell value. rc=%s", strrc(rc));
+          sql_result->close();
+          return rc;
+        }
+
+        string cell_str = value.to_string();
+
+        rc = writer_->writen(cell_str.data(), cell_str.size());
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+          sql_result->close();
+          return rc;
+        }
       }
 
       char newline = '\n';
@@ -307,9 +323,6 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
         sql_result->close();
         return rc;
       }
-      
-      rc = RC::SUCCESS;
-      return rc;
     }
   }
   

@@ -610,6 +610,11 @@ expression:
       $$->set_name(token_name(sql_string, &@$));
       delete $3;
     }
+    | func_op LBRACE expression_list RBRACE ID{
+      $$ = new FunctionExpr((FuncOp)$1,std::move(*$3));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $3;
+    }
     | func_op LBRACE RBRACE {
       $$ = new FunctionExpr((FuncOp)$1,std::vector<std::unique_ptr<Expression>>());
       $$->set_name(token_name(sql_string, &@$));

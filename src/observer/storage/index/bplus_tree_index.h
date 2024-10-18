@@ -27,9 +27,14 @@ public:
   BplusTreeIndex() = default;
   virtual ~BplusTreeIndex() noexcept;
 
+<<<<<<< HEAD
   RC create(Table *table,const char *file_name, const bool unique, const IndexMeta &index_meta, 
               const std::vector<int> &field_ids, const std::vector<const FieldMeta*> &field_metas);
   RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const std::vector<const FieldMeta *> &field_metas);
+=======
+  RC create(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas, bool unique);
+  RC open(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas);
+>>>>>>> Update
   RC close();
   void destroy() override;
 

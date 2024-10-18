@@ -31,7 +31,11 @@ See the Mulan PSL v2 for more details. */
 #include "storage/clog/log_handler.h"
 #include "storage/index/bplus_tree_log.h"
 
+<<<<<<< HEAD
 #define MAX_INDEX_FIELD_NUM 16
+=======
+#define MAX_ATTR_NUM 16
+>>>>>>> Update
 
 class BplusTreeHandler;
 class BplusTreeMiniTransaction;
@@ -56,9 +60,10 @@ enum class BplusTreeOperationType
  * @brief 属性比较(BplusTree)
  * @ingroup BPlusTree
  */
-class AttrComparator
+class AttrComparator 
 {
 public:
+<<<<<<< HEAD
 
   void init(int attr_num, int *field_id, AttrType *type, int *length)
   {
@@ -76,10 +81,35 @@ public:
       sum_len += attr_lengths_[i];
     }
     return sum_len;
+=======
+  void init(std::vector<AttrType>  types, std::vector<int>  lengths)
+  {
+    attr_types_ = types;
+    attr_lengths_ = lengths;
+  }
+
+  int attr_length() const
+  {
+    int attr_length = 0;
+    // for (int len: attr_lengths_){
+    //   attr_length += len;
+    // }
+
+    for (long unsigned int i=0;i<attr_lengths_.size();++i){
+      attr_length += attr_lengths_[i];
+    }
+
+    return attr_length;
+  }
+
+  std::vector<int> attr_lengths() const {
+    return attr_lengths_;
+>>>>>>> Update
   }
 
   int operator()(const char *v1, const char *v2) const
   {
+<<<<<<< HEAD
     int cmp_res = 0;
     // 第一列是bitmap，比较时应该跳过它
     // 这里认为NULL比任何值都大，放在B+树的最右边
@@ -130,6 +160,41 @@ private:
   std::vector<int> field_ids_;
   std::vector<int> attr_lengths_;
   std::vector<AttrType> attr_types_;
+=======
+    int offset = 0;
+    //std::cout<<"start comparing, ATTR_LENGTH="<<attr_lengths_.size()<<std::endl;
+
+    // std::cout<<"check types"<<std::endl;
+    // for (int i=0;i<attr_lengths_.size();++i) std::cout<<attr_lengths_[i]<<std::endl;
+    //std::cout<<"check in operator"<<std::endl;
+    //for (long unsigned int i=0;i<attr_lengths_.size();++i) std::cout<<*(int *)(v1+attr_lengths_[i])<<" "<<*(int *)(v2+attr_lengths_[i])<<std::endl;
+    //std::cout<<"check finished!"<<std::endl;
+
+    for (long unsigned int i=0;i<attr_lengths_.size();++i){
+      //std::cout<<"start comparing:"<<offset<<std::endl;
+      int res=-1;
+
+      // TODO: optimized the comparison
+      Value left;
+      left.set_type(attr_types_[i]);
+      left.set_data(v1+offset, attr_lengths_[i]);
+      Value right;
+      right.set_type(attr_types_[i]);
+      right.set_data(v2+offset, attr_lengths_[i]);
+      res = DataType::type_instance(attr_types_[i])->compare(left, right);
+      if(res != 0)
+        return res;
+      //std::cout<<"com_res:"<<res<<endl;
+      offset += attr_lengths_[i];
+
+    }
+    return 0;
+  }
+
+private:
+  std::vector<AttrType> attr_types_;
+  std::vector<int> attr_lengths_;
+>>>>>>> Update
 };
 
 /**
@@ -140,40 +205,90 @@ private:
 class KeyComparator
 {
 public:
+<<<<<<< HEAD
   void init(AttrType type, int length) { attr_comparator_.init(1, 0, &type, &length); }
 
   void init(bool unique, int attr_num, int *field_id, AttrType *type, int *length)
   {
     attr_comparator_.init(attr_num, field_id, type, length);
+=======
+  void init(std::vector<AttrType> types, std::vector<int> lengths, bool unique)
+  {
+    attr_comparator_.init(types, lengths);
+
+>>>>>>> Update
     unique_ = unique;
   }
 
-  const AttrComparator &attr_comparator() const { return attr_comparator_; }
+  const AttrComparator &attr_comparator() const
+  {
+    return attr_comparator_;
+  }
 
   int operator()(const char *v1, const char *v2) const
   {
+    //std::cout<<"Key-value COmparaing"<<std::endl;
+
     int result = attr_comparator_(v1, v2);
-    if (result != 0) {
+    if (unique_ || result != 0) {
+      //std::cout<<*(int *)(v1)<<" "<<*(int *)(v2)<<std::endl;
+      //std::cout<<"in result:\t"<<result<<std::endl;
       return result;
     }
 
-    const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
-    return RID::compare(rid1, rid2);
+    //std::cout<<"result:"<<result<<std::endl;
+
+    //std::cout<<"operator_rid"<<std::endl;
+    std::vector<int> attr_lengths(attr_comparator_.attr_lengths());
+
+    int allocate_idx = 0;
+    for (long unsigned int i=0;i<attr_lengths.size();++i){
+      //std::cout<<*(int *)(v1+allocate_idx)<<" "<<*(int *)(v2+allocate_idx)<<" "<<attr_lengths[i]<<std::endl;
+      allocate_idx += attr_lengths[i];
+    }
+
+    //std::cout<<"finished"<<std::endl;
+
+    // const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
+    // const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+
+    RID *rid1, *rid2;
+    allocate_idx = 0;
+    int same_flag = 1;
+    for (long unsigned int i=0;i<attr_lengths.size();++i){
+      rid1 = (RID *)(v1+allocate_idx);
+      rid2 = (RID *)(v2+allocate_idx);
+      allocate_idx += attr_lengths[i];
+      int page_diff = rid1->page_num - rid2->page_num;
+      if (page_diff != 0) {
+        same_flag = 0;
+        break;
+      } else if(rid1->slot_num - rid2->slot_num !=0){
+        same_flag = 0;
+        break;
+      }
+    }
+
+    // return RID::compare(rid1, rid2);
+
+    return same_flag;
   }
 
 private:
   bool unique_;
   AttrComparator attr_comparator_;
+  bool unique_;
 };
+
 
 /**
  * @brief 属性打印,调试使用(BplusTree)
  * @ingroup BPlusTree
  */
-class AttrPrinter
+class AttrPrinter 
 {
 public:
+<<<<<<< HEAD
   void init(int attr_num, AttrType *type, int *length)
   {
     for (int i = 0; i < attr_num; i++) {
@@ -190,9 +305,28 @@ public:
     }
     return len_sum;
   }
-
-  string operator()(const char *v) const
+=======
+  void init(std::vector<AttrType> types, std::vector<int> lengths)
   {
+    attr_types_ = types;
+    attr_lengths_ = lengths;
+  }
+
+>>>>>>> Update
+
+  int attr_length() const
+  {
+    int attr_length = 0;
+    for (long unsigned int i=0;i<attr_lengths_.size();++i){
+      attr_length += attr_lengths_[i];
+    }
+
+    return attr_length;
+  }
+
+  std::string operator()(const char *v) const
+  {
+<<<<<<< HEAD
       int offset = 0;
       std::string key_str;
       for (size_t idx = 0; idx < attr_types_.size(); idx++) {
@@ -231,6 +365,19 @@ public:
   return key_str;
 }
   
+=======
+    int allocate_idx = 0;
+    std::string str = "";
+    for (long unsigned int k=0;k<attr_lengths_.size();++k){
+      
+      Value value(attr_types_[k], const_cast<char *>(v+allocate_idx), attr_lengths_[k]);
+      str += value.to_string();
+      allocate_idx += attr_lengths_[k];
+      
+    }
+    return str;
+  }
+>>>>>>> Update
 
 private:
   std::vector<AttrType> attr_types_;
@@ -241,19 +388,28 @@ private:
  * @brief 键值打印,调试使用(BplusTree)
  * @ingroup BPlusTree
  */
-class KeyPrinter
+class KeyPrinter 
 {
 public:
+<<<<<<< HEAD
   void init(int attr_num, AttrType *type, int *length)
   {
     attr_printer_.init(attr_num, type, length);
+=======
+  void init(std::vector<AttrType> types, std::vector<int> lengths)
+  {
+    attr_printer_.init(types, lengths);
+>>>>>>> Update
   }
 
-  const AttrPrinter &attr_printer() const { return attr_printer_; }
-
-  string operator()(const char *v) const
+  const AttrPrinter &attr_printer() const
   {
-    stringstream ss;
+    return attr_printer_;
+  }
+
+  std::string operator()(const char *v) const
+  {
+    std::stringstream ss;
     ss << "{key:" << attr_printer_(v) << ",";
 
     const RID *rid = (const RID *)(v + attr_printer_.attr_length());
@@ -281,6 +437,7 @@ struct IndexFileHeader
   PageNum root_page;          ///< 根节点在磁盘中的页号
   int32_t internal_max_size;  ///< 内部节点最大的键值对数
   int32_t leaf_max_size;      ///< 叶子节点最大的键值对数
+<<<<<<< HEAD
   int32_t key_length;         ///< attr length + sizeof(RID)
   int32_t unique;            ///< 是否是唯一索引
   int32_t attr_num;           ///< 索引列数量
@@ -288,6 +445,15 @@ struct IndexFileHeader
   int32_t attr_length[MAX_INDEX_FIELD_NUM];       ///< 键值的长度
   int32_t attr_offset[MAX_INDEX_FIELD_NUM];       ///< 键值在record中的offset  
   AttrType attr_type[MAX_INDEX_FIELD_NUM]; 
+=======
+  int32_t attr_length;
+  int32_t attr_lengths[MAX_ATTR_NUM];        ///< 键值的长度
+  int32_t key_length;         ///< attr length + sizeof(RID)
+  AttrType attr_type;
+  AttrType attr_types[MAX_ATTR_NUM];         ///< 键值的类型
+  int32_t attr_num;
+  bool unique;
+>>>>>>> Update
 
   const string to_string() const
   {
@@ -295,7 +461,11 @@ struct IndexFileHeader
 
     ss << "attr_length:" << attr_length << ","
        << "key_length:" << key_length << ","
+<<<<<<< HEAD
        << "attr_type:" << attr_type << ","
+=======
+       //<< "attr_type:" << attr_type << ","
+>>>>>>> Update
        << "root_page:" << root_page << ","
        << "internal_max_size:" << internal_max_size << ","
        << "leaf_max_size:" << leaf_max_size << ";";
@@ -568,8 +738,11 @@ public:
    * @param internal_max_size 内部节点最大大小
    * @param leaf_max_size 叶子节点最大大小
    */
-  RC create(LogHandler &log_handler, BufferPoolManager &bpm, const char *file_name, AttrType attr_type, int attr_length,
+  RC create(LogHandler &log_handler,
+                            BufferPoolManager &bpm,
+                            const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique,
       int internal_max_size = -1, int leaf_max_size = -1);
+<<<<<<< HEAD
   RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length,
       int internal_max_size = -1, int leaf_max_size = -1);
   RC create(LogHandler &log_handler,
@@ -588,6 +761,14 @@ public:
             int internal_max_size = -1 ,
             int leaf_max_size  = -1 );
 
+=======
+  RC create(LogHandler &log_handler,
+            DiskBufferPool &buffer_pool,
+            const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique, int internal_max_size  = -1,
+    int leaf_max_size  = -1 );
+  RC insert_entry(const char *user_key, std::vector<FieldMeta> &field_metas, const RID *rid);
+  RC delete_entry(const char *user_key, std::vector<FieldMeta> field_metas, const RID *rid);
+>>>>>>> Update
   /**
    * @brief 打开一个B+树
    * @param log_handler 记录日志
@@ -760,6 +941,7 @@ protected:
 
 private:
   common::MemPoolItem::item_unique_ptr make_key(const char *user_key, const RID &rid);
+  common::MemPoolItem::item_unique_ptr make_key(const char *user_key, std::vector<FieldMeta> field_metas, const RID &rid);
 
 protected:
   LogHandler     *log_handler_      = nullptr;  /// 日志处理器

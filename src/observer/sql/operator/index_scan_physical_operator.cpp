@@ -32,18 +32,70 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index,
   }
 }
 
+IndexScanPhysicalOperator::IndexScanPhysicalOperator(
+    Table *table, Index *index, ReadWriteMode mode,
+    std::vector<Value> left_values, bool left_inclusive, 
+    std::vector<Value> right_values, bool right_inclusive)
+    : table_(table), 
+      index_(index),
+      mode_(mode),
+      left_values_(left_values),
+      left_inclusive_(left_inclusive), 
+      right_values_(right_values),
+      right_inclusive_(right_inclusive){}
+
 RC IndexScanPhysicalOperator::open(Trx *trx)
 {
   if (nullptr == table_ || nullptr == index_) {
     return RC::INTERNAL;
   }
 
-  IndexScanner *index_scanner = index_->create_scanner(left_value_.data(),
-      left_value_.length(),
+  //std::cout << "left_value:"<<left_value_.data()<<std::endl;
+  
+  size_t total_left_length = 0;
+  size_t total_right_length = 0;
+
+  for (const auto &value : left_values_) {
+      total_left_length += value.length();
+  }
+  for (const auto &value : right_values_) {
+      total_right_length += value.length();
+  }
+
+  char *left_key = (char *)malloc(total_left_length);
+  char *right_key = (char *)malloc(total_right_length);
+
+
+  if (left_key == nullptr || right_key == nullptr) {
+    LOG_WARN("Failed to alloc memory for key.");
+    return RC::INTERNAL;
+  }
+
+  int allocate_idx = 0;
+  int left_lengths = 0;
+  int right_lengths = 0;
+  //std::cout<<"check malloc"<<std::endl;
+
+  for (long unsigned int i=0;i<left_values_.size();++i){
+    memcpy(left_key+allocate_idx, left_values_[i].data(),left_values_[i].length());
+    memcpy(right_key+allocate_idx, right_values_[i].data(),right_values_[i].length());
+    //std::cout<<*(int *)(left_key + allocate_idx) <<" "<<*(int *)(right_key + allocate_idx) ;
+    allocate_idx += left_values_[i].length();
+    left_lengths += left_values_[i].length();
+    right_lengths += right_values_[i].length();
+  }
+
+  //std::cout<<"\ncheck finished!"<<std::endl;
+
+
+  IndexScanner *index_scanner = index_->create_scanner(left_key,
+      left_lengths,
       left_inclusive_,
-      right_value_.data(),
-      right_value_.length(),
+      right_key,
+      right_lengths,
       right_inclusive_);
+
+
   if (nullptr == index_scanner) {
     LOG_WARN("failed to create index scanner");
     return RC::INTERNAL;

@@ -26,6 +26,7 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
   stmt = nullptr;
 
   const char *table_name = create_index.relation_name.c_str();
+<<<<<<< HEAD
   if (is_blank(table_name) || is_blank(create_index.index_name.c_str())) {
     LOG_WARN("invalid argument. db=%p, table_name=%p, index name=%s",
              db, table_name, create_index.index_name.c_str());
@@ -35,6 +36,12 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
   if (create_index.attribute_names.empty()) {
     LOG_WARN("no attribute names provided for index creation. db=%p, table_name=%p, index name=%s",
              db, table_name, create_index.index_name.c_str());
+=======
+  if (is_blank(table_name) || is_blank(create_index.index_name.c_str()) ||
+      !create_index.attribute_names.size()) {
+    LOG_WARN("invalid argument. db=%p, table_name=%p, index name=%s, attribute name=%s",
+        db, table_name, create_index.index_name.c_str(), create_index.attribute_names[0].c_str());
+>>>>>>> Update
     return RC::INVALID_ARGUMENT;
   }
 
@@ -45,6 +52,7 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
+<<<<<<< HEAD
   std::vector<const FieldMeta *> field_metas;
   for (const std::string &attr_name : create_index.attribute_names) {
     const FieldMeta *field_meta = table->table_meta().field(attr_name.c_str());
@@ -54,6 +62,23 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
       return RC::SCHEMA_FIELD_NOT_EXIST;
     }
     field_metas.push_back(field_meta);  // 将字段元信息添加到列表中
+=======
+  std::vector<FieldMeta> field_metas;
+
+  for (std::string attr:create_index.attribute_names){
+    const FieldMeta *field_meta = table->table_meta().field(attr.c_str());
+    if (field_meta == nullptr){
+      LOG_WARN("no such field in table. db=%s, table=%s, field name=%s", 
+             db->name(), table_name, attr.c_str());
+      return RC::SCHEMA_FIELD_NOT_EXIST;   
+    }
+    field_metas.emplace_back(*field_meta);
+  }
+
+    if (!field_metas.size()){
+    LOG_WARN("no such fields in table");
+    return RC::SCHEMA_FIELD_NOT_EXIST;
+>>>>>>> Update
   }
 
   // 检查索引是否已存在
@@ -63,8 +88,12 @@ RC CreateIndexStmt::create(Db *db, const CreateIndexSqlNode &create_index, Stmt 
     return RC::SCHEMA_INDEX_NAME_REPEAT;
   }
 
+<<<<<<< HEAD
   // 创建支持多字段的索引
   stmt = new CreateIndexStmt(table, field_metas, create_index.index_name); 
+=======
+  stmt = new CreateIndexStmt(table, field_metas, create_index.index_name, create_index.unique);
+>>>>>>> Update
   return RC::SUCCESS;
 }
 

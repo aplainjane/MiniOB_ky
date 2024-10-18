@@ -139,7 +139,11 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
+<<<<<<< HEAD
 #line 143 "yacc_sql.hpp"
+=======
+#line 142 "yacc_sql.hpp"
+>>>>>>> Update
 
 };
 typedef union YYSTYPE YYSTYPE;

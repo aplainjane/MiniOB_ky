@@ -35,11 +35,8 @@ using namespace common;
 #define INSERT_NUM (TIMES * ORDER * ORDER * ORDER * ORDER)
 #define POOL_NUM 2
 
-const char *index_name = "test.btree";
-int         insert_num = INSERT_NUM;
-const int   page_size  = 1024;
-int         k          = 0;
 
+<<<<<<< HEAD
 void test_insert(BplusTreeHandler *handler)
 {
   RC  rc = RC::SUCCESS;
@@ -813,6 +810,8 @@ TEST(test_bplus_tree, test_bplus_tree_insert)
   delete handler;
   handler = nullptr;
 }
+=======
+>>>>>>> Update
 
 int main(int argc, char **argv)
 {

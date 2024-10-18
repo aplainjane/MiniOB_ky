@@ -286,6 +286,7 @@ desc_table_stmt:
     }
     ;
 
+<<<<<<< HEAD
 create_index_stmt:    /* create index 语句的语法解析树 */
     CREATE INDEX ID ON ID LBRACE id_list RBRACE
     {
@@ -315,6 +316,28 @@ id_list:
     {
         $$->push_back($3);
     }
+
+=======
+create_index_stmt:    /*create index 语句的语法解析树*/
+    CREATE INDEX ID ON ID LBRACE ID rel_list RBRACE
+    {
+      $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
+      CreateIndexSqlNode &create_index = $$->create_index;
+      create_index.index_name = $3;
+      create_index.relation_name = $5;
+      if ($8 != nullptr) {
+        create_index.attribute_names.swap(*$8);
+      }
+      create_index.attribute_names.emplace_back($7);
+
+      create_index.unique = false;
+      free($3);
+      free($5);
+      free($7);
+    }
+    
+    ;
+>>>>>>> Update
 
 
 drop_index_stmt:      /*drop index 语句的语法解析树*/

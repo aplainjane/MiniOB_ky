@@ -150,12 +150,32 @@ const IndexMeta *TableMeta::index(const char *name) const
   return nullptr;
 }
 
-const IndexMeta *TableMeta::find_index_by_field(const char *field) const
+const IndexMeta *TableMeta::find_index_by_fields(std::vector<const char *> fields) const   // 修改成多个field
 {
+
   for (const IndexMeta &index : indexes_) {
+<<<<<<< HEAD
     if (index.fields().size() > 1 && 0 == strcmp(index.fields().at(1).c_str(), field)) {
       return &index;
     }  
+=======
+    //std::cout<<index.field_num()<<" "<<fields.size()<<std::endl;
+    if (index.field_num() == fields.size()){
+      std::vector<const char *> index_fields = index.fields();
+      int field_num = fields.size();
+      bool same_flag = true;
+      for (int i=0;i<field_num;++i){
+        //std::cout<<index_fields[i]<<fields[i]<<std::endl;
+        if (0 != strcmp(index_fields[i], fields[i])){
+          same_flag = false;
+          break;
+        }
+      }
+      if (same_flag){
+        return &index;
+      }
+    }
+>>>>>>> Update
   }
   return nullptr;
 }

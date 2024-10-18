@@ -19,22 +19,13 @@ See the Mulan PSL v2 for more details. */
 
 BplusTreeIndex::~BplusTreeIndex() noexcept { close(); }
 
-<<<<<<< HEAD
-RC BplusTreeIndex::create(Table *table,const char *file_name, const bool unique, const IndexMeta &index_meta, 
-              const std::vector<int> &field_ids, const std::vector<const FieldMeta*> &field_metas)
-=======
 RC BplusTreeIndex::create(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas, bool unique)
->>>>>>> Update
 {
   if (inited_) {
     LOG_WARN("Failed to create index due to the index has been created before. file_name:%s, index:%s, field:%s",
         file_name,
         index_meta.name(),
-<<<<<<< HEAD
-        index_meta.fields());
-=======
         index_meta.all_field());
->>>>>>> Update
     return RC::RECORD_OPENNED;
   }
 
@@ -42,43 +33,25 @@ RC BplusTreeIndex::create(Table *table, const char *file_name, const IndexMeta &
 
   
   BufferPoolManager &bpm = table->db()->buffer_pool_manager();
-<<<<<<< HEAD
-  RC rc = index_handler_.create(table->db()->log_handler(), bpm,file_name, unique, field_ids, field_metas);
-=======
   // RC rc = index_handler_.create(file_name, field_meta.type(), field_meta.len(), unique);
   RC rc = index_handler_.create(table->db()->log_handler(), bpm, file_name, field_metas, unique);
   
->>>>>>> Update
   if (RC::SUCCESS != rc) {
     LOG_WARN("Failed to create index_handler, file_name:%s, index:%s, field:%s, rc:%s",
         file_name,
         index_meta.name(),
-<<<<<<< HEAD
-        index_meta.fields(),
-=======
         index_meta.all_field(),
->>>>>>> Update
         strrc(rc));
     return rc;
   }
 
   inited_ = true;
-<<<<<<< HEAD
-  table_  = table;
-  LOG_INFO(
-      "Successfully create index, file_name:%s, index:%s, field:%s", file_name, index_meta.name(), index_meta.fields());
-  return RC::SUCCESS;
-}
-
-RC BplusTreeIndex::open(Table *table, const char *file_name, const IndexMeta &index_meta, const std::vector<const FieldMeta *> &field_metas)
-=======
   LOG_INFO(
       "Successfully create index, file_name:%s, index:%s, field:%s", file_name, index_meta.name(), index_meta.all_field());
   return RC::SUCCESS;
 }
 
 RC BplusTreeIndex::open(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas)
->>>>>>> Update
 {
   if (inited_) {
     LOG_WARN("Failed to open index due to the index has been initedd before. file_name:%s, index:%s, field:%s",
@@ -86,11 +59,7 @@ RC BplusTreeIndex::open(Table *table, const char *file_name, const IndexMeta &in
     return RC::RECORD_OPENNED;
   }
 
-<<<<<<< HEAD
-  Index::init(index_meta, field_metas);
-=======
   Index::init(index_meta, field_metas_);
->>>>>>> Update
 
   BufferPoolManager &bpm = table->db()->buffer_pool_manager();
   RC rc = index_handler_.open(table->db()->log_handler(), bpm, file_name);
@@ -129,30 +98,12 @@ void BplusTreeIndex::destroy(){
 
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid)
 {
-<<<<<<< HEAD
-  /*int attr_offset_ = 0;
-  for(FieldMeta field_meta_ : field_metas_)
-  {
-    attr_offset_ += field_meta_.offset();
-  }*/
-  return index_handler_.insert_entry(record, rid);
-=======
   return index_handler_.insert_entry(record, field_metas_, rid);
->>>>>>> Update
 }
 
 RC BplusTreeIndex::delete_entry(const char *record, const RID *rid)
 {
-<<<<<<< HEAD
-  /*int attr_offset_ = 0;
-  for(FieldMeta field_meta_ : field_metas_)
-  {
-    attr_offset_ += field_meta_.offset();
-  }*/
-  return index_handler_.delete_entry(record, rid);
-=======
   return index_handler_.delete_entry(record, field_metas_, rid);
->>>>>>> Update
 }
 
 IndexScanner *BplusTreeIndex::create_scanner(

@@ -31,11 +31,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/clog/log_handler.h"
 #include "storage/index/bplus_tree_log.h"
 
-<<<<<<< HEAD
-#define MAX_INDEX_FIELD_NUM 16
-=======
 #define MAX_ATTR_NUM 16
->>>>>>> Update
 
 class BplusTreeHandler;
 class BplusTreeMiniTransaction;
@@ -63,25 +59,6 @@ enum class BplusTreeOperationType
 class AttrComparator 
 {
 public:
-<<<<<<< HEAD
-
-  void init(int attr_num, int *field_id, AttrType *type, int *length)
-  {
-    for (int i = 0; i < attr_num; i++) {
-      field_ids_.emplace_back(field_id[i]);
-      attr_types_.emplace_back(type[i]);
-      attr_lengths_.emplace_back(length[i]);
-    }
-  }
-
-  int attr_length() const
-  {
-    int sum_len = 0;
-    for (size_t i = 0; i < attr_lengths_.size(); i++) {
-      sum_len += attr_lengths_[i];
-    }
-    return sum_len;
-=======
   void init(std::vector<AttrType>  types, std::vector<int>  lengths)
   {
     attr_types_ = types;
@@ -104,63 +81,10 @@ public:
 
   std::vector<int> attr_lengths() const {
     return attr_lengths_;
->>>>>>> Update
   }
 
   int operator()(const char *v1, const char *v2) const
   {
-<<<<<<< HEAD
-    int cmp_res = 0;
-    // 第一列是bitmap，比较时应该跳过它
-    // 这里认为NULL比任何值都大，放在B+树的最右边
-    int offset = attr_lengths_[0];
-    common::Bitmap l_map(const_cast<char*>(v1), attr_lengths_[0] * 8);
-    common::Bitmap r_map(const_cast<char*>(v2), attr_lengths_[0] * 8);
-    for (size_t i = 1; i < attr_types_.size(); i++) {
-      // NULL get_bit 是true
-      if (l_map.get_bit(field_ids_[i]) == true || r_map.get_bit(field_ids_[i]) == true) {
-        return -1;
-      }
-      switch (attr_types_[i]) {
-        case AttrType::INTS:
-        case AttrType::DATES: {
-          if (0 == (cmp_res = common::compare_int((void *)(v1 + offset), (void *)(v2 + offset)))) {
-            offset += attr_lengths_[i];
-          } else {
-            return cmp_res;
-          }
-          break;
-        } 
-        case AttrType::FLOATS: {
-          if (0 == (cmp_res = common::compare_float((void *)(v1 + offset), (void *)(v2 + offset)))) {
-            offset += attr_lengths_[i];
-          } else {
-            return cmp_res;
-          }
-          break;
-        }
-        case AttrType::CHARS: {
-          if (0 == (cmp_res = common::compare_string((void *)(v1 + offset), attr_lengths_[i], (void *)(v2 + offset), attr_lengths_[i]))) {
-            offset += attr_lengths_[i];
-          } else {
-            return cmp_res;
-          }
-          break;
-        }
-        default: {
-          ASSERT(false, "unknown attr type. %d", attr_types_);
-          return 0;
-        }
-      }
-    }
-    return cmp_res;
-  }
-
-private:
-  std::vector<int> field_ids_;
-  std::vector<int> attr_lengths_;
-  std::vector<AttrType> attr_types_;
-=======
     int offset = 0;
     //std::cout<<"start comparing, ATTR_LENGTH="<<attr_lengths_.size()<<std::endl;
 
@@ -194,7 +118,6 @@ private:
 private:
   std::vector<AttrType> attr_types_;
   std::vector<int> attr_lengths_;
->>>>>>> Update
 };
 
 /**
@@ -205,18 +128,10 @@ private:
 class KeyComparator
 {
 public:
-<<<<<<< HEAD
-  void init(AttrType type, int length) { attr_comparator_.init(1, 0, &type, &length); }
-
-  void init(bool unique, int attr_num, int *field_id, AttrType *type, int *length)
-  {
-    attr_comparator_.init(attr_num, field_id, type, length);
-=======
   void init(std::vector<AttrType> types, std::vector<int> lengths, bool unique)
   {
     attr_comparator_.init(types, lengths);
 
->>>>>>> Update
     unique_ = unique;
   }
 
@@ -288,31 +203,12 @@ private:
 class AttrPrinter 
 {
 public:
-<<<<<<< HEAD
-  void init(int attr_num, AttrType *type, int *length)
-  {
-    for (int i = 0; i < attr_num; i++) {
-      attr_types_.emplace_back(type[i]);
-      attr_lengths_.emplace_back(length[i]);
-    }
-  }
-
-  int attr_length() const
-  {
-    int len_sum = 0;
-    for (size_t i = 0; i < attr_lengths_.size(); i++) {
-      len_sum += attr_lengths_[i];
-    }
-    return len_sum;
-  }
-=======
   void init(std::vector<AttrType> types, std::vector<int> lengths)
   {
     attr_types_ = types;
     attr_lengths_ = lengths;
   }
 
->>>>>>> Update
 
   int attr_length() const
   {
@@ -326,46 +222,6 @@ public:
 
   std::string operator()(const char *v) const
   {
-<<<<<<< HEAD
-      int offset = 0;
-      std::string key_str;
-      for (size_t idx = 0; idx < attr_types_.size(); idx++) {
-        switch (attr_types_[idx]) {
-          case AttrType::INTS:
-          case AttrType::DATES: {
-            key_str += std::to_string(*(int *)(v + offset));
-            key_str += ",";
-            offset += attr_lengths_[idx];
-            break;
-          }
-          case AttrType::FLOATS: {
-            key_str += std::to_string(*(float *)(v + offset));
-            key_str += ",";
-            offset += attr_lengths_[idx];
-            break;
-          }
-          case AttrType::CHARS: {
-            std::string str;
-            for (int i = 0; i < attr_lengths_[idx]; i++) {
-              if (v[i] == 0) {
-                break;
-              }
-              str.push_back(v[i]);
-            }
-            key_str += str;
-            key_str += ",";
-            break;
-          }
-          default: {
-            ASSERT(false, "unknown attr type. %d", attr_types_);
-          }
-        }
-      }
-  key_str += " ";
-  return key_str;
-}
-  
-=======
     int allocate_idx = 0;
     std::string str = "";
     for (long unsigned int k=0;k<attr_lengths_.size();++k){
@@ -377,7 +233,6 @@ public:
     }
     return str;
   }
->>>>>>> Update
 
 private:
   std::vector<AttrType> attr_types_;
@@ -391,15 +246,9 @@ private:
 class KeyPrinter 
 {
 public:
-<<<<<<< HEAD
-  void init(int attr_num, AttrType *type, int *length)
-  {
-    attr_printer_.init(attr_num, type, length);
-=======
   void init(std::vector<AttrType> types, std::vector<int> lengths)
   {
     attr_printer_.init(types, lengths);
->>>>>>> Update
   }
 
   const AttrPrinter &attr_printer() const
@@ -437,15 +286,6 @@ struct IndexFileHeader
   PageNum root_page;          ///< 根节点在磁盘中的页号
   int32_t internal_max_size;  ///< 内部节点最大的键值对数
   int32_t leaf_max_size;      ///< 叶子节点最大的键值对数
-<<<<<<< HEAD
-  int32_t key_length;         ///< attr length + sizeof(RID)
-  int32_t unique;            ///< 是否是唯一索引
-  int32_t attr_num;           ///< 索引列数量
-  int32_t field_id[MAX_INDEX_FIELD_NUM];
-  int32_t attr_length[MAX_INDEX_FIELD_NUM];       ///< 键值的长度
-  int32_t attr_offset[MAX_INDEX_FIELD_NUM];       ///< 键值在record中的offset  
-  AttrType attr_type[MAX_INDEX_FIELD_NUM]; 
-=======
   int32_t attr_length;
   int32_t attr_lengths[MAX_ATTR_NUM];        ///< 键值的长度
   int32_t key_length;         ///< attr length + sizeof(RID)
@@ -453,7 +293,6 @@ struct IndexFileHeader
   AttrType attr_types[MAX_ATTR_NUM];         ///< 键值的类型
   int32_t attr_num;
   bool unique;
->>>>>>> Update
 
   const string to_string() const
   {
@@ -461,11 +300,7 @@ struct IndexFileHeader
 
     ss << "attr_length:" << attr_length << ","
        << "key_length:" << key_length << ","
-<<<<<<< HEAD
-       << "attr_type:" << attr_type << ","
-=======
        //<< "attr_type:" << attr_type << ","
->>>>>>> Update
        << "root_page:" << root_page << ","
        << "internal_max_size:" << internal_max_size << ","
        << "leaf_max_size:" << leaf_max_size << ";";
@@ -742,33 +577,12 @@ public:
                             BufferPoolManager &bpm,
                             const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique,
       int internal_max_size = -1, int leaf_max_size = -1);
-<<<<<<< HEAD
-  RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length,
-      int internal_max_size = -1, int leaf_max_size = -1);
-  RC create(LogHandler &log_handler,
-            BufferPoolManager &bpm, 
-            const char *file_name, 
-            const bool unique,
-            const std::vector<int> &field_ids,
-            const std::vector<const FieldMeta*> &fields,
-            int internal_max_size = -1, 
-            int leaf_max_size = -1);
-  RC create(LogHandler &log_handler,
-            DiskBufferPool &buffer_pool,
-            const bool unique, 
-            const std::vector<int> &field_ids,
-            const std::vector<const FieldMeta*> &fields, 
-            int internal_max_size = -1 ,
-            int leaf_max_size  = -1 );
-
-=======
   RC create(LogHandler &log_handler,
             DiskBufferPool &buffer_pool,
             const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique, int internal_max_size  = -1,
     int leaf_max_size  = -1 );
   RC insert_entry(const char *user_key, std::vector<FieldMeta> &field_metas, const RID *rid);
   RC delete_entry(const char *user_key, std::vector<FieldMeta> field_metas, const RID *rid);
->>>>>>> Update
   /**
    * @brief 打开一个B+树
    * @param log_handler 记录日志

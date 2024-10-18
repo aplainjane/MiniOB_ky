@@ -82,11 +82,7 @@ public:
   virtual RC sync() = 0;
 
 protected:
-<<<<<<< HEAD
-  RC init(const IndexMeta &index_meta, const std::vector<const FieldMeta*> &field_metas);
-=======
   RC init(const IndexMeta &index_meta, std::vector<FieldMeta> &field_meta);
->>>>>>> Update
 
 protected:
   IndexMeta index_meta_;  ///< 索引的元数据

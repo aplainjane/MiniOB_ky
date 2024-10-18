@@ -154,11 +154,6 @@ const IndexMeta *TableMeta::find_index_by_fields(std::vector<const char *> field
 {
 
   for (const IndexMeta &index : indexes_) {
-<<<<<<< HEAD
-    if (index.fields().size() > 1 && 0 == strcmp(index.fields().at(1).c_str(), field)) {
-      return &index;
-    }  
-=======
     //std::cout<<index.field_num()<<" "<<fields.size()<<std::endl;
     if (index.field_num() == fields.size()){
       std::vector<const char *> index_fields = index.fields();
@@ -175,7 +170,6 @@ const IndexMeta *TableMeta::find_index_by_fields(std::vector<const char *> field
         return &index;
       }
     }
->>>>>>> Update
   }
   return nullptr;
 }

@@ -942,8 +942,6 @@ RC BplusTreeHandler::open(LogHandler &log_handler, BufferPoolManager &bpm, const
   return rc;
 }
 
-
-
 RC BplusTreeHandler::open(LogHandler &log_handler, DiskBufferPool &buffer_pool)
 {
   if (disk_buffer_pool_ != nullptr) {
@@ -1525,12 +1523,11 @@ RC BplusTreeHandler::create_new_tree(BplusTreeMiniTransaction &mtr, const char *
 
 MemPoolItem::item_unique_ptr BplusTreeHandler::make_key(const char *user_key, const RID &rid)
 {
-    MemPoolItem::item_unique_ptr key = mem_pool_item_->alloc_unique_ptr();
+  MemPoolItem::item_unique_ptr key = mem_pool_item_->alloc_unique_ptr();
   if (key == nullptr) {
     LOG_WARN("Failed to alloc memory for key.");
     return nullptr;
   }
-
   memcpy(static_cast<char *>(key.get()), user_key, file_header_.attr_length);
   memcpy(static_cast<char *>(key.get()) + file_header_.attr_length, &rid, sizeof(rid));
   return key;
@@ -1957,9 +1954,8 @@ RC BplusTreeHandler::delete_entry(const char *user_key, const RID *rid)
   }
   char *key = static_cast<char *>(pkey.get());
 
-  // 先把bitmap复制进去，然后复制索引列
-  int allocate_idx = 0;
-  memcpy(key + allocate_idx, rid, sizeof(*rid));
+  memcpy(key, user_key, file_header_.attr_length);
+  memcpy(key + file_header_.attr_length, rid, sizeof(*rid));
 
   BplusTreeOperationType op = BplusTreeOperationType::DELETE;
 
@@ -1983,7 +1979,6 @@ RC BplusTreeHandler::delete_entry(const char *user_key, const RID *rid)
   rc = delete_entry_internal(mtr, leaf_frame, key);
   return rc;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

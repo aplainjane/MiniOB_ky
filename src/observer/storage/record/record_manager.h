@@ -450,6 +450,7 @@ public:
    * @param record 返回的下一条记录
    */
   RC next(Record &record);
+  bool has_next() { return next_record_.rid().slot_num != -1; }
 
   RC update_current(const Record &record);
 
@@ -478,6 +479,7 @@ private:
   RecordPageHandler *record_page_handler_ = nullptr;  ///< 处理文件某页面的记录
   RecordPageIterator record_page_iterator_;           ///< 遍历某个页面上的所有record
   Record             next_record_;                    ///< 获取的记录放在这里缓存起来
+  //SlotNum            next_slot_num_ = 0;  ///< 当前遍历到了哪一个slot
 };
 
 /**

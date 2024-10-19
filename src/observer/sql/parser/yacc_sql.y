@@ -71,6 +71,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         GROUP
         TABLE
         TABLES
+        UNIQUE
         INDEX
         CALC
         SELECT
@@ -301,7 +302,23 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       free($5);
       free($7);
     }
-    
+    | CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE
+    {
+      $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
+      CreateIndexSqlNode &create_index = $$->create_index;
+      create_index.index_name = $4;
+      create_index.relation_name = $6;
+      // create_index.attribute_name = $8;
+      if ($9 != nullptr){
+        create_index.attribute_names.swap(*$9);
+      }
+      create_index.attribute_names.emplace_back($8);
+      create_index.unique = true;
+      free($4);
+      free($6);
+      free($8);
+    }
+    ;
     ;
 
 
@@ -468,15 +485,7 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list
-    {
-      $$ = new ParsedSqlNode(SCF_SELECT);
-      if ($2 != nullptr) {
-        $$->selection.expressions.swap(*$2);
-        delete $2;
-      }
-    }
-    | SELECT expression_list FROM ID rel_list join_list where group_by
+     SELECT expression_list FROM ID rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {

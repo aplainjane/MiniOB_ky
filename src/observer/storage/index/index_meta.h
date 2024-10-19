@@ -14,9 +14,8 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include <string>
-#include <vector>
 #include "common/rc.h"
+#include "common/lang/string.h"
 
 class TableMeta;
 class FieldMeta;
@@ -31,7 +30,7 @@ class Value;
  * @details 一个索引包含了表的哪些字段，索引的名称等。
  * 如果以后实现了多种类型的索引，还需要记录索引的类型，对应类型的一些元数据等
  */
-class IndexMeta 
+class IndexMeta
 {
 public:
   IndexMeta() = default;

@@ -28,7 +28,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/buffer/disk_buffer_pool.h"
 #include "storage/record/record_manager.h"
 #include "storage/index/latch_memo.h"
-#include "storage/clog/log_handler.h"
 #include "storage/index/bplus_tree_log.h"
 
 #define MAX_ATTR_NUM 16
@@ -190,9 +189,8 @@ public:
   }
 
 private:
-  bool unique_;
   AttrComparator attr_comparator_;
-  //bool unique_;
+  bool unique_;
 };
 
 
@@ -290,6 +288,7 @@ struct IndexFileHeader
   int32_t attr_lengths[MAX_ATTR_NUM];        ///< 键值的长度
   int32_t key_length;         ///< attr length + sizeof(RID)
   AttrType attr_type;
+  int32_t attr_offset[MAX_ATTR_NUM];       ///< 键值在record中的offset
   AttrType attr_types[MAX_ATTR_NUM];         ///< 键值的类型
   int32_t attr_num;
   bool unique;

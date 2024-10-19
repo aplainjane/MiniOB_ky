@@ -67,6 +67,10 @@ int compare_string(void *arg1, int arg1_max_length, void *arg2, int arg2_max_len
   return 0;
 }
 
+int compare_date(void* arg1, void* arg2){
+  return compare_int(arg1, arg2);
+}
+
 // 支持%和_的模式匹配
 int like_string(void *arg1, void *arg2){
   

@@ -13,15 +13,13 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "storage/index/index_meta.h"
-#include "storage/field/field_meta.h"
-#include "storage/table/table_meta.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include "storage/field/field_meta.h"
+#include "storage/table/table_meta.h"
 #include "json/json.h"
 
 const static Json::StaticString FIELD_NAME("name");
-const static Json::StaticString FIELD_UNIQUE("unique");
-const static Json::StaticString FIELD_FIELD_NUM("field_num");
 const static Json::StaticString FIELD_FIELD_NAME("field_name");
 const static Json::StaticString UNIQUE_FLAG("unique");
 

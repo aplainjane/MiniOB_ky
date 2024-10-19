@@ -84,34 +84,32 @@ public:
 
   int operator()(const char *v1, const char *v2) const
   {
-    int offset = 0;
-    //std::cout<<"start comparing, ATTR_LENGTH="<<attr_lengths_.size()<<std::endl;
+    long unsigned int offset = 0;
 
-    // std::cout<<"check types"<<std::endl;
-    // for (int i=0;i<attr_lengths_.size();++i) std::cout<<attr_lengths_[i]<<std::endl;
-    //std::cout<<"check in operator"<<std::endl;
-    //for (long unsigned int i=0;i<attr_lengths_.size();++i) std::cout<<*(int *)(v1+attr_lengths_[i])<<" "<<*(int *)(v2+attr_lengths_[i])<<std::endl;
-    //std::cout<<"check finished!"<<std::endl;
+    for (size_t i = 0; i < attr_lengths_.size(); ++i) {
+        int res = -1;
 
-    for (long unsigned int i=0;i<attr_lengths_.size();++i){
-      //std::cout<<"start comparing:"<<offset<<std::endl;
-      int res=-1;
+        // 检查偏移量，确保不会越界，假设attr_lengths_代表的类型是int长度（4字节）
+        if (offset + attr_lengths_[i] > sizeof(v1) || offset + attr_lengths_[i] > sizeof(v2)) {
+            std::cerr << "Offset exceeds buffer size, possible memory corruption" << std::endl;
+            return -1; // 或者根据具体情况返回一个错误码
+        }
 
-      // TODO: optimized the comparison
-      Value left;
-      left.set_type(attr_types_[i]);
-      left.set_data(v1+offset, attr_lengths_[i]);
-      Value right;
-      right.set_type(attr_types_[i]);
-      right.set_data(v2+offset, attr_lengths_[i]);
-      res = DataType::type_instance(attr_types_[i])->compare(left, right);
-      if(res != 0)
-        return res;
-      //std::cout<<"com_res:"<<res<<endl;
-      offset += attr_lengths_[i];
+        Value left, right;
+        left.set_type(attr_types_[i]);
+        left.set_data(v1 + offset, attr_lengths_[i]);
+        right.set_type(attr_types_[i]);
+        right.set_data(v2 + offset, attr_lengths_[i]);
 
+        res = DataType::type_instance(attr_types_[i])->compare(left, right);
+        if (res != 0) {
+            return res; // 如果当前属性不相等，立即返回结果
+        }
+
+        offset += attr_lengths_[i]; // 更新偏移量
     }
-    return 0;
+
+    return 0; // 如果所有属性都相等，返回0
   }
 
 private:

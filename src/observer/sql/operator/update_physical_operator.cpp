@@ -40,8 +40,21 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
   trx_ = trx;
 
+  return rc;
+
+}
+
+RC UpdatePhysicalOperator::next()
+{
+  RC rc = RC::SUCCESS;
+  if (children_.empty()){
+    return RC::RECORD_EOF;
+  }
+  PhysicalOperator *child = children_[0].get();
+
   std::vector<Record> insert_records;
   std::vector<Record> delete_records;
+
   while(OB_SUCC(rc = child->next())) {
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
@@ -105,7 +118,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     //std::cout << "insert_record:" << insert_records.size() << std::endl;
   }
 
-  child->close();
 
   for (long unsigned int i = 0; i < insert_records.size(); ++i) {
     
@@ -115,22 +127,14 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       return rc;
     }
   }
-
-  return RC::SUCCESS;
-}
-
-RC UpdatePhysicalOperator::next()
-{
-  
-
   return RC::RECORD_EOF;
 }
 
 RC UpdatePhysicalOperator::close()
 {
 
-  //if (!children_.empty()) {
-  //  children_[0]->close();
-  //}
+  if (!children_.empty()) {
+    children_[0]->close();
+  }
   return RC::SUCCESS;
 }

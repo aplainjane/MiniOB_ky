@@ -243,8 +243,8 @@ RC Table::insert_record(Record &record)
 
 RC Table::update_record(Record &new_record, Record &old_record)
 {
-  RC rc = RC::SUCCESS;
 
+  RC rc = RC::SUCCESS;
 
   // 1. 删除旧记录的索引条目
   for (Index *index : indexes_) {

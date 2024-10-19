@@ -46,74 +46,71 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(
 
 RC IndexScanPhysicalOperator::open(Trx *trx)
 {
-  if (nullptr == table_ || nullptr == index_) {
-    return RC::INTERNAL;
-  }
+    if (nullptr == table_ || nullptr == index_) {
+        return RC::INTERNAL;
+    }
 
-  //std::cout << "left_value:"<<left_value_.data()<<std::endl;
-  
-  size_t total_left_length = 0;
-  size_t total_right_length = 0;
+    size_t total_left_length = 0;
+    size_t total_right_length = 0;
 
-  for (const auto &value : left_values_) {
-      total_left_length += value.length();
-  }
-  for (const auto &value : right_values_) {
-      total_right_length += value.length();
-  }
+    for (const auto &value : left_values_) {
+        total_left_length += value.length();
+    }
+    for (const auto &value : right_values_) {
+        total_right_length += value.length();
+    }
 
-  char *left_key = (char *)malloc(total_left_length);
-  char *right_key = (char *)malloc(total_right_length);
+    char *left_key = (char *)malloc(total_left_length);
+    char *right_key = (char *)malloc(total_right_length);
 
+    if (left_key == nullptr || right_key == nullptr) {
+        LOG_WARN("Failed to alloc memory for key.");
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
 
-  if (left_key == nullptr || right_key == nullptr) {
-    LOG_WARN("Failed to alloc memory for key.");
-    return RC::INTERNAL;
-  }
+    int left_allocate_idx = 0;
+    int right_allocate_idx = 0;
 
-  int allocate_idx = 0;
-  int left_lengths = 0;
-  int right_lengths = 0;
-  //std::cout<<"check malloc"<<std::endl;
+    for (size_t i = 0; i < left_values_.size(); ++i) {
+        memcpy(left_key + left_allocate_idx, left_values_[i].data(), left_values_[i].length());
+        left_allocate_idx += left_values_[i].length();
+    }
 
-  for (long unsigned int i=0;i<left_values_.size();++i){
-    memcpy(left_key+allocate_idx, left_values_[i].data(),left_values_[i].length());
-    memcpy(right_key+allocate_idx, right_values_[i].data(),right_values_[i].length());
-    //std::cout<<*(int *)(left_key + allocate_idx) <<" "<<*(int *)(right_key + allocate_idx) ;
-    allocate_idx += left_values_[i].length();
-    left_lengths += left_values_[i].length();
-    right_lengths += right_values_[i].length();
-  }
+    for (size_t i = 0; i < right_values_.size(); ++i) {
+        memcpy(right_key + right_allocate_idx, right_values_[i].data(), right_values_[i].length());
+        right_allocate_idx += right_values_[i].length();
+    }
 
-  //std::cout<<"\ncheck finished!"<<std::endl;
+    IndexScanner *index_scanner = index_->create_scanner(left_key, left_allocate_idx, left_inclusive_,
+                                                         right_key, right_allocate_idx, right_inclusive_);
 
+    if (nullptr == index_scanner) {
+        LOG_WARN("failed to create index scanner");
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
 
-  IndexScanner *index_scanner = index_->create_scanner(left_key,
-      left_lengths,
-      left_inclusive_,
-      right_key,
-      right_lengths,
-      right_inclusive_);
+    record_handler_ = table_->record_handler();
+    if (nullptr == record_handler_) {
+        LOG_WARN("invalid record handler");
+        index_scanner->destroy();
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
 
+    index_scanner_ = index_scanner;
+    tuple_.set_schema(table_, table_->table_meta().field_metas());
 
-  if (nullptr == index_scanner) {
-    LOG_WARN("failed to create index scanner");
-    return RC::INTERNAL;
-  }
-
-  record_handler_ = table_->record_handler();
-  if (nullptr == record_handler_) {
-    LOG_WARN("invalid record handler");
-    index_scanner->destroy();
-    return RC::INTERNAL;
-  }
-  index_scanner_ = index_scanner;
-
-  tuple_.set_schema(table_, table_->table_meta().field_metas());
-
-  trx_ = trx;
-  return RC::SUCCESS;
+    trx_ = trx;
+    free(left_key);
+    free(right_key);
+    return RC::SUCCESS;
 }
+
 
 RC IndexScanPhysicalOperator::next()
 {

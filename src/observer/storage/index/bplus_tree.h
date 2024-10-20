@@ -188,7 +188,7 @@ public:
 
 private:
   AttrComparator attr_comparator_;
-  //bool unique_;
+  bool unique_;
 };
 
 

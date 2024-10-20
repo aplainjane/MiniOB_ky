@@ -30,7 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/latch_memo.h"
 #include "storage/index/bplus_tree_log.h"
 
-#define MAX_ATTR_NUM 16
+#define MAX_ATTR_NUM 8
 
 class BplusTreeHandler;
 class BplusTreeMiniTransaction;

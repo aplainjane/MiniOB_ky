@@ -47,4 +47,6 @@ private:
   Field field_;
   Value value_;
   Trx *trx_ = nullptr;
+  std::vector<Record> insert_records;
+  std::vector<Record> delete_records;
 };

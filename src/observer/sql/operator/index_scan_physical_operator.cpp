@@ -54,14 +54,14 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
     size_t total_right_length = 0;
 
     for (const auto &value : left_values_) {
-        total_left_length += value.length()+64;
+        total_left_length += value.length();
     }
     for (const auto &value : right_values_) {
-        total_right_length += value.length()+64;
+        total_right_length += value.length();
     }
 
-    char *left_key = (char *)malloc(total_left_length);
-    char *right_key = (char *)malloc(total_right_length);
+    char *left_key = (char *)malloc(total_left_length+8);
+    char *right_key = (char *)malloc(total_right_length+8);
 
     if (left_key == nullptr || right_key == nullptr) {
         LOG_WARN("Failed to alloc memory for key.");

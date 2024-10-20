@@ -109,8 +109,9 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_value(condition.left_value);
     filter_unit->set_left(filter_obj);
-  } else {
+  } else if(condition.left_is_attr==2){
     FilterObj filter_obj;
+    vector<Value> tuple_list;
     CliCommunicator communicator;
     RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
     SessionEvent *event = new SessionEvent(&communicator);
@@ -127,7 +128,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     rc=sql_result->open();
     
     Tuple* tuple=nullptr;
-    vector<Value> tuple_list;
+    
     while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
       Value value;
       if(tuple->cell_num()!=1){
@@ -142,6 +143,16 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
       return RC::INTERNAL;
     }
     filter_obj.init_tuple(tuple_list);
+    filter_unit->set_left(filter_obj);
+  }
+  else{
+    FilterObj filter_obj;
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&condition.left_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    const std::vector<Value>& vector_ref=condition.left_list;
+    filter_obj.init_tuple(const_cast<std::vector<Value>&>(vector_ref));
     filter_unit->set_left(filter_obj);
   }
 
@@ -161,7 +172,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
   }
-  else{
+  else if(condition.right_is_attr==2){
     FilterObj filter_obj;
     CliCommunicator communicator;
     RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
@@ -194,6 +205,16 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
       return RC::INTERNAL;
     }
     filter_obj.init_tuple(tuple_list);
+    filter_unit->set_right(filter_obj);
+  }
+  else{
+    FilterObj filter_obj;
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&condition.right_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    const std::vector<Value>& vector_ref=condition.right_list;
+    filter_obj.init_tuple(const_cast<std::vector<Value>&>(vector_ref));
     filter_unit->set_right(filter_obj);
   }
   filter_unit->set_comp(comp);

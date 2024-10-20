@@ -161,7 +161,6 @@ MIN                                     RETURN_TOKEN(MIN);
 '[^']*\'                                yylval->string = strdup(yytext); RETURN_TOKEN(SSS);
 
 
-
 .                                       LOG_DEBUG("Unknown character [%c]",yytext[0]); return yytext[0];
 %%
 

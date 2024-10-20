@@ -1437,12 +1437,12 @@ yylval->string = strdup(yytext); RETURN_TOKEN(SSS);
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 165 "lex_sql.l"
+#line 164 "lex_sql.l"
 LOG_DEBUG("Unknown character [%c]",yytext[0]); return yytext[0];
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 166 "lex_sql.l"
+#line 165 "lex_sql.l"
 ECHO;
 	YY_BREAK
 #line 1449 "lex_sql.cpp"
@@ -2601,7 +2601,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 166 "lex_sql.l"
+#line 165 "lex_sql.l"
 
 
 void scan_string(const char *str, yyscan_t scanner) {

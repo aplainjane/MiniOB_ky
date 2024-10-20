@@ -61,7 +61,7 @@ extern double atof();
 
 WHITE_SAPCE      [\ \t\b\f]
 DIGIT            [0-9]+
-
+SUBQUERY         \(SELECT.*FROM.*\)
 ID               [A-Za-z_]+[A-Za-z0-9_]*
 DOT              \.
 QUOTE            [\'\"]
@@ -117,6 +117,8 @@ INFILE                                  RETURN_TOKEN(INFILE);
 EXPLAIN                                 RETURN_TOKEN(EXPLAIN);
 NOT                                     RETURN_TOKEN(NOT);
 LIKE                                    RETURN_TOKEN(LIKE);
+IN                                      RETURN_TOKEN(IN);
+EXIST                                   RETURN_TOKEN(EXIST);
 INNER                                   RETURN_TOKEN(INNER);
 JOIN                                    RETURN_TOKEN(JOIN);
 GROUP                                   RETURN_TOKEN(GROUP);
@@ -128,10 +130,20 @@ AVG                                     RETURN_TOKEN(AVG);
 COUNT                                   RETURN_TOKEN(COUNT);
 MAX                                     RETURN_TOKEN(MAX);
 MIN                                     RETURN_TOKEN(MIN);
+{SUBQUERY}   {
+                // 提取括号内的字符串
+                int len = yyleng - 2; // 去掉左右括号
+                char *subquery = (char *)malloc(len + 1);
+                strncpy(subquery, yytext + 1, len);
+                subquery[len] = '\0';
+                
+                yylval->string = subquery;
+                RETURN_TOKEN(SUB_QUERY);
+             }
+
 {ID}                                    yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("                                     RETURN_TOKEN(LBRACE);
 ")"                                     RETURN_TOKEN(RBRACE);
-
 ","                                     RETURN_TOKEN(COMMA);
 "="                                     RETURN_TOKEN(EQ);
 "<="                                    RETURN_TOKEN(LE);

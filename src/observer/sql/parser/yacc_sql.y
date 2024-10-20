@@ -13,6 +13,7 @@
 #include "sql/parser/lex_sql.h"
 #include "sql/expr/expression.h"
 
+
 using namespace std;
 
 string token_name(const char *sql_string, YYLTYPE *llocp)
@@ -108,6 +109,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         FORMAT
         NOT
         LIKE
+        IN
+        EXIST
         INNER
         JOIN
         EQ
@@ -148,7 +151,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %token <floats> FLOAT
 %token <string> ID
 %token <string> SSS
-
+%token <string>  SUB_QUERY
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -739,6 +742,32 @@ condition:
       delete $1;
       delete $3;
     }
+    | rel_attr comp_op SUB_QUERY
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 2;
+      $$->right_subquery = $3;
+      $$->comp = $2;
+
+      delete $1;
+      free($3);
+      
+    }
+    | SUB_QUERY comp_op rel_attr
+    {
+      $$ = new ConditionSqlNode;
+      $$->left_is_attr = 2;
+      $$->left_subquery = $1;
+      $$->right_is_attr = 1;
+      $$->right_attr = *$3;
+      $$->comp = $2;
+
+      free($1);
+      delete $3;
+    }
+    
     ;
 
 comp_op:
@@ -750,6 +779,10 @@ comp_op:
     | NE { $$ = NOT_EQUAL; }
     | LIKE { $$ = CLIKE; }
     | NOT LIKE { $$ = CNLIKE; }
+    | IN { $$ = IN_LIST; }
+    | NOT IN { $$ = NOTIN_LIST; }
+    | EXIST { $$ = EXIST_LIST; }
+    | NOT EXIST { $$ = NOTEXIST_LIST; }
     ;
 
 // your code here

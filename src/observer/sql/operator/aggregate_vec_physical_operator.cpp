@@ -29,7 +29,6 @@ AggregateVecPhysicalOperator::AggregateVecPhysicalOperator(vector<Expression *> 
     ASSERT(child_expr != nullptr, "aggregation expression must have a child expression");
     value_expressions_.emplace_back(child_expr);
   });
-
   for (size_t i = 0; i < aggregate_expressions_.size(); i++) {
     auto &expr = aggregate_expressions_[i];
     ASSERT(expr->type() == ExprType::AGGREGATION, "expected an aggregation expression");

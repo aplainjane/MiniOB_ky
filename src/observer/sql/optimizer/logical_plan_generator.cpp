@@ -150,7 +150,6 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
   if (*last_oper) {
     project_oper->add_child(std::move(*last_oper));
   }
-
   logical_operator = std::move(project_oper);
   return RC::SUCCESS;
 }
@@ -163,21 +162,32 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
   for (const FilterUnit *filter_unit : filter_units) {
     const FilterObj &filter_obj_left  = filter_unit->left();
     const FilterObj &filter_obj_right = filter_unit->right();
+    
+    std::unique_ptr<Expression> left;
+    if (filter_obj_left.is_tuple) {
+      left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.tuple_list));
+    } else if (filter_obj_left.is_attr) {
+      left = std::unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
+    } else {
+      left = std::unique_ptr<Expression>(new ValueExpr(filter_obj_left.value));
+    }
 
-    unique_ptr<Expression> left(filter_obj_left.is_attr
-                                    ? static_cast<Expression *>(new FieldExpr(filter_obj_left.field))
-                                    : static_cast<Expression *>(new ValueExpr(filter_obj_left.value)));
 
-    unique_ptr<Expression> right(filter_obj_right.is_attr
-                                     ? static_cast<Expression *>(new FieldExpr(filter_obj_right.field))
-                                     : static_cast<Expression *>(new ValueExpr(filter_obj_right.value)));
+    std::unique_ptr<Expression> right;
+    if (filter_obj_right.is_tuple) {
+      right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.tuple_list));
+    } else if (filter_obj_right.is_attr) {
+      right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
+    } else {
+      right = std::unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
+    }
 
     if (left->value_type() != right->value_type()) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
       auto right_to_left_cost = implicit_cast_cost(right->value_type(), left->value_type());
       if (left_to_right_cost <= right_to_left_cost && left_to_right_cost != INT32_MAX) {
         ExprType left_type = left->type();
-        std::cout<<attr_type_to_string(left->value_type())<<" to "<<attr_type_to_string(right->value_type())<<std::endl;
+        //std::cout<<attr_type_to_string(left->value_type())<<" to "<<attr_type_to_string(right->value_type())<<std::endl;
         auto cast_expr = make_unique<CastExpr>(std::move(left), right->value_type());
         if (left_type == ExprType::VALUE) {
           Value left_val;

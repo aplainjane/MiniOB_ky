@@ -131,6 +131,9 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     }
   }
 
+  insert_records.clear();
+  delete_records.clear();
+  
   return RC::SUCCESS;
 
 }

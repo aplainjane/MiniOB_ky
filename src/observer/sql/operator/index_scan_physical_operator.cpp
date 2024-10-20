@@ -60,8 +60,8 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
         total_right_length += value.length();
     }
 
-    char *left_key = (char *)malloc(total_left_length+8);
-    char *right_key = (char *)malloc(total_right_length+8);
+    char *left_key = (char *)malloc(total_left_length);
+    char *right_key = (char *)malloc(total_right_length);
 
     if (left_key == nullptr || right_key == nullptr) {
         LOG_WARN("Failed to alloc memory for key.");

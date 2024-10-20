@@ -54,10 +54,10 @@ RC IndexScanPhysicalOperator::open(Trx *trx)
     size_t total_right_length = 0;
 
     for (const auto &value : left_values_) {
-        total_left_length += value.length();
+        total_left_length += value.length()+64;
     }
     for (const auto &value : right_values_) {
-        total_right_length += value.length();
+        total_right_length += value.length()+64;
     }
 
     char *left_key = (char *)malloc(total_left_length);

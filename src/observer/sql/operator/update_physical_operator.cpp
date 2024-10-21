@@ -96,8 +96,8 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
         return rc;
       }
-      delete_records.emplace_back(std::move(record));
-      new_record.set_rid(delete_records[delete_records.size()-1].rid());
+      delete_records.emplace_back(record);
+      //new_record.set_rid(delete_records[delete_records.size()-1].rid());
       insert_records.emplace_back(new_record);
     }
     

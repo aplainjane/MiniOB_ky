@@ -126,7 +126,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       if (rc != RC::SUCCESS) {
       LOG_WARN("failed to insert record: %s", strrc(rc));
       return rc;
-    }
+      }
     }
   }
 

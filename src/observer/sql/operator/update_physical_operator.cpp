@@ -96,8 +96,8 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
         return rc;
       }
-      delete_records.emplace_back(record);
-      //new_record.set_rid(delete_records[delete_records.size()-1].rid());
+      delete_records.emplace_back(std::move(record));
+      new_record.set_rid(delete_records[delete_records.size()-1].rid());
       insert_records.emplace_back(new_record);
     }
     
@@ -115,19 +115,18 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     }
   }*/
 
-  for (Record &record : delete_records) {
-    rc = trx_->delete_record(table_, record);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to delete record: %s", strrc(rc));
-      return rc;
-    }
-  }
-
-  for (Record &record : insert_records) {
-    rc = trx_->insert_record(table_, record);
-    if (rc != RC::SUCCESS) {
+  for (Record &record_d : delete_records) {
+    for (Record &record_i : insert_records) {
+      rc = trx_->delete_record(table_, record_d);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to delete record: %s", strrc(rc));
+        return rc;
+      }
+      rc = trx_->insert_record(table_, record_i);
+      if (rc != RC::SUCCESS) {
       LOG_WARN("failed to insert record: %s", strrc(rc));
       return rc;
+    }
     }
   }
 

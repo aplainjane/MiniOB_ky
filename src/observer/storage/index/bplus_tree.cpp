@@ -883,6 +883,7 @@ RC BplusTreeHandler::create(LogHandler &log_handler,
   for (long unsigned int i=0;i<field_metas.size();++i){
     file_header->attr_lengths[i] = field_metas[i].len();
     file_header->attr_types[i] = field_metas[i].type();
+    file_header->attr_offset[i] = field_metas[i].offset();
   }
   file_header->internal_max_size = internal_max_size;
   file_header->leaf_max_size = leaf_max_size;
@@ -1528,8 +1529,13 @@ MemPoolItem::item_unique_ptr BplusTreeHandler::make_key(const char *user_key, co
     LOG_WARN("Failed to alloc memory for key.");
     return nullptr;
   }
-  memcpy(static_cast<char *>(key.get()), user_key, file_header_.attr_length);
-  memcpy(static_cast<char *>(key.get()) + file_header_.attr_length, &rid, sizeof(rid));
+  int offset = file_header_.attr_lengths[0];
+  memcpy(static_cast<char *>(key.get()), user_key, file_header_.attr_lengths[0]);
+  for (int i = 1; i < file_header_.attr_num; i++) {
+    memcpy(static_cast<char *>(key.get()) + offset, user_key + file_header_.attr_offset[i], file_header_.attr_lengths[i]);
+    offset += file_header_.attr_lengths[i];
+  }
+  memcpy(static_cast<char *>(key.get()) + offset, &rid, sizeof(rid));
   return key;
 }
 
@@ -1612,7 +1618,10 @@ RC BplusTreeHandler::insert_entry(const char *user_key, std::vector<FieldMeta> &
   }
 
   // MemPoolItem::unique_ptr pkey = make_key(user_key, *rid);
-  MemPoolItem::item_unique_ptr pkey = make_key(user_key, field_metas, *rid);
+  //MemPoolItem::item_unique_ptr pkey = make_key(user_key, field_metas, *rid);
+
+  //test
+  MemPoolItem::item_unique_ptr pkey = make_key(user_key, *rid);
   if (pkey == nullptr) {
     LOG_WARN("Failed to alloc memory for key.");
     return RC::NOMEM;
@@ -1954,8 +1963,13 @@ RC BplusTreeHandler::delete_entry(const char *user_key, const RID *rid)
   }
   char *key = static_cast<char *>(pkey.get());
 
-  memcpy(key, user_key, file_header_.attr_length);
-  memcpy(key + file_header_.attr_length, rid, sizeof(*rid));
+  int offset = file_header_.attr_lengths[0];
+  memcpy(key, user_key, file_header_.attr_lengths[0]);
+  for (int i = 1; i < file_header_.attr_num; i++) {
+    memcpy(key + offset, user_key + file_header_.attr_offset[i], file_header_.attr_lengths[i]);
+    offset += file_header_.attr_lengths[i];
+  }
+  memcpy(key + offset, rid, sizeof(*rid));
 
   BplusTreeOperationType op = BplusTreeOperationType::DELETE;
 

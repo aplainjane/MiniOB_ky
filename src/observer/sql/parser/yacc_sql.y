@@ -160,7 +160,6 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <condition>           condition
 %type <value>               value
 %type <number>              number
-%type <string>              relation
 %type <comp>                comp_op
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
@@ -305,6 +304,9 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       free($3);
       free($5);
       free($7);
+      if ($8 != nullptr){
+        delete($8);
+      }
     }
     | CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE
     {
@@ -321,8 +323,10 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       free($4);
       free($6);
       free($8);
+      if ($9 != nullptr){
+        delete($9);
+      }
     }
-    ;
     ;
 
 drop_index_stmt:      /*drop index 语句的语法解析树*/
@@ -488,33 +492,30 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list join_list where group_by
+     SELECT expression_list FROM ID rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
         $$->selection.expressions.swap(*$2);
         delete $2;
       }
-
-      if ($4 != nullptr) {
-        $$->selection.relations.swap(*$4);
-        delete $4;
-      }
-
       if ($5 != nullptr) {
-        $$->selection.relations.insert($$->selection.relations.end(), $5->relations.begin(), $5->relations.end());
-        $$->selection.conditions.insert($$->selection.conditions.end(), $5->conditions.begin(), $5->conditions.end());
+        $$->selection.relations.swap(*$5);
         delete $5;
       }
-    
-      if ($6 != nullptr) {
-        $$->selection.conditions.swap(*$6);
-        delete $6;
-      }
+      $$->selection.relations.push_back($4);
+      std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
 
       if ($7 != nullptr) {
-        $$->selection.group_by.swap(*$7);
+        $$->selection.conditions.swap(*$7);
         delete $7;
+      }
+      free($4);
+
+      if ($6 != nullptr) {
+        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
+        delete $6;
       }
     }
     ;
@@ -639,26 +640,20 @@ rel_attr:
     }
     ;
 
-relation:
-    ID {
-      $$ = $1;
-    }
-    ;
 rel_list:
-    relation {
-      $$ = new std::vector<std::string>();
-      $$->push_back($1);
-      free($1);
+    /* empty */
+    {
+      $$ = nullptr;
     }
-    | relation COMMA rel_list {
+    | COMMA ID rel_list {
       if ($3 != nullptr) {
         $$ = $3;
       } else {
         $$ = new std::vector<std::string>;
       }
 
-      $$->insert($$->begin(), $1);
-      free($1);
+      $$->push_back($2);
+      free($2);
     }
     ;
 

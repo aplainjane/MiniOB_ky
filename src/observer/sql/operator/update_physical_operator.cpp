@@ -115,18 +115,19 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     }
   }*/
 
-  for (Record &record_d : delete_records) {
-    for (Record &record_i : insert_records) {
-      rc = trx_->delete_record(table_, record_d);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to delete record: %s", strrc(rc));
-        return rc;
-      }
-      rc = trx_->insert_record(table_, record_i);
-      if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to insert record: %s", strrc(rc));
+  for (Record &record_d : delete_records) {    
+    rc = trx_->delete_record(table_, record_d);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to delete record: %s", strrc(rc));
       return rc;
-      }
+    }     
+  }
+
+  for (Record &record_i : insert_records) {
+    rc = trx_->insert_record(table_, record_i);
+    if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to insert record: %s", strrc(rc));
+    return rc;
     }
   }
 

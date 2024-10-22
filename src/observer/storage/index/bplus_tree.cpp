@@ -1618,10 +1618,10 @@ RC BplusTreeHandler::insert_entry(const char *user_key, std::vector<FieldMeta> &
   }
 
   // MemPoolItem::unique_ptr pkey = make_key(user_key, *rid);
-  //MemPoolItem::item_unique_ptr pkey = make_key(user_key, field_metas, *rid);
+  MemPoolItem::item_unique_ptr pkey = make_key(user_key, field_metas, *rid);
 
   //test
-  MemPoolItem::item_unique_ptr pkey = make_key(user_key, *rid);
+  //MemPoolItem::item_unique_ptr pkey = make_key(user_key, *rid);
   if (pkey == nullptr) {
     LOG_WARN("Failed to alloc memory for key.");
     return RC::NOMEM;

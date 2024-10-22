@@ -47,6 +47,17 @@ RC FieldExpr::get_column(Chunk &chunk, Column &column)
   return RC::SUCCESS;
 }
 
+bool SubqueryExpr::equal(const Expression &other) const
+{
+  if (this == &other) {
+    return true;
+  }
+  if (other.type() != ExprType::SUBQUERY) {
+    return false;
+  }
+  return false;
+}
+
 bool ValueExpr::equal(const Expression &other) const
 {
   if (this == &other) {
@@ -182,7 +193,82 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
   Value left_value;
   Value right_value;
-
+  bool bool_value = false;
+  if(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST){
+    vector<Value> temp;
+    RC rc = right_->get(temp);
+    if(temp.size()==0){
+      if(comp_==IN_LIST||comp_==EXIST_LIST){
+        value.set_boolean(false);
+      }
+      else{
+        value.set_boolean(true);
+      }
+      return RC::SUCCESS;
+    }
+    else{
+      rc=left_->get_value(tuple,left_value);
+      for(int i = 0;i<(int)temp.size();i++){
+        int cmp_result = left_value.compare(temp[i]);
+        bool_value = (0 == cmp_result);
+        if(bool_value==true){
+          if(comp_==IN_LIST||comp_==EXIST_LIST){
+            value.set_boolean(true);
+          }
+          else{
+            value.set_boolean(false);
+          }
+          return rc;
+        }
+      }
+      if(comp_==IN_LIST||comp_==EXIST_LIST){
+        value.set_boolean(false);
+      }
+      else{
+        value.set_boolean(true);
+      }
+      return rc;
+    }
+  }
+  if(left_->type() == ExprType::SUBQUERY){
+    RC rc = right_->get_value(tuple, right_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    vector<Value> temp;
+    rc = left_->get(temp);
+    if(temp.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    else{
+      rc = compare_value(temp[0],right_value, bool_value);
+      value.set_boolean(bool_value);
+      return rc;
+    }
+  }
+  else if(right_->type() == ExprType::SUBQUERY){
+    RC rc = left_->get_value(tuple, left_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    vector<Value> temp;
+    rc = right_->get(temp);
+    if(temp.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    else{
+      rc = compare_value(left_value,temp[0], bool_value);
+      value.set_boolean(bool_value);
+      return rc;
+    }
+  }
+  else{
   RC rc = left_->get_value(tuple, left_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
@@ -194,13 +280,14 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     return rc;
   }
 
-  bool bool_value = false;
+  
 
   rc = compare_value(left_value, right_value, bool_value);
   if (rc == RC::SUCCESS) {
     value.set_boolean(bool_value);
   }
   return rc;
+  }
 }
 
 RC ComparisonExpr::eval(Chunk &chunk, std::vector<uint8_t> &select)

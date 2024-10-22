@@ -53,6 +53,10 @@ enum CompOp
   GREAT_THAN,   ///< ">"
   CLIKE,
   CNLIKE,
+  IN_LIST,
+  NOTIN_LIST,
+  EXIST_LIST,
+  NOTEXIST_LIST,
   NO_OP
 };
 
@@ -72,11 +76,15 @@ struct ConditionSqlNode
                                  ///< 1时，操作符左边是属性名，0时，是属性值
   Value          left_value;     ///< left-hand side value if left_is_attr = FALSE
   RelAttrSqlNode left_attr;      ///< left-hand side attribute
+  std::string    left_subquery;
+  std::vector<Value>  left_list;
   CompOp         comp;           ///< comparison operator
   int            right_is_attr;  ///< TRUE if right-hand side is an attribute
                                  ///< 1时，操作符右边是属性名，0时，是属性值
+  std::string    right_subquery;
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
+  std::vector<Value>  right_list;
 };
 
 /**

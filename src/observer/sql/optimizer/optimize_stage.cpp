@@ -40,28 +40,25 @@ RC OptimizeStage::handle_request(SQLStageEvent *sql_event)
     }
     return rc;
   }
-
   ASSERT(logical_operator, "logical operator is null");
 
-  rc = rewrite(logical_operator);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to rewrite plan. rc=%s", strrc(rc));
-    return rc;
-  }
-
+  // rc = rewrite(logical_operator);
+  // if (rc != RC::SUCCESS) {
+  //   LOG_WARN("failed to rewrite plan. rc=%s", strrc(rc));
+  //   return rc;
+  // }
   rc = optimize(logical_operator);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to optimize plan. rc=%s", strrc(rc));
     return rc;
   }
-
   unique_ptr<PhysicalOperator> physical_operator;
   rc = generate_physical_plan(logical_operator, physical_operator, sql_event->session_event()->session());
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to generate physical plan. rc=%s", strrc(rc));
     return rc;
   }
-
+  
   sql_event->set_operator(std::move(physical_operator));
 
   return rc;

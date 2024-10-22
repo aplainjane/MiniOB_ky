@@ -239,7 +239,14 @@ int Value::like(const Value &other) const
 {
   return DataType::type_instance(this->attr_type_)->like(*this, other);
 }
-
+int Value::in(const Value &other) const
+{
+  return DataType::type_instance(this->attr_type_)->like(*this, other);
+}
+int Value::exist(const Value &other) const
+{
+  return DataType::type_instance(this->attr_type_)->like(*this, other);
+}
 int Value::get_int() const
 {
   switch (attr_type_) {

@@ -101,6 +101,10 @@ public:
   int compare(const Value &other) const;
   
   int like(const Value &other) const;
+  
+  int in(const Value &other) const; 
+  
+  int exist(const Value &other) const;
 
   const char *data() const;
 

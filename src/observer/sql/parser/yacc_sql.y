@@ -13,6 +13,7 @@
 #include "sql/parser/lex_sql.h"
 #include "sql/expr/expression.h"
 
+
 using namespace std;
 
 string token_name(const char *sql_string, YYLTYPE *llocp)
@@ -109,6 +110,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         FORMAT
         NOT
         LIKE
+        IN
+        EXIST
         INNER
         JOIN
         EQ
@@ -149,7 +152,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %token <floats> FLOAT
 %token <string> ID
 %token <string> SSS
-
+%token <string>  SUB_QUERY
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -157,6 +160,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <condition>           condition
 %type <value>               value
 %type <number>              number
+%type <string>              relation
 %type <comp>                comp_op
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
@@ -321,7 +325,6 @@ create_index_stmt:    /*create index 语句的语法解析树*/
     ;
     ;
 
-
 drop_index_stmt:      /*drop index 语句的语法解析树*/
     DROP INDEX ID ON ID
     {
@@ -485,30 +488,33 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-     SELECT expression_list FROM ID rel_list join_list where group_by
+    SELECT expression_list FROM rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
         $$->selection.expressions.swap(*$2);
         delete $2;
       }
+
+      if ($4 != nullptr) {
+        $$->selection.relations.swap(*$4);
+        delete $4;
+      }
+
       if ($5 != nullptr) {
-        $$->selection.relations.swap(*$5);
+        $$->selection.relations.insert($$->selection.relations.end(), $5->relations.begin(), $5->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $5->conditions.begin(), $5->conditions.end());
         delete $5;
       }
-      $$->selection.relations.push_back($4);
-      std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
+    
+      if ($6 != nullptr) {
+        $$->selection.conditions.swap(*$6);
+        delete $6;
+      }
 
       if ($7 != nullptr) {
-        $$->selection.conditions.swap(*$7);
+        $$->selection.group_by.swap(*$7);
         delete $7;
-      }
-      free($4);
-
-      if ($6 != nullptr) {
-        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
-        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
-        delete $6;
       }
     }
     ;
@@ -633,20 +639,26 @@ rel_attr:
     }
     ;
 
-rel_list:
-    /* empty */
-    {
-      $$ = nullptr;
+relation:
+    ID {
+      $$ = $1;
     }
-    | COMMA ID rel_list {
+    ;
+rel_list:
+    relation {
+      $$ = new std::vector<std::string>();
+      $$->push_back($1);
+      free($1);
+    }
+    | relation COMMA rel_list {
       if ($3 != nullptr) {
         $$ = $3;
       } else {
         $$ = new std::vector<std::string>;
       }
 
-      $$->push_back($2);
-      free($2);
+      $$->insert($$->begin(), $1);
+      free($1);
     }
     ;
 
@@ -705,55 +717,188 @@ condition_list:
     
     ;
 condition:
-    rel_attr comp_op value
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 0;
-      $$->right_value = *$3;
-      $$->comp = $2;
-
-      delete $1;
-      delete $3;
+    rel_attr comp_op value    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 1;
+        $$->left_attr = *$1;
+        $$->right_is_attr = 0;
+        $$->right_value = *$3;
+        $$->comp = $2;
+        delete $1;
+        delete $3;
     }
-    | value comp_op value 
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->left_value = *$1;
-      $$->right_is_attr = 0;
-      $$->right_value = *$3;
-      $$->comp = $2;
-
-      delete $1;
-      delete $3;
+    | value comp_op value     {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 0;
+        $$->left_value = *$1;
+        $$->right_is_attr = 0;
+        $$->right_value = *$3;
+        $$->comp = $2;
+        delete $1;
+        delete $3;
     }
-    | rel_attr comp_op rel_attr
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 1;
-      $$->left_attr = *$1;
-      $$->right_is_attr = 1;
-      $$->right_attr = *$3;
-      $$->comp = $2;
-
-      delete $1;
-      delete $3;
+    | rel_attr comp_op rel_attr    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 1;
+        $$->left_attr = *$1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        delete $1;
+        delete $3;
     }
-    | value comp_op rel_attr
-    {
-      $$ = new ConditionSqlNode;
-      $$->left_is_attr = 0;
-      $$->left_value = *$1;
-      $$->right_is_attr = 1;
-      $$->right_attr = *$3;
-      $$->comp = $2;
-
-      delete $1;
-      delete $3;
+    | value comp_op rel_attr    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 0;
+        $$->left_value = *$1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        delete $1;
+        delete $3;
+    }
+    | rel_attr comp_op SUB_QUERY    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 1;
+        $$->left_attr = *$1;
+        $$->right_is_attr = 2;
+        $$->right_subquery = $3;
+        $$->comp = $2;
+        delete $1;
+        free($3);
+    }
+    | SUB_QUERY comp_op rel_attr    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 2;
+        $$->left_subquery = $1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        free($1);
+        delete $3;
+    }
+    | SUB_QUERY comp_op SUB_QUERY    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 2;
+        $$->left_subquery = $1;
+        $$->right_is_attr = 2;
+        $$->right_subquery = $3;
+        $$->comp = $2;
+        free($1);
+        free($3);
+    }
+    | value comp_op LBRACE value value_list RBRACE    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 0;
+        $$->left_value = *$1;
+        $$->right_is_attr = 3;
+        if ($5 != nullptr) {
+            $$->right_list.swap(*$5);
+            delete $5;
+        }
+        $$->right_list.emplace_back(*$4);
+        std::reverse($$->right_list.begin(), $$->right_list.end());
+        $$->comp = $2;
+        delete $1;
+        delete $4;
+    }
+    | rel_attr comp_op LBRACE value value_list RBRACE    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 1;
+        $$->left_attr = *$1;
+        $$->right_is_attr = 3;
+        if ($5 != nullptr) {
+            $$->right_list.swap(*$5);
+            delete $5;
+        }
+        $$->right_list.emplace_back(*$4);
+        std::reverse($$->right_list.begin(), $$->right_list.end());
+        $$->comp = $2;
+        delete $1;
+        delete $4;
+    }
+    | SUB_QUERY comp_op LBRACE value value_list RBRACE    {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 2;
+        $$->left_subquery = $1;
+        $$->right_is_attr = 3;
+        if ($5 != nullptr) {
+            $$->right_list.swap(*$5);
+            delete $5;
+        }
+        $$->right_list.emplace_back(*$4);
+        std::reverse($$->right_list.begin(), $$->right_list.end());
+        $$->comp = $2;
+        free($1);
+        delete $4;
+    }
+    | LBRACE value value_list RBRACE comp_op value {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 3;
+        if ($3 != nullptr) {
+            $$->left_list.swap(*$3);
+            delete $3;
+        }
+        $$->left_list.emplace_back(*$2);
+        std::reverse($$->left_list.begin(), $$->left_list.end());
+        $$->right_is_attr = 0;
+        $$->right_value = *$6;
+        $$->comp = $5;
+        delete $2;
+        delete $6;
+    }
+    | LBRACE value value_list RBRACE comp_op rel_attr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 3;
+        if ($3 != nullptr) {
+            $$->left_list.swap(*$3);
+            delete $3;
+        }
+        $$->left_list.emplace_back(*$2);
+        std::reverse($$->left_list.begin(), $$->left_list.end());
+        $$->right_is_attr = 1;
+        $$->right_attr = *$6;
+        $$->comp = $5;
+        delete $2;
+        delete $6;
+    }
+    | LBRACE value value_list RBRACE comp_op SUB_QUERY {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 3;
+        if ($3 != nullptr) {
+            $$->left_list.swap(*$3);
+            delete $3;
+        }
+        $$->left_list.emplace_back(*$2);
+        std::reverse($$->left_list.begin(), $$->left_list.end());
+        $$->right_is_attr = 2;
+        $$->right_subquery = $6;
+        $$->comp = $5;
+        delete $2;
+        free($6);
+    }
+    | LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 3;
+        if ($3 != nullptr) {
+            $$->left_list.swap(*$3);
+            delete $3;
+        }
+        $$->left_list.emplace_back(*$2);
+        std::reverse($$->left_list.begin(), $$->left_list.end());
+        $$->right_is_attr = 3;
+        if ($8 != nullptr) {
+            $$->right_list.swap(*$8);
+            delete $8;
+        }
+        $$->right_list.emplace_back(*$7);
+        std::reverse($$->right_list.begin(), $$->right_list.end());
+        $$->comp = $5;
+        delete $2;
+        delete $7;
     }
     ;
+
 
 comp_op:
       EQ { $$ = EQUAL_TO; }
@@ -764,6 +909,10 @@ comp_op:
     | NE { $$ = NOT_EQUAL; }
     | LIKE { $$ = CLIKE; }
     | NOT LIKE { $$ = CNLIKE; }
+    | IN { $$ = IN_LIST; }
+    | NOT IN { $$ = NOTIN_LIST; }
+    | EXIST { $$ = EXIST_LIST; }
+    | NOT EXIST { $$ = NOTEXIST_LIST; }
     ;
 
 // your code here

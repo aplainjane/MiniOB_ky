@@ -258,21 +258,21 @@ RC LogicalPlanGenerator::create_plan(InsertStmt *insert_stmt, unique_ptr<Logical
 RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
   Table                  *table           = update_stmt->table();
-  Value                  values           = update_stmt->value();
-  Field                   field           = update_stmt->field();
-  FilterStmt                 *filter_stmt = update_stmt->filter_stmt();
-  
+  //Value                  values           = update_stmt->value();
+  // 首先创建select和filter算子
+  std::vector<Field> fields(update_stmt->fields());
+  // fields.emplace_back(update_stmt->field());
+  //unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, false));
   unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 
   unique_ptr<LogicalOperator> predicate_oper;
-
+  FilterStmt *filter_stmt = update_stmt->filter_stmt();
   RC rc = create_plan(filter_stmt, predicate_oper);
   if (rc != RC::SUCCESS) {
     return rc;
   }
 
-  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table,field,values));
-
+  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->fields(), update_stmt->values()));
   if (predicate_oper) {
     predicate_oper->add_child(std::move(table_get_oper));
     update_oper->add_child(std::move(predicate_oper));

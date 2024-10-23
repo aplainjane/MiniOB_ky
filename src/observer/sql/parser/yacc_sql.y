@@ -138,6 +138,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
   Expression *                               expression;
+  UpdateKV *                                 set_clause;
+  std::vector<UpdateKV> *                    set_clause_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -173,6 +175,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
+%type <set_clause_list>     set_clause_list
+%type <set_clause>          set_clause
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -476,21 +480,55 @@ delete_stmt:    /*  delete 语句的语法解析树*/
       free($3);
     }
     ;
-update_stmt:      /*  update 语句的语法解析树*/
-    UPDATE ID SET ID EQ value where 
+update_stmt:
+    UPDATE ID SET set_clause_list where
     {
-      $$ = new ParsedSqlNode(SCF_UPDATE);
-      $$->update.relation_name = $2;
-      $$->update.attribute_name = $4;
-      $$->update.value = *$6;
-      if ($7 != nullptr) {
-        $$->update.conditions.swap(*$7);
-        delete $7;
-      }
-      free($2);
-      free($4);
+        $$ = new ParsedSqlNode(SCF_UPDATE);
+        $$->update.relation_name = $2;
+        if (nullptr != $4) {
+            for (UpdateKV kv : *$4) {
+                $$->update.attribute_names.emplace_back(kv.attr_name);
+                $$->update.values.emplace_back(kv.value);
+            }
+            delete $4;  // $4 只需要在这里释放一次
+        }
+        if ($5 != nullptr) {
+            $$->update.conditions.swap(*$5);
+            delete $5;  // $5 在此处释放
+        }
+        free($2);  // 正确释放 $2
+        // delete $5;  // 这里不需要再释放 $5，避免 double-free
     }
     ;
+
+
+set_clause_list:
+    set_clause
+    {
+        $$ = new std::vector<UpdateKV>();
+        $$->push_back(*$1);
+        delete $1;  // 确保 $1 是 new 出来的对象
+    }
+    | set_clause_list COMMA set_clause
+    {
+        $1->push_back(*$3);
+        $$ = $1;
+        delete $3;  // 确保 $3 是 new 出来的对象
+    }
+    ;
+
+
+set_clause:
+    ID EQ value
+    {
+        $$ = new UpdateKV();
+        $$->attr_name = strdup($1);  // 使用 strdup 复制字符串，避免释放后使用问题
+        $$->value = *$3;
+        free($1);  // 确保在拷贝完成后再释放
+    }
+    ;
+
+
 select_stmt:        /*  select 语句的语法解析树*/
      SELECT expression_list FROM ID rel_list join_list where group_by
     {

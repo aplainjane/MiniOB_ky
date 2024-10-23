@@ -20,8 +20,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse_defs.h"
 
 
-UpdateStmt::UpdateStmt(Table *table, Field field, Value value, FilterStmt *filter_stmt)
-    : table_(table), field_(field), value_(value), filter_stmt_(filter_stmt)
+UpdateStmt::UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> value, FilterStmt *filter_stmt)
+    : table_(table), fields_(field), values_(value), filter_stmt_(filter_stmt)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
@@ -51,13 +51,26 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
-  
-  const FieldMeta *field_meta = table->table_meta().field(update_sql.attribute_name.c_str());
 
-  if (nullptr == field_meta) {
-      LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), update_sql.attribute_name.c_str());
+
+  std::vector<const FieldMeta *> fields;
+
+   // check whether the field exists
+  if (update_sql.attribute_names.size() != update_sql.values.size()) {
+    LOG_WARN("invalid argument. fields and values are not matched.");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  for( auto &attribute_name : update_sql.attribute_names){
+    const FieldMeta *field_meta = table->table_meta().field(attribute_name.c_str());
+    
+    if (nullptr == field_meta) {
+      LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), attribute_name.c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
+    fields.emplace_back(field_meta);   
+  }
+  
 
   // 过滤算子
   std::unordered_map<std::string, Table *> table_map;
@@ -77,9 +90,15 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     return rc;
   }
 
+  std::vector<Field> cons_fields;
+
+  for (int i=0;i<fields.size();++i){
+    cons_fields.emplace_back(Field(table,fields[i]));
+  }
+
   UpdateStmt *update_stmt = new UpdateStmt(table,
-      Field(table, field_meta), 
-      update_sql.value, 
+      cons_fields, 
+      update_sql.values, 
       filter_stmt
     );
   // std::cout<<"update!"<<std::endl;

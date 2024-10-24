@@ -141,6 +141,8 @@ union YYSTYPE
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
   Expression *                               expression;
+  UpdateKV *                                 set_clause;
+  std::vector<UpdateKV> *                    set_clause_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;

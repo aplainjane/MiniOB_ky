@@ -2205,16 +2205,21 @@ yyreduce:
   case 58: /* update_stmt: UPDATE ID SET ID EQ value where  */
 #line 508 "yacc_sql.y"
     {
-      (yyval.sql_node) = new ParsedSqlNode(SCF_UPDATE);
-      (yyval.sql_node)->update.relation_name = (yyvsp[-5].string);
-      (yyval.sql_node)->update.attribute_name = (yyvsp[-3].string);
-      (yyval.sql_node)->update.value = *(yyvsp[-1].value);
-      if ((yyvsp[0].condition_list) != nullptr) {
-        (yyval.sql_node)->update.conditions.swap(*(yyvsp[0].condition_list));
-        delete (yyvsp[0].condition_list);
-      }
-      free((yyvsp[-5].string));
-      free((yyvsp[-3].string));
+        (yyval.sql_node) = new ParsedSqlNode(SCF_UPDATE);
+        (yyval.sql_node)->update.relation_name = (yyvsp[-3].string);
+        if (nullptr != (yyvsp[-1].set_clause_list)) {
+            for (UpdateKV kv : *(yyvsp[-1].set_clause_list)) {
+                (yyval.sql_node)->update.attribute_names.emplace_back(kv.attr_name);
+                (yyval.sql_node)->update.values.emplace_back(kv.value);
+            }
+            delete (yyvsp[-1].set_clause_list);  // $4 只需要在这里释放一次
+        }
+        if ((yyvsp[0].condition_list) != nullptr) {
+            (yyval.sql_node)->update.conditions.swap(*(yyvsp[0].condition_list));
+            delete (yyvsp[0].condition_list);  // $5 在此处释放
+        }
+        free((yyvsp[-3].string));  // 正确释放 $2
+        // delete $5;  // 这里不需要再释放 $5，避免 double-free
     }
 #line 2220 "yacc_sql.cpp"
     break;

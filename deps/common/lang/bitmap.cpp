@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by wangyunlai on 2021/5/7.
 //
 
+#include <cstring>
 #include "common/lang/bitmap.h"
 
 namespace common {
@@ -47,7 +48,7 @@ void Bitmap::init(char *bitmap, int size)
   size_   = size;
 }
 
-bool Bitmap::get_bit(int index)
+bool Bitmap::get_bit(int index) const
 {
   char bits = bitmap_[index / 8];
   return (bits & (1 << (index % 8))) != 0;
@@ -63,6 +64,11 @@ void Bitmap::clear_bit(int index)
 {
   char &bits = bitmap_[index / 8];
   bits &= ~(1 << (index % 8));
+}
+
+void Bitmap::clear_bits()
+{
+  memset(bitmap_, 0, bytes(size_));
 }
 
 int Bitmap::next_unsetted_bit(int start)

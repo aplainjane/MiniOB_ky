@@ -24,6 +24,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse.h"
 #include "common/value.h"
 #include "storage/record/record.h"
+#include "common/lang/bitmap.h"
 
 class Table;
 
@@ -171,7 +172,16 @@ public:
     speces_.clear();
   }
 
-  void set_record(Record *record) { this->record_ = record; }
+  void set_record(Record *record)
+  {
+    this->record_ = record;
+    ASSERT(!this->speces_.empty(), "RowTuple speces empty!");
+    const FieldMeta* null_field = this->speces_.front()->field().meta();
+    // 确保第一行是我们规定的null bitmap
+    ASSERT(nullptr != null_field && AttrType::CHARS == null_field->type(), "RowTuple get null field failed!");
+    bitmap_.init(record->data() + null_field->offset(), this->speces_.size());
+
+  }
 
   void set_schema(const Table *table, const std::vector<FieldMeta> *fields)
   {
@@ -193,11 +203,15 @@ public:
       LOG_WARN("invalid argument. index=%d", index);
       return RC::INVALID_ARGUMENT;
     }
-
-    FieldExpr       *field_expr = speces_[index];
-    const FieldMeta *field_meta = field_expr->field().meta();
-    cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    
+    if (bitmap_.get_bit(index)) {
+      cell.make_null();
+    } else {
+      FieldExpr       *field_expr = speces_[index];
+      const FieldMeta *field_meta = field_expr->field().meta();
+      cell.set_type(field_meta->type());
+      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    }
     return RC::SUCCESS;
   }
 
@@ -245,6 +259,7 @@ public:
 private:
   Record                  *record_ = nullptr;
   const Table             *table_  = nullptr;
+  common::Bitmap          bitmap_;
   std::vector<FieldExpr *> speces_;
 };
 

@@ -17,6 +17,10 @@ See the Mulan PSL v2 for more details. */
 
 RC SumAggregator::accumulate(const Value &value)
 {
+  if (value.attr_type() == AttrType::NULLS) {
+    // 忽略 NULL 值
+    return RC::SUCCESS;
+  }
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
@@ -31,12 +35,21 @@ RC SumAggregator::accumulate(const Value &value)
 
 RC SumAggregator::evaluate(Value& result)
 {
-  result = value_;
+  if (value_.attr_type() == AttrType::UNDEFINED) {
+    Value vals(0);
+    result = vals; 
+  } else {
+    result = value_;
+  }
   return RC::SUCCESS;
 }
 
 RC AvgAggregator::accumulate(const Value &value)
 {
+  if (value.attr_type() == AttrType::NULLS) {
+    // 忽略 NULL 值
+    return RC::SUCCESS;
+  }
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
@@ -51,13 +64,23 @@ RC AvgAggregator::accumulate(const Value &value)
 }
 RC AvgAggregator::evaluate(Value& result)
 { 
-  float tempresult=value_.get_float()/count_;
-  Value temp2(tempresult);
-  result = temp2;
+  if (value_.attr_type() == AttrType::UNDEFINED) {
+    Value vals;
+    vals.make_null();
+    result = vals; 
+  } else {
+    float tempresult=value_.get_float()/count_;
+    Value temp2(tempresult);
+    result = temp2;
+  }
   return RC::SUCCESS;
 }
 RC CountAggregator::accumulate(const Value &value)
 {
+  if (value.attr_type() == AttrType::NULLS) {
+    // 忽略 NULL 值
+    return RC::SUCCESS;
+  }
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
@@ -70,12 +93,18 @@ RC CountAggregator::accumulate(const Value &value)
   return RC::SUCCESS;
 }
 RC CountAggregator::evaluate(Value& result)
-{
+{ 
+  if(count_ == 1 && value_.attr_type() == AttrType::UNDEFINED) {  count_ = 0;}
   result = Value(count_);
   return RC::SUCCESS;
 }
 RC MaxAggregator::accumulate(const Value &value)
 {
+  if (value.attr_type() == AttrType::NULLS) {
+    // 忽略 NULL 值
+    return RC::SUCCESS;
+  }
+  
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
@@ -91,11 +120,22 @@ RC MaxAggregator::accumulate(const Value &value)
 }
 RC MaxAggregator::evaluate(Value& result)
 {
-  result = value_;
+  // 检查是否是未定义，以便返回 NULL
+  if (value_.attr_type() == AttrType::UNDEFINED) {
+    Value vals;
+    vals.make_null();
+    result = vals; 
+  } else {
+    result = value_;
+  }
   return RC::SUCCESS;
 }
 RC MinAggregator::accumulate(const Value &value)
 {
+  if (value.attr_type() == AttrType::NULLS) {
+    // 忽略 NULL 值
+    return RC::SUCCESS;
+  }
   if (value_.attr_type() == AttrType::UNDEFINED) {
     value_ = value;
     return RC::SUCCESS;
@@ -104,16 +144,20 @@ RC MinAggregator::accumulate(const Value &value)
   ASSERT(value.attr_type() == value_.attr_type(), "type mismatch. value type: %s, value_.type: %s", 
         attr_type_to_string(value.attr_type()), attr_type_to_string(value_.attr_type()));
   
-
   if(value_.compare(value)>0){
     value_=value;
   }
-
-
   return RC::SUCCESS;
 }
 RC MinAggregator::evaluate(Value& result)
 {
-  result = value_;
+  // 检查是否是未定义，以便返回 NULL
+  if (value_.attr_type() == AttrType::UNDEFINED) {
+    Value vals;
+    vals.make_null();
+    result = vals; 
+  } else {
+    result = value_;
+  }
   return RC::SUCCESS;
 }

@@ -35,12 +35,15 @@ public:
   friend class BooleanType;
   friend class CharType;
   friend class DateType;
+  friend class NullType;
 
   Value() = default;
 
   ~Value() { reset(); }
 
-  Value(AttrType attr_type, char *data, int length = 4) : attr_type_(attr_type) { this->set_data(data, length); }
+  Value(AttrType attr_type, char *data, int length = 4) : attr_type_(attr_type) { 
+    if(attr_type != AttrType::NULLS) this->set_data(data, length); 
+  }
 
   explicit Value(int val);
   explicit Value(float val);
@@ -86,6 +89,8 @@ public:
   }
 
   void set_type(AttrType type) { this->attr_type_ = type; }
+  void make_null() {this->attr_type_ = AttrType::NULLS; }
+  bool is_null() const { return this->attr_type_ == AttrType::NULLS; }
   void set_data(char *data, int length);
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);

@@ -132,32 +132,59 @@ ComparisonExpr::~ComparisonExpr() {}
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC  rc         = RC::SUCCESS;
-  int cmp_result = left.compare(right);
+  int cmp_result = 0;
+  if(left.attr_type() != AttrType::NULLS && right.attr_type() != AttrType::NULLS){
+    cmp_result = left.compare(right);
+  } 
   result         = false;
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
+      if(left.is_null() || right.is_null()){
+        result = false;
+      }
     } break;
     case LESS_EQUAL: {
       result = (cmp_result <= 0);
+      if(left.is_null()||right.is_null()){
+        result = false;
+      }
     } break;
     case NOT_EQUAL: {
       result = (cmp_result != 0);
+      if(left.is_null() || right.is_null()){
+        result = false;
+      }
     } break;
     case LESS_THAN: {
       result = (cmp_result < 0);
+      if(left.is_null() || right.is_null()) {
+        result = false;
+      }
     } break;
     case GREAT_EQUAL: {
       result = (cmp_result >= 0);
+      if(left.is_null() || right.is_null()) {
+        result = false;
+      }
     } break;
     case GREAT_THAN: {
       result = (cmp_result > 0);
+      if(left.is_null() || right.is_null()) {
+        result = false;
+      }
     } break;
     case CLIKE:{
       result = left.like(right);
     } break;
     case CNLIKE:{
       result = !left.like(right);
+    } break;
+    case IS_NULL: {
+      result = (left.is_null());
+    } break;
+    case IS_NOT_NULL: {
+      result = !left.is_null();
     } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
@@ -400,6 +427,10 @@ AttrType ArithmeticExpr::value_type() const
     return left_->value_type();
   }
 
+  if(left_->value_type() == AttrType::NULLS || right_->value_type() == AttrType::NULLS){
+    return AttrType::NULLS;
+  }
+  
   if (left_->value_type() == AttrType::INTS && right_->value_type() == AttrType::INTS &&
       arithmetic_type_ != Type::DIV) {
     return AttrType::INTS;
@@ -414,6 +445,12 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 
   const AttrType target_type = value_type();
   value.set_type(target_type);
+  
+  if(target_type == AttrType::NULLS || left_value.is_null() || right_value.is_null())
+  {
+    value.make_null();
+    return rc;
+  }
 
   switch (arithmetic_type_) {
     case Type::ADD: {

@@ -111,7 +111,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         NOT
         LIKE
         IN
+        IS
         EXIST
+        NULL_KY
         INNER
         JOIN
         EQ
@@ -146,6 +148,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   char *                                     string;
   int                                        number;
   float                                      floats;
+  bool                                       boolean;
 }
 
 %token <number> NUMBER
@@ -161,6 +164,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
+%type <boolean>             null_choice
+%type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
 %type <attr_info>           attr_def
@@ -380,23 +385,41 @@ attr_def_list:
     ;
     
 attr_def:
-    ID type LBRACE number RBRACE 
+    ID type LBRACE number RBRACE null_choice
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = $4;
+      $$->nullable = $6;
       free($1);
     }
-    | ID type
+    | ID type null_choice
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = 4;
+      $$->nullable = $3;
       free($1);
     }
     ;
+
+null_choice:
+    /* empty */
+    {
+      $$ = false;
+    }
+    | NULL_KY
+    {
+      $$ = true;
+    }
+    | NOT NULL_KY
+    {
+      $$ = false;
+    }
+    ;
+    
 number:
     NUMBER {$$ = $1;}
     ;
@@ -451,6 +474,10 @@ value:
       $$ = new Value(tmp);
       free(tmp);
       free($1);
+    }
+    | NULL_KY {
+      $$ = new Value();
+      $$->make_null();
     }
     ;
 storage_format:
@@ -892,9 +919,37 @@ condition:
         delete $2;
         delete $7;
     }
+    | value is_null_choice {
+      $$ = new ConditionSqlNode;
+      Value val;
+      val.make_null();
+        
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;  
+      $$->right_is_attr = 0;
+      $$->right_value = val;
+      $$->comp = $2;
+      delete $1;
+    }
+    | rel_attr is_null_choice {
+      $$ = new ConditionSqlNode;
+      Value val;
+      val.make_null();
+      
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->right_value = val;
+      $$->comp = $2;
+      delete $1;
+    }
     ;
 
-
+is_null_choice:
+      IS NULL_KY { $$ = IS_NULL; }
+    | IS NOT NULL_KY { $$ = IS_NOT_NULL; }
+    ;
+      
 comp_op:
       EQ { $$ = EQUAL_TO; }
     | LT { $$ = LESS_THAN; }

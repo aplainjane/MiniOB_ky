@@ -100,26 +100,28 @@ extern int yydebug;
     NOT = 301,                     /* NOT  */
     LIKE = 302,                    /* LIKE  */
     IN = 303,                      /* IN  */
-    EXIST = 304,                   /* EXIST  */
-    INNER = 305,                   /* INNER  */
-    JOIN = 306,                    /* JOIN  */
-    EQ = 307,                      /* EQ  */
-    LT = 308,                      /* LT  */
-    GT = 309,                      /* GT  */
-    LE = 310,                      /* LE  */
-    GE = 311,                      /* GE  */
-    NE = 312,                      /* NE  */
-    SUM = 313,                     /* SUM  */
-    AVG = 314,                     /* AVG  */
-    COUNT = 315,                   /* COUNT  */
-    MAX = 316,                     /* MAX  */
-    MIN = 317,                     /* MIN  */
-    NUMBER = 318,                  /* NUMBER  */
-    FLOAT = 319,                   /* FLOAT  */
-    ID = 320,                      /* ID  */
-    SSS = 321,                     /* SSS  */
-    SUB_QUERY = 322,               /* SUB_QUERY  */
-    UMINUS = 323                   /* UMINUS  */
+    IS = 304,                      /* IS  */
+    EXIST = 305,                   /* EXIST  */
+    NULL_KY = 306,                 /* NULL_KY  */
+    INNER = 307,                   /* INNER  */
+    JOIN = 308,                    /* JOIN  */
+    EQ = 309,                      /* EQ  */
+    LT = 310,                      /* LT  */
+    GT = 311,                      /* GT  */
+    LE = 312,                      /* LE  */
+    GE = 313,                      /* GE  */
+    NE = 314,                      /* NE  */
+    SUM = 315,                     /* SUM  */
+    AVG = 316,                     /* AVG  */
+    COUNT = 317,                   /* COUNT  */
+    MAX = 318,                     /* MAX  */
+    MIN = 319,                     /* MIN  */
+    NUMBER = 320,                  /* NUMBER  */
+    FLOAT = 321,                   /* FLOAT  */
+    ID = 322,                      /* ID  */
+    SSS = 323,                     /* SSS  */
+    SUB_QUERY = 324,               /* SUB_QUERY  */
+    UMINUS = 325                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -128,7 +130,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 131 "yacc_sql.y"
+#line 133 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -147,8 +149,9 @@ union YYSTYPE
   char *                                     string;
   int                                        number;
   float                                      floats;
+  bool                                       boolean;
 
-#line 152 "yacc_sql.hpp"
+#line 155 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

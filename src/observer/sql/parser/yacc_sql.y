@@ -100,6 +100,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         VALUES
         FROM
         WHERE
+        HAVING
         AND
         SET
         ON
@@ -174,6 +175,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <attr_info>           attr_def
 %type <value_list>          value_list
 %type <condition_list>      where
+%type <condition_list>      having
 %type <join_sql_node>       join_list
 %type <condition_list>      condition_list
 %type <string>              storage_format
@@ -413,7 +415,7 @@ attr_def:
 null_choice:
     /* empty */
     {
-      $$ = false;
+      $$ = true;
     }
     | NULL_KY
     {
@@ -559,7 +561,7 @@ set_clause:
 
 
 select_stmt:        /*  select 语句的语法解析树*/
-     SELECT expression_list FROM ID rel_list join_list where group_by
+    SELECT expression_list FROM ID rel_list join_list where group_by having
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -572,17 +574,23 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
       $$->selection.relations.push_back($4);
       std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
-
+      if ($6 != nullptr) {
+        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
+        delete $6;
+      }
       if ($7 != nullptr) {
         $$->selection.conditions.swap(*$7);
         delete $7;
       }
       free($4);
-
-      if ($6 != nullptr) {
-        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
-        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
-        delete $6;
+      if ($8 != nullptr) {
+        $$->selection.group_by.swap(*$8);
+        delete $8;
+      }
+      if ($9 != nullptr) {
+        $$->selection.having_conditions.swap(*$9);
+        delete $9;
       }
     }
     ;
@@ -1007,11 +1015,25 @@ comp_op:
 
 // your code here
 group_by:
-    /* empty */
     {
       $$ = nullptr;
     }
+    | GROUP BY expression_list
+	  {
+        $$ = $3;
+	  }
     ;
+
+having:
+    {
+      $$ = nullptr;
+    }
+    | HAVING condition_list
+    {
+      $$ = $2;
+    }
+    ;
+    
 load_data_stmt:
     LOAD DATA INFILE SSS INTO TABLE ID 
     {

@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/expression.h"
 #include "sql/parser/parse_defs.h"
 #include "sql/stmt/stmt.h"
+
 #include <unordered_map>
 #include <vector>
 
@@ -24,22 +25,32 @@ class Db;
 class Table;
 class FieldMeta;
 
-struct FilterObj
+class FilterObj
 {
+  public:
+  bool is_tuple=false;
   bool  is_attr;
   Field field;
   Value value;
-
+  vector<Value> tuple_list;
   void init_attr(const Field &field)
   {
     is_attr     = true;
+    is_tuple    = false;
     this->field = field;
   }
 
   void init_value(const Value &value)
   {
     is_attr     = false;
+    is_tuple    = false;
     this->value = value;
+  }
+  void init_tuple(vector<Value>& tuple)
+  {
+    is_attr = false;
+    is_tuple = true;
+    this->tuple_list = tuple;
   }
 };
 

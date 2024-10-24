@@ -407,11 +407,14 @@ RC ExpressionBinder::bind_aggregate_expression(
   if (nullptr == expr) {
     return RC::SUCCESS;
   }
-
   auto unbound_aggregate_expr = static_cast<UnboundAggregateExpr *>(expr.get());
+  if (unbound_aggregate_expr->is_error()) {
+      return RC::INTERNAL;
+  }
   const char *aggregate_name = unbound_aggregate_expr->aggregate_name();
   AggregateExpr::Type aggregate_type;
   RC rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
+  
   if (OB_FAIL(rc)) {
     LOG_WARN("invalid aggregate name: %s", aggregate_name);
     return rc;

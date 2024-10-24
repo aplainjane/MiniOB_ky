@@ -45,6 +45,9 @@ namespace common {
  *  \sa http://scienceworld.wolfram.com/astronomy/Weekday.html
  */
 
+
+bool check_date(int y,int m,int d);
+
 struct DateTime
 {
   int m_date;
@@ -99,6 +102,7 @@ struct DateTime
 
   // check whether a string is valid with a xml datetime format
   static bool is_valid_xml_datetime(const string &str);
+  
 
   // Load the referenced values with the year, month and day
   // portions of the date in a single operation
@@ -151,6 +155,7 @@ struct DateTime
 
   // Clear the time portion of the DateTime
   void clear_time() { m_time = 0; }
+  
 
   // Set the internal date and time members
   void set(int date, int time)

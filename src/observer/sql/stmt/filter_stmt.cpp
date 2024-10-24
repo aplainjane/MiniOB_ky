@@ -18,7 +18,11 @@ See the Mulan PSL v2 for more details. */
 #include "common/rc.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
-
+#include "event/session_event.h"
+#include "event/sql_event.h"
+#include "net/sql_task_handler.h"
+#include "net/cli_communicator.h"
+#include "net/plain_communicator.h"
 FilterStmt::~FilterStmt()
 {
   for (FilterUnit *unit : filter_units_) {
@@ -90,8 +94,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
   }
 
   filter_unit = new FilterUnit;
-
-  if (condition.left_is_attr) {
+  if (condition.left_is_attr==1) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.left_attr, table, field);
@@ -102,13 +105,58 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_left(filter_obj);
-  } else {
+  } else if(condition.left_is_attr==0){
     FilterObj filter_obj;
     filter_obj.init_value(condition.left_value);
     filter_unit->set_left(filter_obj);
+  } else if(condition.left_is_attr==2){
+    FilterObj filter_obj;
+    vector<Value> tuple_list;
+    CliCommunicator communicator;
+    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(condition.left_subquery);
+    SQLStageEvent sql_event(event, event->query());
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    if (OB_FAIL(rc)) {
+      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+      event->sql_result()->set_return_code(rc);
+    }
+    SqlResult *sql_result=event->sql_result();
+  
+    rc=sql_result->open();
+    
+    Tuple* tuple=nullptr;
+    
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+      Value value;
+      if(tuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      tuple->cell_at(0,value);
+      tuple_list.emplace_back(value);
+    }
+    sql_result->close();
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    filter_obj.init_tuple(tuple_list);
+    filter_unit->set_left(filter_obj);
+  }
+  else{
+    FilterObj filter_obj;
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&condition.left_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    const std::vector<Value>& vector_ref=condition.left_list;
+    filter_obj.init_tuple(const_cast<std::vector<Value>&>(vector_ref));
+    filter_unit->set_left(filter_obj);
   }
 
-  if (condition.right_is_attr) {
+  if (condition.right_is_attr==1) {
     Table           *table = nullptr;
     const FieldMeta *field = nullptr;
     rc                     = get_table_and_field(db, default_table, tables, condition.right_attr, table, field);
@@ -119,14 +167,57 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     FilterObj filter_obj;
     filter_obj.init_attr(Field(table, field));
     filter_unit->set_right(filter_obj);
-  } else {
+  } else if(condition.right_is_attr==0){
     FilterObj filter_obj;
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
   }
-
+  else if(condition.right_is_attr==2){
+    FilterObj filter_obj;
+    CliCommunicator communicator;
+    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(condition.right_subquery);
+    SQLStageEvent sql_event(event, event->query());
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    if (OB_FAIL(rc)) {
+      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+      event->sql_result()->set_return_code(rc);
+    }
+    SqlResult *sql_result=event->sql_result();
+  
+    rc=sql_result->open();
+    
+    Tuple* tuple=nullptr;
+    vector<Value> tuple_list;
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+      Value value;
+      if(tuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      tuple->cell_at(0,value);
+      tuple_list.emplace_back(value);
+    }
+    sql_result->close();
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    filter_obj.init_tuple(tuple_list);
+    filter_unit->set_right(filter_obj);
+  }
+  else{
+    FilterObj filter_obj;
+    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&condition.right_list.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    const std::vector<Value>& vector_ref=condition.right_list;
+    filter_obj.init_tuple(const_cast<std::vector<Value>&>(vector_ref));
+    filter_unit->set_right(filter_obj);
+  }
   filter_unit->set_comp(comp);
-
   // 检查两个类型是否能够比较
   return rc;
 }

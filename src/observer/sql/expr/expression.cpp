@@ -47,6 +47,17 @@ RC FieldExpr::get_column(Chunk &chunk, Column &column)
   return RC::SUCCESS;
 }
 
+bool SubqueryExpr::equal(const Expression &other) const
+{
+  if (this == &other) {
+    return true;
+  }
+  if (other.type() != ExprType::SUBQUERY) {
+    return false;
+  }
+  return false;
+}
+
 bool ValueExpr::equal(const Expression &other) const
 {
   if (this == &other) {
@@ -142,6 +153,12 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case GREAT_THAN: {
       result = (cmp_result > 0);
     } break;
+    case CLIKE:{
+      result = left.like(right);
+    } break;
+    case CNLIKE:{
+      result = !left.like(right);
+    } break;
     default: {
       LOG_WARN("unsupported comparison. %d", comp_);
       rc = RC::INTERNAL;
@@ -176,7 +193,82 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
 {
   Value left_value;
   Value right_value;
-
+  bool bool_value = false;
+  if(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST){
+    vector<Value> temp;
+    RC rc = right_->get(temp);
+    if(temp.size()==0){
+      if(comp_==IN_LIST||comp_==EXIST_LIST){
+        value.set_boolean(false);
+      }
+      else{
+        value.set_boolean(true);
+      }
+      return RC::SUCCESS;
+    }
+    else{
+      rc=left_->get_value(tuple,left_value);
+      for(int i = 0;i<(int)temp.size();i++){
+        int cmp_result = left_value.compare(temp[i]);
+        bool_value = (0 == cmp_result);
+        if(bool_value==true){
+          if(comp_==IN_LIST||comp_==EXIST_LIST){
+            value.set_boolean(true);
+          }
+          else{
+            value.set_boolean(false);
+          }
+          return rc;
+        }
+      }
+      if(comp_==IN_LIST||comp_==EXIST_LIST){
+        value.set_boolean(false);
+      }
+      else{
+        value.set_boolean(true);
+      }
+      return rc;
+    }
+  }
+  if(left_->type() == ExprType::SUBQUERY){
+    RC rc = right_->get_value(tuple, right_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    vector<Value> temp;
+    rc = left_->get(temp);
+    if(temp.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    else{
+      rc = compare_value(temp[0],right_value, bool_value);
+      value.set_boolean(bool_value);
+      return rc;
+    }
+  }
+  else if(right_->type() == ExprType::SUBQUERY){
+    RC rc = left_->get_value(tuple, left_value);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    vector<Value> temp;
+    rc = right_->get(temp);
+    if(temp.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    else{
+      rc = compare_value(left_value,temp[0], bool_value);
+      value.set_boolean(bool_value);
+      return rc;
+    }
+  }
+  else{
   RC rc = left_->get_value(tuple, left_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
@@ -188,13 +280,14 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     return rc;
   }
 
-  bool bool_value = false;
+  
 
   rc = compare_value(left_value, right_value, bool_value);
   if (rc == RC::SUCCESS) {
     value.set_boolean(bool_value);
   }
   return rc;
+  }
 }
 
 RC ComparisonExpr::eval(Chunk &chunk, std::vector<uint8_t> &select)
@@ -512,9 +605,16 @@ RC ArithmeticExpr::try_get_value(Value &value) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, Expression *child)
-    : aggregate_name_(aggregate_name), child_(child)
-{}
+UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, std::vector<std::unique_ptr<Expression> >*child)
+    : aggregate_name_(aggregate_name), childs_(child)
+{
+  if (childs_ && !childs_->empty()) {
+    child_ = std::move((*childs_)[0]);
+  }
+
+  if(child->size()!=1)
+    this->error_ = true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 AggregateExpr::AggregateExpr(Type type, Expression *child) : aggregate_type_(type), child_(child) {}
@@ -551,6 +651,22 @@ unique_ptr<Aggregator> AggregateExpr::create_aggregator() const
   switch (aggregate_type_) {
     case Type::SUM: {
       aggregator = make_unique<SumAggregator>();
+      break;
+    }
+    case Type::AVG: {
+      aggregator = make_unique<AvgAggregator>();
+      break;
+    }
+    case Type::MAX:{
+      aggregator = make_unique<MaxAggregator>();
+      break;
+    }
+    case Type::MIN:{
+      aggregator = make_unique<MinAggregator>();
+      break;
+    }
+    case Type::COUNT: {
+      aggregator = make_unique<CountAggregator>();
       break;
     }
     default: {

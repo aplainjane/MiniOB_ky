@@ -30,6 +30,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/latch_memo.h"
 #include "storage/index/bplus_tree_log.h"
 
+#define MAX_ATTR_NUM 8
+
 class BplusTreeHandler;
 class BplusTreeMiniTransaction;
 
@@ -53,32 +55,66 @@ enum class BplusTreeOperationType
  * @brief 属性比较(BplusTree)
  * @ingroup BPlusTree
  */
-class AttrComparator
+class AttrComparator 
 {
 public:
-  void init(AttrType type, int length)
+  void init(std::vector<AttrType>  types, std::vector<int>  lengths)
   {
-    attr_type_   = type;
-    attr_length_ = length;
+    attr_types_ = types;
+    attr_lengths_ = lengths;
   }
 
-  int attr_length() const { return attr_length_; }
+  int attr_length() const
+  {
+    int attr_length = 0;
+    // for (int len: attr_lengths_){
+    //   attr_length += len;
+    // }
+
+    for (long unsigned int i=0;i<attr_lengths_.size();++i){
+      attr_length += attr_lengths_[i];
+    }
+
+    return attr_length;
+  }
+
+  std::vector<int> attr_lengths() const {
+    return attr_lengths_;
+  }
 
   int operator()(const char *v1, const char *v2) const
   {
-    // TODO: optimized the comparison
-    Value left;
-    left.set_type(attr_type_);
-    left.set_data(v1, attr_length_);
-    Value right;
-    right.set_type(attr_type_);
-    right.set_data(v2, attr_length_);
-    return DataType::type_instance(attr_type_)->compare(left, right);
+    long unsigned int offset = 0;
+
+    for (size_t i = 0; i < attr_lengths_.size(); ++i) {
+        int res = -1;
+
+        // 检查偏移量，确保不会越界，假设attr_lengths_代表的类型是int长度（4字节）
+        if (offset + attr_lengths_[i] > sizeof(v1) || offset + attr_lengths_[i] > sizeof(v2)) {
+            std::cerr << "Offset exceeds buffer size, possible memory corruption" << std::endl;
+            return -1; // 或者根据具体情况返回一个错误码
+        }
+
+        Value left, right;
+        left.set_type(attr_types_[i]);
+        left.set_data(v1 + offset, attr_lengths_[i]);
+        right.set_type(attr_types_[i]);
+        right.set_data(v2 + offset, attr_lengths_[i]);
+
+        res = DataType::type_instance(attr_types_[i])->compare(left, right);
+        if (res != 0) {
+            return res; // 如果当前属性不相等，立即返回结果
+        }
+
+        offset += attr_lengths_[i]; // 更新偏移量
+    }
+
+    return 0; // 如果所有属性都相等，返回0
   }
 
 private:
-  AttrType attr_type_;
-  int      attr_length_;
+  std::vector<AttrType> attr_types_;
+  std::vector<int> attr_lengths_;
 };
 
 /**
@@ -89,66 +125,136 @@ private:
 class KeyComparator
 {
 public:
-  void init(AttrType type, int length) { attr_comparator_.init(type, length); }
+  void init(std::vector<AttrType> types, std::vector<int> lengths, bool unique)
+  {
+    attr_comparator_.init(types, lengths);
 
-  const AttrComparator &attr_comparator() const { return attr_comparator_; }
+    unique_ = unique;
+  }
+
+  const AttrComparator &attr_comparator() const
+  {
+    return attr_comparator_;
+  }
 
   int operator()(const char *v1, const char *v2) const
   {
+    //std::cout<<"Key-value COmparaing"<<std::endl;
+
     int result = attr_comparator_(v1, v2);
-    if (result != 0) {
+    if (unique_ || result != 0) {
+      //std::cout<<*(int *)(v1)<<" "<<*(int *)(v2)<<std::endl;
+      //std::cout<<"in result:\t"<<result<<std::endl;
       return result;
     }
 
-    const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
-    return RID::compare(rid1, rid2);
+    //std::cout<<"result:"<<result<<std::endl;
+
+    //std::cout<<"operator_rid"<<std::endl;
+    std::vector<int> attr_lengths(attr_comparator_.attr_lengths());
+
+    int allocate_idx = 0;
+    for (long unsigned int i=0;i<attr_lengths.size();++i){
+      //std::cout<<*(int *)(v1+allocate_idx)<<" "<<*(int *)(v2+allocate_idx)<<" "<<attr_lengths[i]<<std::endl;
+      allocate_idx += attr_lengths[i];
+    }
+
+    //std::cout<<"finished"<<std::endl;
+
+    // const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
+    // const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+
+    RID *rid1, *rid2;
+    allocate_idx = 0;
+    int same_flag = 1;
+    for (long unsigned int i=0;i<attr_lengths.size();++i){
+      rid1 = (RID *)(v1+allocate_idx);
+      rid2 = (RID *)(v2+allocate_idx);
+      allocate_idx += attr_lengths[i];
+      int page_diff = rid1->page_num - rid2->page_num;
+      if (page_diff != 0) {
+        same_flag = 0;
+        break;
+      } else if(rid1->slot_num - rid2->slot_num !=0){
+        same_flag = 0;
+        break;
+      }
+    }
+
+    // return RID::compare(rid1, rid2);
+
+    return same_flag;
   }
 
 private:
   AttrComparator attr_comparator_;
+  bool unique_;
 };
+
 
 /**
  * @brief 属性打印,调试使用(BplusTree)
  * @ingroup BPlusTree
  */
-class AttrPrinter
+class AttrPrinter 
 {
 public:
-  void init(AttrType type, int length)
+  void init(std::vector<AttrType> types, std::vector<int> lengths)
   {
-    attr_type_   = type;
-    attr_length_ = length;
+    attr_types_ = types;
+    attr_lengths_ = lengths;
   }
 
-  int attr_length() const { return attr_length_; }
 
-  string operator()(const char *v) const
+  int attr_length() const
   {
-    Value value(attr_type_, const_cast<char *>(v), attr_length_);
-    return value.to_string();
+    int attr_length = 0;
+    for (long unsigned int i=0;i<attr_lengths_.size();++i){
+      attr_length += attr_lengths_[i];
+    }
+
+    return attr_length;
+  }
+
+  std::string operator()(const char *v) const
+  {
+    int allocate_idx = 0;
+    std::string str = "";
+    for (long unsigned int k=0;k<attr_lengths_.size();++k){
+      
+      Value value(attr_types_[k], const_cast<char *>(v+allocate_idx), attr_lengths_[k]);
+      str += value.to_string();
+      allocate_idx += attr_lengths_[k];
+      
+    }
+    return str;
   }
 
 private:
-  AttrType attr_type_;
-  int      attr_length_;
+  std::vector<AttrType> attr_types_;
+  std::vector<int> attr_lengths_;
 };
 
 /**
  * @brief 键值打印,调试使用(BplusTree)
  * @ingroup BPlusTree
  */
-class KeyPrinter
+class KeyPrinter 
 {
 public:
-  void init(AttrType type, int length) { attr_printer_.init(type, length); }
-
-  const AttrPrinter &attr_printer() const { return attr_printer_; }
-
-  string operator()(const char *v) const
+  void init(std::vector<AttrType> types, std::vector<int> lengths)
   {
-    stringstream ss;
+    attr_printer_.init(types, lengths);
+  }
+
+  const AttrPrinter &attr_printer() const
+  {
+    return attr_printer_;
+  }
+
+  std::string operator()(const char *v) const
+  {
+    std::stringstream ss;
     ss << "{key:" << attr_printer_(v) << ",";
 
     const RID *rid = (const RID *)(v + attr_printer_.attr_length());
@@ -173,12 +279,17 @@ struct IndexFileHeader
     memset(this, 0, sizeof(IndexFileHeader));
     root_page = BP_INVALID_PAGE_NUM;
   }
-  PageNum  root_page;          ///< 根节点在磁盘中的页号
-  int32_t  internal_max_size;  ///< 内部节点最大的键值对数
-  int32_t  leaf_max_size;      ///< 叶子节点最大的键值对数
-  int32_t  attr_length;        ///< 键值的长度
-  int32_t  key_length;         ///< attr length + sizeof(RID)
-  AttrType attr_type;          ///< 键值的类型
+  PageNum root_page;          ///< 根节点在磁盘中的页号
+  int32_t internal_max_size;  ///< 内部节点最大的键值对数
+  int32_t leaf_max_size;      ///< 叶子节点最大的键值对数
+  int32_t attr_length;
+  int32_t attr_lengths[MAX_ATTR_NUM];        ///< 键值的长度
+  int32_t key_length;         ///< attr length + sizeof(RID)
+  AttrType attr_type;
+  int32_t attr_offset[MAX_ATTR_NUM];       ///< 键值在record中的offset
+  AttrType attr_types[MAX_ATTR_NUM];         ///< 键值的类型
+  int32_t attr_num;
+  bool unique;
 
   const string to_string() const
   {
@@ -186,7 +297,7 @@ struct IndexFileHeader
 
     ss << "attr_length:" << attr_length << ","
        << "key_length:" << key_length << ","
-       << "attr_type:" << attr_type_to_string(attr_type) << ","
+       //<< "attr_type:" << attr_type << ","
        << "root_page:" << root_page << ","
        << "internal_max_size:" << internal_max_size << ","
        << "leaf_max_size:" << leaf_max_size << ";";
@@ -459,11 +570,16 @@ public:
    * @param internal_max_size 内部节点最大大小
    * @param leaf_max_size 叶子节点最大大小
    */
-  RC create(LogHandler &log_handler, BufferPoolManager &bpm, const char *file_name, AttrType attr_type, int attr_length,
+  RC create(LogHandler &log_handler,
+                            BufferPoolManager &bpm,
+                            const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique,
       int internal_max_size = -1, int leaf_max_size = -1);
-  RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length,
-      int internal_max_size = -1, int leaf_max_size = -1);
-
+  RC create(LogHandler &log_handler,
+            DiskBufferPool &buffer_pool,
+            const char *file_name, const std::vector<FieldMeta> &field_metas, bool unique, int internal_max_size  = -1,
+    int leaf_max_size  = -1 );
+  RC insert_entry(const char *user_key, std::vector<FieldMeta> &field_metas, const RID *rid);
+  RC delete_entry(const char *user_key, std::vector<FieldMeta> field_metas, const RID *rid);
   /**
    * @brief 打开一个B+树
    * @param log_handler 记录日志
@@ -477,6 +593,8 @@ public:
    * 关闭句柄indexHandle对应的索引文件
    */
   RC close();
+
+  void destroy();
 
   /**
    * @brief 此函数向IndexHandle对应的索引中插入一个索引项。
@@ -634,6 +752,7 @@ protected:
 
 private:
   common::MemPoolItem::item_unique_ptr make_key(const char *user_key, const RID &rid);
+  common::MemPoolItem::item_unique_ptr make_key(const char *user_key, std::vector<FieldMeta> field_metas, const RID &rid);
 
 protected:
   LogHandler     *log_handler_      = nullptr;  /// 日志处理器

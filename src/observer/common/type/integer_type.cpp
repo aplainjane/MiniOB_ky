@@ -75,3 +75,54 @@ RC IntegerType::to_string(const Value &val, string &result) const
   result = ss.str();
   return RC::SUCCESS;
 }
+
+int IntegerType::cast_cost(AttrType type)
+{
+  if (type == attr_type_) {
+    return 0;
+  }
+  else if(type == AttrType::FLOATS)
+  {
+    return 1;
+  }
+  else if(type == AttrType::CHARS)
+  {
+    return 2;
+  }
+  return INT32_MAX;
+}
+
+RC IntegerType::cast_to(const Value &val, AttrType type, Value &result) const 
+{ 
+  // 首先检查输入值的类型
+    if (val.attr_type() != AttrType::INTS) {
+        return RC::UNSUPPORTED; // 只支持从整数类型转换
+    }
+
+    // 获取整数值
+    int int_value = val.get_int();
+
+    // 根据目标类型进行转换
+    switch (type) {
+        case AttrType::FLOATS:
+            // 转换为浮点数
+            result.set_float(static_cast<float>(int_value));
+            break;
+
+
+        case AttrType::INTS:
+            // 如果目标类型是整数，直接赋值
+            result.set_int(int_value);
+            break;
+
+        case AttrType::CHARS:
+          // 如果目标类型是整数，直接赋值
+          result.set_string(val.to_string().c_str());
+          break;
+
+        default:
+            return RC::UNSUPPORTED; // 不支持的目标类型
+    }
+
+    return RC::SUCCESS; // 转换成功
+}

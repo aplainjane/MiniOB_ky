@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/aggregator.h"
 #include "storage/common/chunk.h"
 
+
 class Tuple;
 
 /**
@@ -42,6 +43,7 @@ enum class ExprType
 
   FIELD,        ///< 字段。在实际执行时，根据行数据内容提取对应字段的值
   VALUE,        ///< 常量值
+  SUBQUERY,
   CAST,         ///< 需要做类型转换的表达式
   COMPARISON,   ///< 需要做比较的表达式
   CONJUNCTION,  ///< 多个表达式使用同一种关系(AND或OR)来联结
@@ -121,7 +123,8 @@ public:
    * @brief 用于 ComparisonExpr 获得比较结果 `select`。
    */
   virtual RC eval(Chunk &chunk, std::vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
-
+  virtual RC get(vector<Value>& temp){return RC::UNIMPLEMENTED;}
+  virtual RC get_tuple_list(){return RC::UNIMPLEMENTED;};
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -208,7 +211,40 @@ public:
 private:
   Field field_;
 };
+class SubqueryExpr : public Expression
+{
+public:
+  SubqueryExpr() = default;
+  SubqueryExpr(const vector<Value> sql_result)  { this->tuple_list = sql_result;}
 
+  virtual ~SubqueryExpr() = default;
+
+  bool equal(const Expression &other) const override ;
+
+  ExprType type() const override { return ExprType::SUBQUERY; }
+
+  RC try_get_value(Value &value) const override { return RC::UNIMPLEMENTED; };
+  AttrType value_type() const override 
+  { 
+    if(tuple_list.size()!=0){
+      return tuple_list[0].attr_type(); 
+    }
+    else{
+      return AttrType::FLOATS;
+    }
+  }
+  // int   value_length() const override { return field_.meta()->len(); }
+  RC get(vector<Value>& temp)
+  {
+     for(int i = 0;i<(int)tuple_list.size();i++){
+      temp.emplace_back(tuple_list[i]);
+     } 
+     return RC::SUCCESS;
+  }
+  RC get_value(const Tuple &tuple, Value &value) const override { return RC::UNIMPLEMENTED;}
+private:
+  vector<Value> tuple_list;
+};
 /**
  * @brief 常量值表达式
  * @ingroup Expression
@@ -408,21 +444,25 @@ private:
 class UnboundAggregateExpr : public Expression
 {
 public:
-  UnboundAggregateExpr(const char *aggregate_name, Expression *child);
+  UnboundAggregateExpr(const char *aggregate_name, std::vector<std::unique_ptr<Expression> >*child);
   virtual ~UnboundAggregateExpr() = default;
 
   ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
 
   const char *aggregate_name() const { return aggregate_name_.c_str(); }
 
-  std::unique_ptr<Expression> &child() { return child_; }
+  std::unique_ptr<Expression>  &child() { return child_; }
 
   RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
   AttrType value_type() const override { return child_->value_type(); }
+  
+  bool is_error(){return error_;}
 
 private:
   std::string                 aggregate_name_;
+  std::vector<std::unique_ptr<Expression> >* childs_;
   std::unique_ptr<Expression> child_;
+  bool                   error_ = false;
 };
 
 class AggregateExpr : public Expression
@@ -443,6 +483,7 @@ public:
   virtual ~AggregateExpr() = default;
 
   bool equal(const Expression &other) const override;
+  
 
   ExprType type() const override { return ExprType::AGGREGATION; }
 

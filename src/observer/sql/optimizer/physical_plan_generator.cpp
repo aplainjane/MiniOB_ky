@@ -27,6 +27,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/group_by_vec_physical_operator.h"
 #include "sql/operator/index_scan_physical_operator.h"
 #include "sql/operator/insert_logical_operator.h"
+#include "sql/operator/update_physical_operator.h"
+#include "sql/operator/update_logical_operator.h"
 #include "sql/operator/insert_physical_operator.h"
 #include "sql/operator/join_logical_operator.h"
 #include "sql/operator/join_physical_operator.h"
@@ -69,6 +71,10 @@ RC PhysicalPlanGenerator::create(LogicalOperator &logical_operator, unique_ptr<P
 
     case LogicalOperatorType::INSERT: {
       return create_plan(static_cast<InsertLogicalOperator &>(logical_operator), oper);
+    } break;
+
+    case LogicalOperatorType::UPDATE: {
+      return create_plan(static_cast<UpdateLogicalOperator &>(logical_operator), oper);
     } break;
 
     case LogicalOperatorType::DELETE: {
@@ -129,6 +135,8 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
 
   Index     *index      = nullptr;
   ValueExpr *value_expr = nullptr;
+  std::vector<const char *> fields;
+  std::vector<Value> values;
   for (auto &expr : predicates) {
     if (expr->type() == ExprType::COMPARISON) {
       auto comparison_expr = static_cast<ComparisonExpr *>(expr.get());
@@ -160,23 +168,30 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
       }
 
       const Field &field = field_expr->field();
-      index              = table->find_index_by_field(field.field_name());
+      fields.emplace_back(field.field_name());
+      values.emplace_back(*const_cast<Value *>(&value_expr->get_value()));
+
+
+      //const Field &field = field_expr->field();
+      //index              = table->find_index_by_fields(field.field_name());
       if (nullptr != index) {
         break;
       }
     }
   }
 
+  index = table->find_index_by_fields(fields);
+
   if (index != nullptr) {
     ASSERT(value_expr != nullptr, "got an index but value expr is null ?");
 
-    const Value               &value           = value_expr->get_value();
+    //const Value               &value           = value_expr->get_value();
     IndexScanPhysicalOperator *index_scan_oper = new IndexScanPhysicalOperator(table,
         index,
         table_get_oper.read_write_mode(),
-        &value,
+        values,
         true /*left_inclusive*/,
-        &value,
+        values,
         true /*right_inclusive*/);
 
     index_scan_oper->set_predicates(std::move(predicates));
@@ -250,6 +265,30 @@ RC PhysicalPlanGenerator::create_plan(InsertLogicalOperator &insert_oper, unique
   InsertPhysicalOperator *insert_phy_oper = new InsertPhysicalOperator(table, std::move(values));
   oper.reset(insert_phy_oper);
   return RC::SUCCESS;
+}
+
+RC PhysicalPlanGenerator::create_plan(UpdateLogicalOperator &update_oper, unique_ptr<PhysicalOperator> &oper)
+{
+  vector<unique_ptr<LogicalOperator>> &child_opers = update_oper.children();
+
+  unique_ptr<PhysicalOperator> child_physical_oper;
+
+  RC rc = RC::SUCCESS;
+  if (!child_opers.empty()) {
+    LogicalOperator *child_oper = child_opers.front().get();
+
+    rc = create(*child_oper, child_physical_oper);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to create physical operator. rc=%s", strrc(rc));
+      return rc;
+    }
+  }
+
+  oper = unique_ptr<PhysicalOperator>(new UpdatePhysicalOperator(update_oper.table(),update_oper.fields(), update_oper.values()));
+  if (child_physical_oper) {
+    oper->add_child(std::move(child_physical_oper));
+  }
+  return rc;
 }
 
 RC PhysicalPlanGenerator::create_plan(DeleteLogicalOperator &delete_oper, unique_ptr<PhysicalOperator> &oper)
@@ -346,7 +385,6 @@ RC PhysicalPlanGenerator::create_plan(GroupByLogicalOperator &logical_oper, std:
     group_by_oper = make_unique<HashGroupByPhysicalOperator>(std::move(logical_oper.group_by_expressions()),
         std::move(logical_oper.aggregate_expressions()));
   }
-
   ASSERT(logical_oper.children().size() == 1, "group by operator should have 1 child");
 
   LogicalOperator             &child_oper = *logical_oper.children().front();

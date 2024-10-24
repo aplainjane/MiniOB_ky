@@ -46,8 +46,10 @@ RC ParseStage::handle_request(SQLStageEvent *sql_event)
   if (parsed_sql_result.sql_nodes().size() > 1) {
     LOG_WARN("got multi sql commands but only 1 will be handled");
   }
-
   std::unique_ptr<ParsedSqlNode> sql_node = std::move(parsed_sql_result.sql_nodes().front());
+  // std::cout<<sql_node->selection.expressions[0]->name()<<std::endl;
+  // std::cout<<sql_node->selection.relations[0]<<std::endl;
+
   if (sql_node->flag == SCF_ERROR) {
     // set error information to event
     rc = RC::SQL_SYNTAX;

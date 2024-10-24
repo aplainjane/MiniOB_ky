@@ -32,36 +32,85 @@ IndexScanPhysicalOperator::IndexScanPhysicalOperator(Table *table, Index *index,
   }
 }
 
+IndexScanPhysicalOperator::IndexScanPhysicalOperator(
+    Table *table, Index *index, ReadWriteMode mode,
+    std::vector<Value> left_values, bool left_inclusive, 
+    std::vector<Value> right_values, bool right_inclusive)
+    : table_(table), 
+      index_(index),
+      mode_(mode),
+      left_values_(left_values),
+      left_inclusive_(left_inclusive), 
+      right_values_(right_values),
+      right_inclusive_(right_inclusive){}
+
 RC IndexScanPhysicalOperator::open(Trx *trx)
 {
-  if (nullptr == table_ || nullptr == index_) {
-    return RC::INTERNAL;
-  }
+    if (nullptr == table_ || nullptr == index_) {
+        return RC::INTERNAL;
+    }
 
-  IndexScanner *index_scanner = index_->create_scanner(left_value_.data(),
-      left_value_.length(),
-      left_inclusive_,
-      right_value_.data(),
-      right_value_.length(),
-      right_inclusive_);
-  if (nullptr == index_scanner) {
-    LOG_WARN("failed to create index scanner");
-    return RC::INTERNAL;
-  }
+    size_t total_left_length = 0;
+    size_t total_right_length = 0;
 
-  record_handler_ = table_->record_handler();
-  if (nullptr == record_handler_) {
-    LOG_WARN("invalid record handler");
-    index_scanner->destroy();
-    return RC::INTERNAL;
-  }
-  index_scanner_ = index_scanner;
+    for (const auto &value : left_values_) {
+        total_left_length += value.length();
+    }
+    for (const auto &value : right_values_) {
+        total_right_length += value.length();
+    }
 
-  tuple_.set_schema(table_, table_->table_meta().field_metas());
+    char *left_key = (char *)malloc(total_left_length);
+    char *right_key = (char *)malloc(total_right_length);
 
-  trx_ = trx;
-  return RC::SUCCESS;
+    if (left_key == nullptr || right_key == nullptr) {
+        LOG_WARN("Failed to alloc memory for key.");
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
+
+    int left_allocate_idx = 0;
+    int right_allocate_idx = 0;
+
+    for (size_t i = 0; i < left_values_.size(); ++i) {
+        memcpy(left_key + left_allocate_idx, left_values_[i].data(), left_values_[i].length());
+        left_allocate_idx += left_values_[i].length();
+    }
+
+    for (size_t i = 0; i < right_values_.size(); ++i) {
+        memcpy(right_key + right_allocate_idx, right_values_[i].data(), right_values_[i].length());
+        right_allocate_idx += right_values_[i].length();
+    }
+
+    IndexScanner *index_scanner = index_->create_scanner(left_key, left_allocate_idx, left_inclusive_,
+                                                         right_key, right_allocate_idx, right_inclusive_);
+
+    if (nullptr == index_scanner) {
+        LOG_WARN("failed to create index scanner");
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
+
+    record_handler_ = table_->record_handler();
+    if (nullptr == record_handler_) {
+        LOG_WARN("invalid record handler");
+        index_scanner->destroy();
+        free(left_key);
+        free(right_key);
+        return RC::INTERNAL;
+    }
+
+    index_scanner_ = index_scanner;
+    tuple_.set_schema(table_, table_->table_meta().field_metas());
+
+    trx_ = trx;
+    free(left_key);
+    free(right_key);
+    return RC::SUCCESS;
 }
+
 
 RC IndexScanPhysicalOperator::next()
 {

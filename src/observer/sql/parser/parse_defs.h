@@ -51,6 +51,12 @@ enum CompOp
   LESS_THAN,    ///< "<"
   GREAT_EQUAL,  ///< ">="
   GREAT_THAN,   ///< ">"
+  CLIKE,
+  CNLIKE,
+  IN_LIST,
+  NOTIN_LIST,
+  EXIST_LIST,
+  NOTEXIST_LIST,
   NO_OP
 };
 
@@ -61,6 +67,8 @@ enum CompOp
  * 一个条件比较是有两部分组成的，称为左边和右边。
  * 左边和右边理论上都可以是任意的数据，比如是字段（属性，列），也可以是数值常量。
  * 这个结构中记录的仅仅支持字段和值。
+ * select * from sblxl where a = "qwer";
+ * select * from sblxl where a like "qwer"
  */
 struct ConditionSqlNode
 {
@@ -68,11 +76,15 @@ struct ConditionSqlNode
                                  ///< 1时，操作符左边是属性名，0时，是属性值
   Value          left_value;     ///< left-hand side value if left_is_attr = FALSE
   RelAttrSqlNode left_attr;      ///< left-hand side attribute
+  std::string    left_subquery;
+  std::vector<Value>  left_list;
   CompOp         comp;           ///< comparison operator
   int            right_is_attr;  ///< TRUE if right-hand side is an attribute
                                  ///< 1时，操作符右边是属性名，0时，是属性值
+  std::string    right_subquery;
   RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
   Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
+  std::vector<Value>  right_list;
 };
 
 /**
@@ -92,6 +104,16 @@ struct SelectSqlNode
   std::vector<std::string>                 relations;    ///< 查询的表
   std::vector<ConditionSqlNode>            conditions;   ///< 查询条件，使用AND串联起来多个条件
   std::vector<std::unique_ptr<Expression>> group_by;     ///< group by clause
+};
+
+/**
+ * @brief 描述一个join语句
+ * @ingroup SQLParser
+ */
+struct JoinSqlNode
+{
+  std::vector<std::string>        relations;     ///< 查询的表
+  std::vector<ConditionSqlNode>   conditions;    ///< 查询条件，使用AND串联起来多个条件
 };
 
 /**
@@ -128,11 +150,16 @@ struct DeleteSqlNode
  * @brief 描述一个update语句
  * @ingroup SQLParser
  */
+struct UpdateKV
+{
+  std::string attr_name;
+  Value value;
+};
 struct UpdateSqlNode
 {
   std::string                   relation_name;   ///< Relation to update
-  std::string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Value                         value;           ///< 更新的值，仅支持一个字段
+  std::vector<std::string>      attribute_names;  ///< 更新的字段，仅支持一个字段
+  std::vector<Value>            values;           ///< 更新的值，仅支持一个字段
   std::vector<ConditionSqlNode> conditions;
 };
 
@@ -179,7 +206,8 @@ struct CreateIndexSqlNode
 {
   std::string index_name;      ///< Index name
   std::string relation_name;   ///< Relation name
-  std::string attribute_name;  ///< Attribute name
+  std::vector<std::string> attribute_names;
+  bool unique;
 };
 
 /**

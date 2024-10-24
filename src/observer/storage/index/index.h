@@ -34,28 +34,35 @@ class IndexScanner;
  * @brief 索引基类
  * @ingroup Index
  */
-class Index
+class Index 
 {
 public:
-  Index()          = default;
+  Index() = default;
   virtual ~Index() = default;
+  virtual void destroy() = 0;
 
-  virtual RC create(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta)
+
+  virtual RC create(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas, bool unique)
   {
     return RC::UNSUPPORTED;
   }
-  virtual RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta)
+  virtual RC open(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas)
   {
     return RC::UNSUPPORTED;
   }
 
   virtual bool is_vector_index() { return false; }
 
-  const IndexMeta &index_meta() const { return index_meta_; }
+
+  const IndexMeta &index_meta() const
+  {
+    return index_meta_;
+  }
+
 
   /**
    * @brief 插入一条数据
-   *
+   * 
    * @param record 插入的记录，当前假设记录是定长的
    * @param[out] rid    插入的记录的位置
    */
@@ -63,7 +70,7 @@ public:
 
   /**
    * @brief 删除一条数据
-   *
+   * 
    * @param record 删除的记录，当前假设记录是定长的
    * @param[in] rid   删除的记录的位置
    */
@@ -71,7 +78,7 @@ public:
 
   /**
    * @brief 创建一个索引数据的扫描器
-   *
+   * 
    * @param left_key 要扫描的左边界
    * @param left_len 左边界的长度
    * @param left_inclusive 是否包含左边界
@@ -84,26 +91,26 @@ public:
 
   /**
    * @brief 同步索引数据到磁盘
-   *
+   * 
    */
   virtual RC sync() = 0;
 
 protected:
-  RC init(const IndexMeta &index_meta, const FieldMeta &field_meta);
+  RC init(const IndexMeta &index_meta, std::vector<FieldMeta> &field_meta);
 
 protected:
   IndexMeta index_meta_;  ///< 索引的元数据
-  FieldMeta field_meta_;  ///< 当前实现仅考虑一个字段的索引
+  std::vector<FieldMeta> field_metas_;  ///< 当前实现仅考虑一个字段的索引
 };
 
 /**
  * @brief 索引扫描器
  * @ingroup Index
  */
-class IndexScanner
+class IndexScanner 
 {
 public:
-  IndexScanner()          = default;
+  IndexScanner() = default;
   virtual ~IndexScanner() = default;
 
   /**
@@ -111,5 +118,5 @@ public:
    * 如果没有更多的元素，返回RECORD_EOF
    */
   virtual RC next_entry(RID *rid) = 0;
-  virtual RC destroy()            = 0;
+  virtual RC destroy() = 0;
 };

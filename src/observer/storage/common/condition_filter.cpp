@@ -145,7 +145,12 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     case LESS_THAN: return cmp_result < 0;
     case GREAT_EQUAL: return cmp_result >= 0;
     case GREAT_THAN: return cmp_result > 0;
-
+    case CLIKE: return left_value.like(right_value);
+    case CNLIKE: return !left_value.like(right_value);
+    case IN_LIST: return left_value.in(right_value);
+    case NOTIN_LIST: return !left_value.in(right_value);
+    case EXIST_LIST: return left_value.exist(right_value);
+    case NOTEXIST_LIST: return !left_value.exist(right_value);
     default: break;
   }
 

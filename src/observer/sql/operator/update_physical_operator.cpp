@@ -89,8 +89,10 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       // 重新构造record
       // 1. Values
       std::vector<Value> values;
-      int cell_num = row_tuple->cell_num();
-      for (int i=0; i < cell_num; ++i){
+      const int sys_field_num  = table_->table_meta().sys_field_num();
+      const int user_field_num = table_->table_meta().field_num() - sys_field_num;
+      
+      for (int i= sys_field_num; i < table_->table_meta().field_num(); ++i){
         Value cell;
         // find field_index
         int find_flag = -1;
@@ -113,7 +115,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       }
       // 2. Record
       Record new_record;
-      RC rc = table_->make_record(cell_num, values.data(), new_record);
+      RC rc = table_->make_record(user_field_num, values.data(), new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
         return rc;

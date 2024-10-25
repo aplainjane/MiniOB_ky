@@ -101,17 +101,20 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   }
 
   // create filter statement in having clause
-  FilterStmt *having_filter_stmt = nullptr;
-  rc = FilterStmt::create(db,
+  if (select_sql.having_conditions.size() > 0) {
+    FilterStmt *having_filter_stmt = nullptr;
+    rc = FilterStmt::create(db,
       default_table,
       &table_map,
       select_sql.having_conditions.data(),
       static_cast<int>(select_sql.having_conditions.size()),
       filter_stmt);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("cannot construct filter stmt");
-    return rc;
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("cannot construct filter stmt");
+      return rc;
+    }
   }
+  
 
   // everything alright
   SelectStmt *select_stmt = new SelectStmt();

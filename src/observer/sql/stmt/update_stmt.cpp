@@ -69,6 +69,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     if (OB_FAIL(rc)) {
       LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
       event->sql_result()->set_return_code(rc);
+      return RC::INVALID_ARGUMENT;
     }
     SqlResult *sql_result=event->sql_result();
   

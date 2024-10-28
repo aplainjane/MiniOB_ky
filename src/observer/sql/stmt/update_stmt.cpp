@@ -90,7 +90,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       return RC::INVALID_ARGUMENT;
     }
     else{
-      new_values.insert(update_sql.values.begin()+update_sql.record[i],tuple_list[0]);
+      new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
     }
   }
   std::vector<const FieldMeta *> fields;
@@ -134,7 +134,6 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
   for (int i=0;i<(int)fields.size();++i){
     cons_fields.emplace_back(Field(table,fields[i]));
   }
-
   UpdateStmt *update_stmt = new UpdateStmt(table,
       cons_fields, 
       new_values, 

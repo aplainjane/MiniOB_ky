@@ -88,20 +88,24 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     sql_result->close();
     if(tuple_list.size()==0)
     {
-      return RC::INVALID_ARGUMENT;
+      Value *tempvalue=new Value();
+      tempvalue->make_null();
+      new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
     }
-    if(tuple_list.size()>1)
-    {
-      string temp=tuple_list[0].to_string();
-      for(int i = 1;i<tuple_list.size();i++)
+    else{
+      if(tuple_list.size()>1)
       {
-        if(tuple_list[i].to_string()!=temp){
-          return RC::INVALID_ARGUMENT;
+        string temp=tuple_list[0].to_string();
+        for(int i = 1;i<tuple_list.size();i++)
+        {
+          if(tuple_list[i].to_string()!=temp){
+            return RC::INVALID_ARGUMENT;
+          }
         }
       }
+      new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
+      }
     }
-    new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
-  }
   std::vector<const FieldMeta *> fields;
    // check whether the field exists
   if (update_sql.attribute_names.size() != new_values.size()) {

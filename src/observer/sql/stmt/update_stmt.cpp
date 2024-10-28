@@ -18,7 +18,11 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table.h"
 #include "sql/stmt/filter_stmt.h"
 #include "sql/parser/parse_defs.h"
-
+#include "event/session_event.h"
+#include "event/sql_event.h"
+#include "net/sql_task_handler.h"
+#include "net/cli_communicator.h"
+#include "net/plain_communicator.h"
 
 UpdateStmt::UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> value, FilterStmt *filter_stmt)
     : table_(table), fields_(field), values_(value), filter_stmt_(filter_stmt)
@@ -51,12 +55,47 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       LOG_WARN("no such table. db=%s, table_name=%s", db->name(), table_name);
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
-
-
+  std::vector<Value> new_values = update_sql.values;
+  for(int i = 0;i<(int)update_sql.subquery_values.size();i++)
+  {
+    vector<Value> tuple_list;
+    CliCommunicator communicator;
+    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(update_sql.subquery_values[i]);
+    SQLStageEvent sql_event(event, event->query());
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    if (OB_FAIL(rc)) {
+      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+      event->sql_result()->set_return_code(rc);
+    }
+    SqlResult *sql_result=event->sql_result();
+  
+    rc=sql_result->open();
+    
+    Tuple* tuple=nullptr;
+    
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+      Value value;
+      if(tuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      tuple->cell_at(0,value);
+      tuple_list.emplace_back(value);
+    }
+    sql_result->close();
+    if(tuple_list.size()!=1)
+    {
+      return RC::INVALID_ARGUMENT;
+    }
+    else{
+      new_values.insert(update_sql.values.begin()+update_sql.record[i],tuple_list[0]);
+    }
+  }
   std::vector<const FieldMeta *> fields;
-
    // check whether the field exists
-  if (update_sql.attribute_names.size() != update_sql.values.size()) {
+  if (update_sql.attribute_names.size() != new_values.size()) {
     LOG_WARN("invalid argument. fields and values are not matched.");
     return RC::INVALID_ARGUMENT;
   }
@@ -92,13 +131,13 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
 
   std::vector<Field> cons_fields;
 
-  for (int i=0;i<fields.size();++i){
+  for (int i=0;i<(int)fields.size();++i){
     cons_fields.emplace_back(Field(table,fields[i]));
   }
 
   UpdateStmt *update_stmt = new UpdateStmt(table,
       cons_fields, 
-      update_sql.values, 
+      new_values, 
       filter_stmt
     );
   // std::cout<<"update!"<<std::endl;

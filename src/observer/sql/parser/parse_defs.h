@@ -157,6 +157,8 @@ struct UpdateKV
 {
   std::string attr_name;
   Value value;
+  bool is_subquery=false;
+  string subquery="";
 };
 struct UpdateSqlNode
 {
@@ -164,6 +166,8 @@ struct UpdateSqlNode
   std::vector<std::string>      attribute_names;  ///< 更新的字段，仅支持一个字段
   std::vector<Value>            values;           ///< 更新的值，仅支持一个字段
   std::vector<ConditionSqlNode> conditions;
+  std::vector<std::string>      subquery_values;
+  std::vector<int>              record;
 };
 
 /**

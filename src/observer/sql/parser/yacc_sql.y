@@ -516,10 +516,18 @@ update_stmt:
     {
         $$ = new ParsedSqlNode(SCF_UPDATE);
         $$->update.relation_name = $2;
+        int temp = 0;
         if (nullptr != $4) {
             for (UpdateKV kv : *$4) {
-                $$->update.attribute_names.emplace_back(kv.attr_name);
+              $$->update.attribute_names.emplace_back(kv.attr_name);
+              if(kv.is_subquery){
+                $$->update.subquery_values.emplace_back(kv.subquery);
+                $$->update.record.emplace_back(temp);
+              }
+              else{
                 $$->update.values.emplace_back(kv.value);
+              }
+              temp++;
             }
             delete $4;  // $4 只需要在这里释放一次
         }
@@ -556,6 +564,15 @@ set_clause:
         $$->attr_name = strdup($1);  // 使用 strdup 复制字符串，避免释放后使用问题
         $$->value = *$3;
         free($1);  // 确保在拷贝完成后再释放
+    }
+    | ID EQ SUB_QUERY
+    {
+      $$ = new UpdateKV();
+      $$->is_subquery = true;
+      $$->attr_name = strdup($1);
+      $$->subquery = strdup($3);
+      free($1);
+      free($3);
     }
     ;
 

@@ -61,7 +61,7 @@ extern double atof();
 
 WHITE_SAPCE      [\ \t\b\f]
 DIGIT            [0-9]+
-SUBQUERY         \(SELECT.*FROM.*\)
+SUBQUERY         \(SELECT(?:[^()]*|\([^()]*\))*FROM(?:[^()]*|\([^()]*\))*\)
 ID               [A-Za-z_]+[A-Za-z0-9_]*
 DOT              \.
 QUOTE            [\'\"]

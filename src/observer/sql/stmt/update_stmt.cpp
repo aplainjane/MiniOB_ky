@@ -56,6 +56,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
   std::vector<Value> new_values = update_sql.values;
+  std::cout<<update_sql.subquery_values.size()<<std::endl;
   for(int i = 0;i<(int)update_sql.subquery_values.size();i++)
   {
     vector<Value> tuple_list;

@@ -113,7 +113,16 @@ RC FloatType::cast_to(const Value &val, AttrType type, Value &result) const {
     switch (type) {
         case AttrType::INTS:
             // 转换为整数（向下取整）
-            result.set_int(static_cast<int>(float_value));
+            int num;
+            if((static_cast<int>(val.get_float()*10)% 10) >= 5)
+            {
+              num = static_cast<int>(val.get_float()) + 1;
+            }
+            else
+            {
+              num = static_cast<int>(val.get_float());
+            }
+            result.set_int(num);
             break;
 
         case AttrType::FLOATS:

@@ -56,7 +56,6 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
   std::vector<Value> new_values = update_sql.values;
-  std::cout<<update_sql.subquery_values.size()<<std::endl;
   for(int i = 0;i<(int)update_sql.subquery_values.size();i++)
   {
     vector<Value> tuple_list;
@@ -106,12 +105,10 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
         }
       }
       if(flag){
-      new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
+        new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
       }
       else{
-        Value *tempvalue=new Value();
-        tempvalue->make_null();
-        new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
+        return RC::INTERNAL;
       }
       }
     }

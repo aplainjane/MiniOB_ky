@@ -50,6 +50,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
     // rc = trx_->update_record(table_, record);
     // 修改record
+    Record old_record = record;
     rc = trx_->delete_record(table_, record);
     //delete_records.emplace_back(record);
     if (rc != RC::SUCCESS) {
@@ -118,12 +119,13 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       RC rc = table_->make_record(user_field_num, values.data(), new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
+        trx_->insert_record(table_,old_record);
         return rc;
       }
       //new_record.set_rid(delete_records[delete_records.size()-1].rid());
       rc = trx_->insert_record(table_, new_record);
       //insert_records.emplace_back(new_record);
-      if (rc != RC::SUCCESS) {
+      if (rc != RC::SUCCESS) {      
         LOG_WARN("failed to insert record: %s", strrc(rc));
         return rc;
       }

@@ -245,7 +245,7 @@ RC Table::update_record(Record &new_record, Record &old_record)
 {
 
   RC rc = RC::SUCCESS;
-
+  
   // 1. 删除旧记录的索引条目
   for (Index *index : indexes_) {
     rc = index->delete_entry(old_record.data(), &old_record.rid());
@@ -257,7 +257,7 @@ RC Table::update_record(Record &new_record, Record &old_record)
     LOG_ERROR("Failed to delete index entries for old record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
     return rc;
   }
-
+  
   // 2. 删除旧记录
   rc = record_handler_->delete_record(&old_record.rid());
   if (rc != RC::SUCCESS) {
@@ -363,6 +363,11 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
       // 如果为 NULL，则不进行赋值
       null_bitmap.set_bit(normal_field_start_index + i);
       continue;
+    }
+    if (!field->nullable() && value.is_null()) {
+      rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+      LOG_WARN("field can not be null. table name:%s,field name:%s", table_meta_.name(), field->name());
+      return rc;
     }
     if (field->type() != value.attr_type()) {
       Value real_value;

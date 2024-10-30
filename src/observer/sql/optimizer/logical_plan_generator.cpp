@@ -197,7 +197,7 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     } else if (filter_obj_right.is_attr) {
       right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
     } else if (filter_obj_right.is_aggr || filter_obj_right.is_arthi) {
-      left = std::move(filter_obj_left.expr);
+      right = std::move(filter_obj_right.expr);
     }
      else {
       right = std::unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));

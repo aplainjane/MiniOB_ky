@@ -629,6 +629,18 @@ expression:
       $$ = $2;
       $$->set_name(token_name(sql_string, &@$));
     }
+    | expression '+' expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | expression '-' expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | expression '*' expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | expression '/' expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
     | value {
       $$ = new ValueExpr(*$1);
       $$->set_name(token_name(sql_string, &@$));
@@ -649,9 +661,6 @@ expression:
     | aggr_expr {
       $$ = $1;
     }
-    | arith_expr{
-      $$ = $1;
-    }
     ;
 simple_expression:
     value {
@@ -667,7 +676,11 @@ simple_expression:
     }
 
 arith_expr:
-    arith_expr '+' simple_expression {
+    LBRACE arith_expr RBRACE {
+      $$ = $2;
+      $$->set_name(token_name(sql_string, &@$));
+    }
+    | arith_expr '+' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
     }
     | arith_expr '-' simple_expression {
@@ -677,6 +690,30 @@ arith_expr:
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
     }
     | arith_expr '/' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '+' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '-' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '*' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '/' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '+' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '-' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '*' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '/' arith_expr {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
     }
     | simple_expression '+' simple_expression {

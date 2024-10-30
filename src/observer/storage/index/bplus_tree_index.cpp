@@ -98,12 +98,12 @@ void BplusTreeIndex::destroy(){
 
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid)
 {
-  return index_handler_.insert_entry(record, rid);
+  return index_handler_.insert_entry(record, field_metas_, rid);
 }
 
 RC BplusTreeIndex::delete_entry(const char *record, const RID *rid)
 {
-  return index_handler_.delete_entry(record, rid);
+  return index_handler_.delete_entry(record, field_metas_, rid);
 }
 
 IndexScanner *BplusTreeIndex::create_scanner(

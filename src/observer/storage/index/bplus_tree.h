@@ -142,48 +142,15 @@ public:
     //std::cout<<"Key-value COmparaing"<<std::endl;
 
     int result = attr_comparator_(v1, v2);
-    if (unique_ || result != 0) {
-      //std::cout<<*(int *)(v1)<<" "<<*(int *)(v2)<<std::endl;
-      //std::cout<<"in result:\t"<<result<<std::endl;
+    if (result != 0) {
       return result;
+    }else if (!unique_) {
+      /* 唯一索引不比较RID */
+      const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
+      const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+      result = RID::compare(rid1, rid2);
     }
-
-    //std::cout<<"result:"<<result<<std::endl;
-
-    //std::cout<<"operator_rid"<<std::endl;
-    std::vector<int> attr_lengths(attr_comparator_.attr_lengths());
-
-    int allocate_idx = 0;
-    for (long unsigned int i=0;i<attr_lengths.size();++i){
-      //std::cout<<*(int *)(v1+allocate_idx)<<" "<<*(int *)(v2+allocate_idx)<<" "<<attr_lengths[i]<<std::endl;
-      allocate_idx += attr_lengths[i];
-    }
-
-    //std::cout<<"finished"<<std::endl;
-
-    // const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    // const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
-
-    RID *rid1, *rid2;
-    allocate_idx = 0;
-    int same_flag = 1;
-    for (long unsigned int i=0;i<attr_lengths.size();++i){
-      rid1 = (RID *)(v1+allocate_idx);
-      rid2 = (RID *)(v2+allocate_idx);
-      allocate_idx += attr_lengths[i];
-      int page_diff = rid1->page_num - rid2->page_num;
-      if (page_diff != 0) {
-        same_flag = 0;
-        break;
-      } else if(rid1->slot_num - rid2->slot_num !=0){
-        same_flag = 0;
-        break;
-      }
-    }
-
-    // return RID::compare(rid1, rid2);
-
-    return same_flag;
+    return result;
   }
 
 private:

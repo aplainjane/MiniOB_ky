@@ -1549,8 +1549,8 @@ MemPoolItem::item_unique_ptr BplusTreeHandler::make_key(const char *user_key, st
   }
 
   int allocate_idx = 0;
-  allocate_idx += field_metas[0].len();
-  for (long unsigned int i=1;i<field_metas.size();++i){
+  //allocate_idx += field_metas[0].len();
+  for (long unsigned int i=0;i<field_metas.size();++i){
     memcpy(static_cast<char *>(key.get()) + allocate_idx, user_key+field_metas[i].offset(), field_metas[i].len());
     allocate_idx += field_metas[i].len();
   }
@@ -1925,8 +1925,8 @@ RC BplusTreeHandler::delete_entry(const char *user_key, std::vector<FieldMeta> f
   char *key = static_cast<char *>(pkey.get());
 
   int allocate_idx = 0;
-  allocate_idx += field_metas[0].len();
-  for (long unsigned int i=1;i<field_metas.size();++i){
+  //allocate_idx += field_metas[0].len();
+  for (long unsigned int i=0;i<field_metas.size();++i){
     memcpy(key + allocate_idx, user_key+field_metas[i].offset(), field_metas[i].len());
     allocate_idx += field_metas[i].len();
   }

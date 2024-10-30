@@ -181,6 +181,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <string>              storage_format
 %type <relation_list>       rel_list
 %type <expression>          expression
+%type <expression>          simple_expression
 %type <expression>          arith_expr
 %type <expression>          aggr_expr
 %type <expression_list>     expression_list
@@ -624,10 +625,7 @@ expression_list:
     }
     ;
 expression:
-    arith_expr {
-      $$ = $1;
-    }
-    | LBRACE expression RBRACE {
+     LBRACE expression RBRACE {
       $$ = $2;
       $$->set_name(token_name(sql_string, &@$));
     }
@@ -645,27 +643,55 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
-  | '-' expression %prec UMINUS {
+    | '-' expression %prec UMINUS {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::NEGATIVE, $2, nullptr, sql_string, &@$);
     }
     | aggr_expr {
       $$ = $1;
     }
+    | arith_expr{
+      $$ = $1;
+    }
+    ;
+simple_expression:
+    value {
+      $$ = new ValueExpr(*$1);
+      $$->set_name(token_name(sql_string, &@$));
+      delete $1;
+    }
+    | rel_attr {
+      RelAttrSqlNode *node = $1;
+      $$ = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      $$->set_name(token_name(sql_string, &@$));
+      delete $1;
+    }
 
 arith_expr:
-    expression '+' expression {
+    arith_expr '+' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
     }
-    | expression '-' expression {
+    | arith_expr '-' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
     }
-    | expression '*' expression {
+    | arith_expr '*' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
     }
-    | expression '/' expression {
+    | arith_expr '/' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
     }
-
+    | simple_expression '+' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '-' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '*' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '/' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    ;
    
 aggr_expr:
     SUM LBRACE expression_list RBRACE {
@@ -713,7 +739,7 @@ aggr_expr:
       empty->push_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("COUNT", empty, sql_string, &@$);
     }
-    
+    ;
 
 rel_attr:
     ID {
@@ -1007,6 +1033,32 @@ condition:
         $$->right_is_attr = 4;
         $$->right_expr = $3;
         $$->comp = $2;  
+    }
+    | arith_expr comp_op value {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 0;
+        $$->right_value = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | arith_expr comp_op rel_attr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | arith_expr comp_op arith_expr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 5;
+        $$->right_expr = $3;
+        $$->comp = $2;
     }
     | value is_null_choice {
       $$ = new ConditionSqlNode;

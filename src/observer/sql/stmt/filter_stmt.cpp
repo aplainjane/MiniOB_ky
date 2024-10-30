@@ -184,9 +184,38 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
   }
   else if(condition.left_is_attr==5){
     FilterObj filter_obj;
-    auto tmp_expr = unique_ptr<Expression>(std::move(condition.left_expr));
-    filter_obj.init_arthi(tmp_expr);
-    filter_unit->set_left(filter_obj);
+    std::vector<std::unique_ptr<Expression>> bound_expressions;
+    BinderContext binder_context;
+
+    // 遍历传入的 tables，添加每个表到 binder_context
+    if (tables != nullptr) {
+        for (const auto &pair : *tables) {
+            const std::string &table_name = pair.first;
+            Table *table = pair.second;
+
+            if (table != nullptr) {
+                binder_context.add_table(table);
+            } else {
+                LOG_WARN("Table pointer is null for table name: %s", table_name.c_str());
+                return RC::INVALID_ARGUMENT; // 或其他合适的错误码
+            }
+        }
+    }
+    ExpressionBinder expression_binder(binder_context);
+    auto tmp_expr = std::unique_ptr<Expression>(condition.left_expr);
+    RC rc = expression_binder.bind_expression(tmp_expr, bound_expressions);
+    if (OB_FAIL(rc)) {
+      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      return rc;
+    }
+    if (!bound_expressions.empty()) {
+      auto tmp_expr1 = std::move(bound_expressions[0]);
+      filter_obj.init_arthi(tmp_expr1);
+      filter_unit->set_left(filter_obj);
+    } else {
+      LOG_ERROR("Expected an AggregateExpr but got a different type");
+      return RC::INTERNAL;
+    }  
   }
   else{
     FilterObj filter_obj;
@@ -290,9 +319,38 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
   }
   else if(condition.right_is_attr==5){
     FilterObj filter_obj;
-    auto tmp_expr = unique_ptr<Expression>(condition.right_expr);
-    filter_obj.init_arthi(tmp_expr);
-    filter_unit->set_left(filter_obj);
+    std::vector<std::unique_ptr<Expression>> bound_expressions;
+    BinderContext binder_context;
+
+    // 遍历传入的 tables，添加每个表到 binder_context
+    if (tables != nullptr) {
+        for (const auto &pair : *tables) {
+            const std::string &table_name = pair.first;
+            Table *table = pair.second;
+
+            if (table != nullptr) {
+                binder_context.add_table(table);
+            } else {
+                LOG_WARN("Table pointer is null for table name: %s", table_name.c_str());
+                return RC::INVALID_ARGUMENT; // 或其他合适的错误码
+            }
+        }
+    }
+    ExpressionBinder expression_binder(binder_context);
+    auto tmp_expr = std::unique_ptr<Expression>(condition.right_expr);
+    RC rc = expression_binder.bind_expression(tmp_expr, bound_expressions);
+    if (OB_FAIL(rc)) {
+      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      return rc;
+    }
+    if (!bound_expressions.empty()) {
+      auto tmp_expr1 = std::move(bound_expressions[0]);
+      filter_obj.init_arthi(tmp_expr1);
+      filter_unit->set_right(filter_obj);
+    } else {
+      LOG_ERROR("Expected an AggregateExpr but got a different type");
+      return RC::INTERNAL;
+    }  
   }
   else{
     FilterObj filter_obj;

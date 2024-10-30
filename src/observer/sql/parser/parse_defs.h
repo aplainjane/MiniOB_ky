@@ -63,6 +63,16 @@ enum CompOp
 };
 
 /**
+ * @brief order比较运算符
+ * @ingroup SQLParser
+ */
+struct OrderBySqlNode
+{
+  Expression * expr = nullptr;
+  bool is_asc;// true 为升序
+};
+
+/**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
  * @details 条件比较就是SQL查询中的 where a>b 这种。
@@ -107,6 +117,7 @@ struct SelectSqlNode
   std::vector<ConditionSqlNode>            conditions;        ///< 查询条件，使用AND串联起来多个条件
   std::vector<std::unique_ptr<Expression>> group_by;          ///< group by clause
   std::vector<ConditionSqlNode>            having_conditions;  ///< groupby having
+  std::vector<OrderBySqlNode>              orderbys;    ///< 排序规则
 };
 
 /**

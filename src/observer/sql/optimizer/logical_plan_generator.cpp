@@ -27,6 +27,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/project_logical_operator.h"
 #include "sql/operator/table_get_logical_operator.h"
 #include "sql/operator/group_by_logical_operator.h"
+#include "sql/operator/orderby_logical_operator.h"
 
 #include "sql/stmt/calc_stmt.h"
 #include "sql/stmt/delete_stmt.h"
@@ -144,6 +145,21 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
     }
 
     last_oper = &group_by_oper;
+  }
+
+  unique_ptr<LogicalOperator> order_by_oper;
+  rc = create_order_by_plan(select_stmt, order_by_oper);
+  if (OB_FAIL(rc)) {
+    LOG_WARN("failed to create group by logical plan. rc=%s", strrc(rc));
+    return rc;
+  }
+
+  if (order_by_oper) {
+    if (*last_oper) {
+      order_by_oper->add_child(std::move(*last_oper));
+    }
+
+    last_oper = &order_by_oper;
   }
 
   auto project_oper = make_unique<ProjectLogicalOperator>(std::move(select_stmt->query_expressions()));
@@ -403,5 +419,83 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
   auto group_by_oper = make_unique<GroupByLogicalOperator>(std::move(group_by_expressions),
                                                            std::move(aggregate_expressions));
   logical_operator = std::move(group_by_oper);
+  return RC::SUCCESS;
+}
+
+RC LogicalPlanGenerator::create_order_by_plan(SelectStmt *select_stmt, unique_ptr<LogicalOperator> &logical_operator)
+{
+  std::vector<std::unique_ptr<OrderByUnit>> &order_by_units = select_stmt->order_by();
+  vector<Expression *> aggregate_expressions;
+  vector<unique_ptr<Expression>> &query_expressions = select_stmt->query_expressions();
+  function<RC(std::unique_ptr<Expression>&)> collector = [&](unique_ptr<Expression> &expr) -> RC {
+    RC rc = RC::SUCCESS;
+    if (expr->type() == ExprType::AGGREGATION) {
+      expr->set_pos(aggregate_expressions.size() + order_by_units.size());
+      aggregate_expressions.push_back(expr.get());
+    }
+    rc = ExpressionIterator::iterate_child_expr(*expr, collector);
+    return rc;
+  };
+
+  function<RC(std::unique_ptr<Expression>&)> bind_order_by_expr = [&](unique_ptr<Expression> &expr) -> RC {
+    RC rc = RC::SUCCESS;
+    for (size_t i = 0; i < order_by_units.size(); i++) {
+      auto &order_by = order_by_units[i]->expr();
+      if (expr->type() == ExprType::AGGREGATION) {
+        break;
+      } else if (expr->equal(*order_by)) {
+        expr->set_pos(i);
+        continue;
+      } else {
+        rc = ExpressionIterator::iterate_child_expr(*expr, bind_order_by_expr);
+      }
+    }
+    return rc;
+  };
+
+ bool found_unbound_column = false;
+  function<RC(std::unique_ptr<Expression>&)> find_unbound_column = [&](unique_ptr<Expression> &expr) -> RC {
+    RC rc = RC::SUCCESS;
+    if (expr->type() == ExprType::AGGREGATION) {
+      // do nothing
+    } else if (expr->pos() != -1) {
+      // do nothing
+    } else if (expr->type() == ExprType::FIELD) {
+      found_unbound_column = true;
+    }else {
+      rc = ExpressionIterator::iterate_child_expr(*expr, find_unbound_column);
+    }
+    return rc;
+  };
+  
+
+  for (unique_ptr<Expression> &expression : query_expressions) {
+    bind_order_by_expr(expression);
+  }
+
+  for (unique_ptr<Expression> &expression : query_expressions) {
+    find_unbound_column(expression);
+  }
+
+  // collect all aggregate expressions
+  for (unique_ptr<Expression> &expression : query_expressions) {
+    collector(expression);
+  }
+
+  if (order_by_units.empty() && aggregate_expressions.empty()) {
+    // 既没有group by也没有聚合函数，不需要group by
+    return RC::SUCCESS;
+  }
+
+  if (found_unbound_column) {
+    LOG_WARN("column must appear in the GROUP BY clause or must be part of an aggregate function");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  // 如果只需要聚合，但是没有group by 语句，需要生成一个空的group by 语句
+
+  auto order_by_oper = make_unique<OrderByLogicalOperator>(std::move(order_by_units),
+                                                           std::move(aggregate_expressions));
+  logical_operator = std::move(order_by_oper);
   return RC::SUCCESS;
 }

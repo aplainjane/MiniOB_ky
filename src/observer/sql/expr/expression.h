@@ -197,6 +197,10 @@ public:
   AttrType value_type() const override { return field_.attr_type(); }
   int      value_length() const override { return field_.meta()->len(); }
 
+  std::unique_ptr<Expression> deep_copy(){
+    return std::unique_ptr<FieldExpr>(new FieldExpr(*this));
+  }
+
   Field &field() { return field_; }
 
   const Field &field() const { return field_; }

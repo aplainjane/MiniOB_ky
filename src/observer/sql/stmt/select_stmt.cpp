@@ -82,6 +82,21 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
     }
   }
 
+
+  std::vector<std::unique_ptr<OrderByUnit>> order_by_units;
+  for (OrderBySqlNode &orderby_sql : select_sql.orderbys) {
+    // 创建 OrderByUnit 对象并用 unique_ptr 封装
+    auto orderby_unit = std::make_unique<OrderByUnit>(std::move(orderby_sql.expr), orderby_sql.is_asc);
+    if (!orderby_unit) {
+        LOG_WARN("failed to allocate memory for orderby unit");
+        return RC::INTERNAL;
+    }
+    // 将 unique_ptr 移动到 vector 中
+    order_by_units.emplace_back(std::move(orderby_unit));
+  }
+
+
+
   Table *default_table = nullptr;
   if (tables.size() == 1) {
     default_table = tables[0];
@@ -107,6 +122,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   select_stmt->query_expressions_.swap(bound_expressions);
   select_stmt->filter_stmt_ = filter_stmt;
   select_stmt->group_by_.swap(group_by_expressions);
+  select_stmt->order_by_.swap(order_by_units);
   stmt                      = select_stmt;
   return RC::SUCCESS;
 }

@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/memory.h"
 #include "common/type/attr_type.h"
 #include "common/type/data_type.h"
+#include "common/type/vector_type.h"
 
 /**
  * @brief 属性的值
@@ -37,7 +38,8 @@ public:
   friend class VectorType;
   friend class DateType;
   friend class NullType;
-
+  
+  using ElementType = std::variant<int, float>;
   Value() = default;
 
   ~Value() { reset(); }
@@ -96,6 +98,7 @@ public:
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);
   void set_boolean(bool val);
+  void set_vector(const std::vector<ElementType> &values) {this->vector_values_ = values;}
   void set_date(int y,int m,int d){
     //yyyymmdd
     value_.int_value_ = y*10000+m*100+d;
@@ -126,17 +129,20 @@ public:
   float  get_float() const;
   string get_string() const;
   bool   get_boolean() const;
+  vector<ElementType> get_vector() const;
 
 private:
   void set_int(int val);
   void set_float(float val);
   void set_string(const char *s, int len = 0);
+  void parse_vector(const char *s);
   void set_string_from_other(const Value &other);
 
 private:
   AttrType attr_type_ = AttrType::UNDEFINED;
   int      length_    = 0;
-
+  std::vector<ElementType> vector_values_;
+  
   union Val
   {
     int32_t int_value_;

@@ -12,6 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by WangYunlai on 2023/06/28.
 //
 
+#include <cstring>
 #include "common/value.h"
 
 #include "common/lang/comparator.h"
@@ -20,13 +21,23 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 
+using ElementType = std::variant<int, float>;
+char* vectorToCharArray(const std::vector<ElementType>& vector_values);
+
 Value::Value(int val) { set_int(val); }
 
 Value::Value(float val) { set_float(val); }
 
 Value::Value(bool val) { set_boolean(val); }
 
-Value::Value(const char *s, int len /*= 0*/) { set_string(s, len); }
+Value::Value(const char *s, int len /*= 0*/) {
+  if (s[0] == '[' || s[strlen(s) - 1] == ']') {
+    parse_vector(s);
+  }
+  else {
+    set_string(s, len);
+  } 
+}
 
 Value::Value(const Value &other)
 {
@@ -40,6 +51,7 @@ Value::Value(const Value &other)
 
     default: {
       this->value_ = other.value_;
+      this->vector_values_ = other.vector_values_;
     } break;
   }
 }
@@ -50,6 +62,7 @@ Value::Value(Value &&other)
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
   this->value_     = other.value_;
+  this->vector_values_ = other.vector_values_;
   other.own_data_  = false;
   other.length_    = 0;
 }
@@ -70,6 +83,7 @@ Value &Value::operator=(const Value &other)
 
     default: {
       this->value_ = other.value_;
+      this->vector_values_ = other.vector_values_;
     } break;
   }
   return *this;
@@ -85,6 +99,7 @@ Value &Value::operator=(Value &&other)
   this->length_    = other.length_;
   this->own_data_  = other.own_data_;
   this->value_     = other.value_;
+  this->vector_values_ = other.vector_values_;
   other.own_data_  = false;
   other.length_    = 0;
   return *this;
@@ -97,6 +112,11 @@ void Value::reset()
       if (own_data_ && value_.pointer_value_ != nullptr) {
         delete[] value_.pointer_value_;
         value_.pointer_value_ = nullptr;
+      }
+      break;
+    case AttrType::VECTORS:
+      if (own_data_ && !vector_values_.empty()) {
+        vector_values_.clear();
       }
       break;
     default: break;
@@ -128,7 +148,13 @@ void Value::set_data(char *data, int length)
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
       length_           = length;
-    }
+    } break;
+    case AttrType::VECTORS: {
+      std::cout<<"data: "<<data<<std::endl;
+      std::cout<<"length: "<<length<<std::endl;
+      parse_vector(data);
+      length_        = length;
+    } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
     } break;
@@ -179,6 +205,41 @@ void Value::set_string(const char *s, int len /*= 0*/)
   }
 }
 
+void Value::parse_vector(const char *s)
+{
+  reset();
+  attr_type_ = AttrType::VECTORS;
+  own_data_ = true;
+  std::string content(s + 1, s + strlen(s) - 1); // 去掉中括号
+  std::istringstream ss(content);
+  std::string item;
+  std::vector<ElementType> vector_values;
+  std::cout<<"content: "<<content<<std::endl;
+  while (std::getline(ss, item, ',')) {
+    // 去掉可能的空格
+    item.erase(std::remove_if(item.begin(), item.end(), ::isspace), item.end());
+
+    // 判断类型并添加到向量中
+    try {
+      if (!item.empty()) {
+        if (item.find('.') != std::string::npos) {
+          // 处理 float 类型
+          float value = std::stof(item);
+          vector_values.push_back(value);
+        } else {
+          // 处理 int 类型
+          int value = std::stoi(item);
+          vector_values.push_back(value);
+        }
+      }
+    } catch (const std::exception &e) {
+      LOG_WARN("Invalid value in vector: %s", item.c_str());
+      vector_values.push_back(0);
+    }
+  }
+  vector_values_ = vector_values;
+}
+
 void Value::set_value(const Value &value)
 {
   switch (value.attr_type_) {
@@ -197,6 +258,10 @@ void Value::set_value(const Value &value)
     case AttrType::NULLS: {
       make_null();
     } break;
+    case AttrType::VECTORS: {
+      attr_type_ = AttrType::VECTORS;
+      vector_values_ = value.vector_values_;
+    }
     default: {
       ASSERT(false, "got an invalid value type");
     } break;
@@ -219,6 +284,10 @@ const char *Value::data() const
     case AttrType::CHARS: {
       return value_.pointer_value_;
     } break;
+    case AttrType::VECTORS: {
+      char *data_values = vectorToCharArray(vector_values_);
+      return data_values;
+    }
     default: {
       return (const char *)&value_;
     } break;
@@ -345,4 +414,37 @@ bool Value::get_boolean() const
     }
   }
   return false;
+}
+
+vector<ElementType> Value::get_vector() const
+{
+  ASSERT(attr_type_ == AttrType::VECTORS, "attr type is not VECTORS");
+  return vector_values_;
+}
+
+char* vectorToCharArray(const std::vector<ElementType>& vector_values) {
+    std::ostringstream oss;
+    oss << "["; // 开始括号
+
+    for (size_t i = 0; i < vector_values.size(); ++i) {
+        std::visit([&oss](auto&& arg) {
+            oss << arg; // 将元素添加到输出流
+        }, vector_values[i]);
+
+        if (i < vector_values.size() - 1) {
+            oss << ", "; // 添加逗号和空格分隔
+        }
+    }
+
+    oss << "]"; // 结束括号
+
+    std::string result = oss.str();
+    result += '\0'; // 添加字符串终止符
+
+    size_t result_size = result.size() + 1; // +1 for null terminato
+
+    char* char_array = new char[result_size];
+    std::strcpy(char_array, result.c_str());
+
+    return char_array;
 }

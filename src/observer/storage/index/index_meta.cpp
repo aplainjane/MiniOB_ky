@@ -32,9 +32,6 @@ RC IndexMeta::init(const char *name, std::vector<FieldMeta> &fields, bool unique
 
   name_ = name;
   for (FieldMeta file_meta: fields){
-    if (file_meta.name() == std::string("__null")){
-      continue;
-    }
     fields_.emplace_back(file_meta.name());
   }
   unique_ = unique;

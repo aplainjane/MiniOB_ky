@@ -163,7 +163,7 @@ RC VectorType::to_string(const Value &val, string &result) const
     oss << "[";
     const auto &val_vec = val.get_vector();
     for (size_t i = 0; i < val_vec.size(); ++i) {
-        if (i != 0) oss << ", ";
+        if (i != 0) oss << ",";
             if (std::holds_alternative<int>(val_vec[i])) {
                 oss << std::get<int>(val_vec[i]);
             } else {

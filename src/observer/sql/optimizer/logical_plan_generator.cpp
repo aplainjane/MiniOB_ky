@@ -174,16 +174,19 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
   RC                                  rc = RC::SUCCESS;
   std::vector<unique_ptr<Expression>> cmp_exprs;
   const std::vector<FilterUnit *>    &filter_units = filter_stmt->filter_units();
-  for (const FilterUnit *filter_unit : filter_units) {
-    const FilterObj &filter_obj_left  = filter_unit->left();
-    const FilterObj &filter_obj_right = filter_unit->right();
+  for (FilterUnit *filter_unit : filter_units) {
+    FilterObj &filter_obj_left  = filter_unit->left();
+    FilterObj &filter_obj_right = filter_unit->right();
     
     std::unique_ptr<Expression> left;
     if (filter_obj_left.is_tuple) {
       left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.tuple_list));
     } else if (filter_obj_left.is_attr) {
       left = std::unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
-    } else {
+    } else if (filter_obj_left.is_aggr || filter_obj_left.is_arthi) {
+      left = std::move(filter_obj_left.expr);
+    } 
+    else {
       left = std::unique_ptr<Expression>(new ValueExpr(filter_obj_left.value));
     }
 
@@ -193,7 +196,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.tuple_list));
     } else if (filter_obj_right.is_attr) {
       right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
-    } else {
+    } else if (filter_obj_right.is_aggr || filter_obj_right.is_arthi) {
+      right = std::move(filter_obj_right.expr);
+    }
+     else {
       right = std::unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
     }
 
@@ -382,7 +388,7 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
     } else if (expr->pos() != -1) {
       // do nothing
     } else if (expr->type() == ExprType::FIELD) {
-      found_unbound_column = true;
+      // found_unbound_column = true;
     }else {
       rc = ExpressionIterator::iterate_child_expr(*expr, find_unbound_column);
     }

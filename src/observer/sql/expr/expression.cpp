@@ -297,11 +297,19 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   }
   else{
   RC rc = left_->get_value(tuple, left_value);
+  if(rc == RC::SQL_SYNTAX){
+    value.set_boolean(false);
+    return RC::SUCCESS;
+  }
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
   rc = right_->get_value(tuple, right_value);
+  if(rc == RC::SQL_SYNTAX){
+    value.set_boolean(false);
+    return RC::SUCCESS;
+  }
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
     return rc;
@@ -470,6 +478,9 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
     } break;
 
     case Type::DIV: {
+      if(right_value.get_int() == 0){
+        return RC::SQL_SYNTAX;
+      }
       Value::divide(left_value, right_value, value);
     } break;
 
@@ -559,8 +570,8 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
 
   Value left_value;
   Value right_value;
-
   rc = left_->get_value(tuple, left_value);
+  
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;

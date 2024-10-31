@@ -2657,7 +2657,7 @@ yyreduce:
   case 90: /* arith_expr: '-' arith_expr  */
 #line 729 "yacc_sql.y"
                      {
-      (yyval.expression) = (yyvsp[0].expression);
+      (yyval.expression) = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), (yyvsp[0].expression), sql_string, &(yyloc));
     }
 #line 2663 "yacc_sql.cpp"
     break;

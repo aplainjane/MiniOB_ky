@@ -678,7 +678,36 @@ simple_expression:
 arith_expr:
     LBRACE arith_expr RBRACE {
       $$ = $2;
-      $$->set_name(token_name(sql_string, &@$));
+    }
+    | arith_expr '+' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '-' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '*' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '/' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '+' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '-' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '*' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '/' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $4, sql_string, &@$);
+    }
+    | '-' arith_expr {
+      $$ = $2;
+    }
+    | '-' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
     }
     | arith_expr '+' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);

@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include <iomanip>
+#include <cmath>
 
 using ElementType = std::variant<int, float>;
 char* vectorToCharArray(const std::vector<ElementType>& vector_values);
@@ -227,19 +228,15 @@ void Value::parse_vector(const char *s)
           // 处理 float 类型
           float value = std::stof(item);
 
-          // 格式化浮点数，保留两位小数
-          std::ostringstream out;
-          out << std::fixed << std::setprecision(2) << value;
-          std::string formatted_value = out.str();
+          // 四舍五入保留两位小数
+          value = std::round(value * 100.0f) / 100.0f;
 
-          // 去掉多余的零
-          if (formatted_value.back() == '0') {
-            formatted_value.pop_back(); // 去掉最后一个零
-            if (formatted_value.back() == '.') {
-              formatted_value.pop_back(); // 去掉小数点
-            }
+          // 如果结果是整型（例如 1.00），将其转换为 int
+          if (value == static_cast<int>(value)) {
+            vector_values.push_back(static_cast<int>(value)); // 插入为 int
+          } else {
+            vector_values.push_back(value); // 插入为 float
           }
-          vector_values.push_back(value);
         } else {
           // 处理 int 类型
           int value = std::stoi(item);

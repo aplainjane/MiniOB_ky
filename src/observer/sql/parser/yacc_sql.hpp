@@ -123,7 +123,8 @@ extern int yydebug;
     ID = 324,                      /* ID  */
     SSS = 325,                     /* SSS  */
     SUB_QUERY = 326,               /* SUB_QUERY  */
-    UMINUS = 327                   /* UMINUS  */
+    VECTOR_LIST = 327,             /* VECTOR_LIST  */
+    UMINUS = 328                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -155,7 +156,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 159 "yacc_sql.hpp"
+#line 160 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

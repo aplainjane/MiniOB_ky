@@ -6,6 +6,7 @@
 #include "common/log/log.h"
 #include "common/type/vector_type.h"
 #include "common/value.h"
+#include <cmath>
 
 int VectorType::compare(const Value &left, const Value &right) const
 {
@@ -53,16 +54,22 @@ RC VectorType::add(const Value &left, const Value &right, Value &result) const
   // add element by element
   std::vector<std::variant<int, float>> sum_values;
   for (size_t i = 0; i < left.vector_values_.size(); ++i) {
-    if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
-      return RC::INTERNAL; // 不同类型的元素不能相加
-    }
-    std::variant<int, float> sum;
-    if (std::holds_alternative<int>(left.vector_values_[i])) {
-      sum = std::get<int>(left.vector_values_[i]) + std::get<int>(right.vector_values_[i]);
+    // 检查元素类型
+    bool left_is_float = std::holds_alternative<float>(left.vector_values_[i]);
+    bool right_is_float = std::holds_alternative<float>(right.vector_values_[i]);
+
+    if (left_is_float || right_is_float) {
+      float left_value = left_is_float ? std::get<float>(left.vector_values_[i]) : static_cast<float>(std::get<int>(left.vector_values_[i]));
+      float right_value = right_is_float ? std::get<float>(right.vector_values_[i]) : static_cast<float>(std::get<int>(right.vector_values_[i]));
+      float product = left_value + right_value;
+      // 保留两位小数，使用浮点数表示
+      product = std::round(product * 100.0f) / 100.0f;
+      // 将结果存入结果向量
+      sum_values.push_back(product);
     } else {
-      sum = std::get<float>(left.vector_values_[i]) + std::get<float>(right.vector_values_[i]);
+      // 两个都是整数
+      sum_values.push_back(std::get<int>(left.vector_values_[i]) + std::get<int>(right.vector_values_[i]));
     }
-    sum_values.push_back(sum);
   }
 
   result.set_vector(sum_values);
@@ -85,16 +92,23 @@ RC VectorType::subtract(const Value &left, const Value &right, Value &result) co
   // subtract element by element
   std::vector<std::variant<int, float>> sub_values;
   for (size_t i = 0; i < left.vector_values_.size(); ++i) {
-    if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
-      return RC::INTERNAL; // 不同类型的元素不能相减
-    }
-    std::variant<int, float> sub;
-    if (std::holds_alternative<int>(left.vector_values_[i])) {
-      sub = std::get<int>(left.vector_values_[i]) - std::get<int>(right.vector_values_[i]);
+    // 检查元素类型
+    bool left_is_float = std::holds_alternative<float>(left.vector_values_[i]);
+    bool right_is_float = std::holds_alternative<float>(right.vector_values_[i]);
+
+    if (left_is_float || right_is_float) {
+      float left_value = left_is_float ? std::get<float>(left.vector_values_[i]) : static_cast<float>(std::get<int>(left.vector_values_[i]));
+      float right_value = right_is_float ? std::get<float>(right.vector_values_[i]) : static_cast<float>(std::get<int>(right.vector_values_[i]));
+      
+      float product = left_value - right_value;
+      // 保留两位小数，使用浮点数表示
+      product = std::round(product * 100.0f) / 100.0f;
+      // 将结果存入结果向量
+      sub_values.push_back(product);
     } else {
-      sub = std::get<float>(left.vector_values_[i]) - std::get<float>(right.vector_values_[i]);
+      // 两个都是整数
+      sub_values.push_back(std::get<int>(left.vector_values_[i]) - std::get<int>(right.vector_values_[i]));
     }
-    sub_values.push_back(sub);
   }
   
   result.set_vector(sub_values);
@@ -117,16 +131,26 @@ RC VectorType::multiply(const Value &left, const Value &right, Value &result) co
   // multiply element by element
   std::vector<std::variant<int, float>> mul_values;
   for (size_t i = 0; i < left.vector_values_.size(); ++i) {
-    if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
-      return RC::INTERNAL; // 不同类型的元素不能相乘
-    }
-    std::variant<int, float> mul;
-    if (std::holds_alternative<int>(left.vector_values_[i])) {
-      mul = std::get<int>(left.vector_values_[i]) * std::get<int>(right.vector_values_[i]);
+    // 检查元素类型
+    bool left_is_float = std::holds_alternative<float>(left.vector_values_[i]);
+    bool right_is_float = std::holds_alternative<float>(right.vector_values_[i]);
+
+    if (left_is_float || right_is_float) {
+      float left_value = left_is_float ? std::get<float>(left.vector_values_[i]) : static_cast<float>(std::get<int>(left.vector_values_[i]));
+      float right_value = right_is_float ? std::get<float>(right.vector_values_[i]) : static_cast<float>(std::get<int>(right.vector_values_[i]));
+      
+      // 计算乘积
+      float product = left_value * right_value;
+
+      // 保留两位小数
+      product = std::round(product * 100.0f) / 100.0f;
+
+      // 将结果存入结果向量
+      mul_values.push_back(product);
     } else {
-      mul = std::get<float>(left.vector_values_[i]) * std::get<float>(right.vector_values_[i]);
+      // 两个都是整数
+      mul_values.push_back(std::get<int>(left.vector_values_[i]) * std::get<int>(right.vector_values_[i]));
     }
-    mul_values.push_back(mul);
   }
 
   result.set_vector(mul_values);

@@ -68,7 +68,7 @@ int FieldMeta::offset() const { return attr_offset_; }
 
 int FieldMeta::len() const {
   if (attr_type_ == AttrType::VECTORS) {
-    return 5 * attr_len_ + 2; //[x.xx,y.yy] 长度为n+2 1位 \0
+    return 20 * attr_len_ + 2; //[x.xx,y.yy] 长度为n+2 1位 \0
   } 
   return attr_len_; 
 }

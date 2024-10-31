@@ -721,7 +721,7 @@ arith_expr:
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $4, sql_string, &@$);
     }
     | '-' arith_expr {
-      $$ = $2;
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
     }
     | '-' simple_expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);

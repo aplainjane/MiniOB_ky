@@ -46,9 +46,11 @@ RC VectorType::add(const Value &left, const Value &right, Value &result) const
 
   const auto &left_values = left.get_vector();
   const auto &right_values = right.get_vector();
-  // add element by element
+  
   ASSERT(left_values.size() == right_values.size(),"size must be equal");
   result.set_type(AttrType::VECTORS);
+
+  // add element by element
   std::vector<std::variant<int, float>> sum_values;
   for (size_t i = 0; i < left.vector_values_.size(); ++i) {
     if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
@@ -62,7 +64,72 @@ RC VectorType::add(const Value &left, const Value &right, Value &result) const
     }
     sum_values.push_back(sum);
   }
+
   result.set_vector(sum_values);
+  return RC::SUCCESS;
+}
+
+RC VectorType::subtract(const Value &left, const Value &right, Value &result) const
+{
+  if (left.attr_type()!=AttrType::VECTORS || right.attr_type()!=AttrType::VECTORS){
+    LOG_WARN("type not match");
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
+
+  const auto &left_values = left.get_vector();
+  const auto &right_values = right.get_vector();
+  
+  ASSERT(left_values.size() == right_values.size(),"size must be equal");
+  result.set_type(AttrType::VECTORS);
+
+  // subtract element by element
+  std::vector<std::variant<int, float>> sub_values;
+  for (size_t i = 0; i < left.vector_values_.size(); ++i) {
+    if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
+      return RC::INTERNAL; // 不同类型的元素不能相减
+    }
+    std::variant<int, float> sub;
+    if (std::holds_alternative<int>(left.vector_values_[i])) {
+      sub = std::get<int>(left.vector_values_[i]) - std::get<int>(right.vector_values_[i]);
+    } else {
+      sub = std::get<float>(left.vector_values_[i]) - std::get<float>(right.vector_values_[i]);
+    }
+    sub_values.push_back(sub);
+  }
+  
+  result.set_vector(sub_values);
+  return RC::SUCCESS;
+}
+
+RC VectorType::multiply(const Value &left, const Value &right, Value &result) const
+{
+  if (left.attr_type()!=AttrType::VECTORS || right.attr_type()!=AttrType::VECTORS){
+    LOG_WARN("type not match");
+    return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+  }
+
+  const auto &left_values = left.get_vector();
+  const auto &right_values = right.get_vector();
+
+  ASSERT(left_values.size() == right_values.size(),"size must be equal");
+  result.set_type(AttrType::VECTORS);
+
+  // multiply element by element
+  std::vector<std::variant<int, float>> mul_values;
+  for (size_t i = 0; i < left.vector_values_.size(); ++i) {
+    if (left.vector_values_[i].index() != right.vector_values_[i].index()) {
+      return RC::INTERNAL; // 不同类型的元素不能相乘
+    }
+    std::variant<int, float> mul;
+    if (std::holds_alternative<int>(left.vector_values_[i])) {
+      mul = std::get<int>(left.vector_values_[i]) * std::get<int>(right.vector_values_[i]);
+    } else {
+      mul = std::get<float>(left.vector_values_[i]) * std::get<float>(right.vector_values_[i]);
+    }
+    mul_values.push_back(mul);
+  }
+
+  result.set_vector(mul_values);
   return RC::SUCCESS;
 }
 

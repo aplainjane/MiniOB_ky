@@ -344,6 +344,7 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   // 复制所有字段的值
   int   record_size = table_meta_.record_size();
   char *record_data = (char *)malloc(record_size);
+  // std::cout<<"record_size:"<<record_size<<std::endl;
   memset(record_data, 0, record_size);
   
   // null field
@@ -399,6 +400,7 @@ RC Table::set_value_to_record(char *record_data, const Value &value, const Field
   if (field->type() == AttrType::VECTORS) {
     copy_len = strlen(value.data())+1;
   }
+  // std::cout<<"copy_len:"<<copy_len<<std::endl;
   memcpy(record_data + field->offset(), value.data(), copy_len);
   return RC::SUCCESS;
 }

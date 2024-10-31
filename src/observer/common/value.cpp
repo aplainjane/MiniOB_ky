@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/sstream.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include <iomanip>
 
 using ElementType = std::variant<int, float>;
 char* vectorToCharArray(const std::vector<ElementType>& vector_values);
@@ -150,8 +151,8 @@ void Value::set_data(char *data, int length)
       length_           = length;
     } break;
     case AttrType::VECTORS: {
-      std::cout<<"data: "<<data<<std::endl;
-      std::cout<<"length: "<<length<<std::endl;
+      // std::cout<<"data: "<<data<<std::endl;
+      // std::cout<<"length: "<<length<<std::endl;
       parse_vector(data);
       length_        = length;
     } break;
@@ -214,7 +215,7 @@ void Value::parse_vector(const char *s)
   std::istringstream ss(content);
   std::string item;
   std::vector<ElementType> vector_values;
-  std::cout<<"content: "<<content<<std::endl;
+  // std::cout<<"content: "<<content<<std::endl;
   while (std::getline(ss, item, ',')) {
     // 去掉可能的空格
     item.erase(std::remove_if(item.begin(), item.end(), ::isspace), item.end());
@@ -225,6 +226,19 @@ void Value::parse_vector(const char *s)
         if (item.find('.') != std::string::npos) {
           // 处理 float 类型
           float value = std::stof(item);
+
+          // 格式化浮点数，保留两位小数
+          std::ostringstream out;
+          out << std::fixed << std::setprecision(2) << value;
+          std::string formatted_value = out.str();
+
+          // 去掉多余的零
+          if (formatted_value.back() == '0') {
+            formatted_value.pop_back(); // 去掉最后一个零
+            if (formatted_value.back() == '.') {
+              formatted_value.pop_back(); // 去掉小数点
+            }
+          }
           vector_values.push_back(value);
         } else {
           // 处理 int 类型

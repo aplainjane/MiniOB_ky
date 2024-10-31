@@ -181,6 +181,12 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <string>              storage_format
 %type <relation_list>       rel_list
 %type <expression>          expression
+%type <expression>          simple_expression
+%type <expression>          arith_expr
+%type <expression>          aggr_expr
+%type <expression>          simple_expression
+%type <expression>          arith_expr
+%type <expression>          aggr_expr
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
 %type <set_clause_list>     set_clause_list

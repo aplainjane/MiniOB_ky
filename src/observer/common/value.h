@@ -44,12 +44,11 @@ public:
 
   ~Value() { reset(); }
 
-  Value(AttrType attr_type, char *data, int length = 4) : attr_type_(attr_type) { 
-    if(attr_type != AttrType::NULLS) this->set_data(data, length); 
-  }
+  Value(AttrType attr_type, char *data, int length = 4) : attr_type_(attr_type) { this->set_data(data, length); }
 
   explicit Value(int val);
   explicit Value(float val);
+  explicit Value(int val, int flag);  
   explicit Value(bool val);
   explicit Value(const char *s, int len = 0);
 
@@ -92,11 +91,10 @@ public:
   }
 
   void set_type(AttrType type) { this->attr_type_ = type; }
-  void make_null() {this->attr_type_ = AttrType::NULLS; }
-  bool is_null() const { return this->attr_type_ == AttrType::NULLS; }
   void set_data(char *data, int length);
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);
+  void set_null(int val);
   void set_boolean(bool val);
   void set_vector(const std::vector<ElementType> &values) {this->vector_values_ = values;}
   void set_date(int y,int m,int d){
@@ -129,6 +127,7 @@ public:
   float               get_float() const;
   string              get_string() const;
   bool                get_boolean() const;
+  int                 get_null() const;
   vector<ElementType> get_vector() const;
 
   void                set_float(float val);
@@ -149,6 +148,7 @@ private:
     int32_t int_value_;
     float   float_value_;
     bool    bool_value_;
+    int   null_value_;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

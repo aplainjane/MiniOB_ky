@@ -32,6 +32,11 @@ Value::Value(float val) { set_float(val); }
 
 Value::Value(bool val) { set_boolean(val); }
 
+Value::Value(int val, int flag)
+{
+  set_null(val);
+}
+
 Value::Value(const char *s, int len /*= 0*/) {
   if (s[0] == '[' || s[strlen(s) - 1] == ']') {
     parse_vector(s);
@@ -147,6 +152,9 @@ void Value::set_data(char *data, int length)
       value_.bool_value_ = *(int *)data != 0;
       length_            = length;
     } break;
+    case AttrType::NULLS: {
+      value_.null_value_ = *(int* )data;
+    } break;
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
       length_           = length;
@@ -184,6 +192,14 @@ void Value::set_boolean(bool val)
   attr_type_         = AttrType::BOOLEANS;
   value_.bool_value_ = val;
   length_            = sizeof(val);
+}
+void Value::set_null(int val)
+{
+  reset();
+  attr_type_ = AttrType::NULLS;
+  value_.int_value_ = val;
+  value_.null_value_ = val;
+  length_ = sizeof(val);
 }
 
 void Value::set_string(const char *s, int len /*= 0*/)
@@ -263,11 +279,11 @@ void Value::set_value(const Value &value)
     case AttrType::CHARS: {
       set_string(value.get_string().c_str());
     } break;
+    case AttrType::NULLS: {
+      set_null(value.get_null());
+    } break;
     case AttrType::BOOLEANS: {
       set_boolean(value.get_boolean());
-    } break;
-    case AttrType::NULLS: {
-      make_null();
     } break;
     case AttrType::VECTORS: {
       attr_type_ = AttrType::VECTORS;
@@ -458,4 +474,33 @@ char* vectorToCharArray(const std::vector<ElementType>& vector_values) {
     std::strcpy(char_array, result.c_str());
 
     return char_array;
+}
+
+int Value::get_null() const
+{
+  switch (attr_type_) {
+    case AttrType::CHARS: {
+      std::cout << "Value::get_null() ERROR" << std::endl;
+    }
+    case AttrType::INTS: {
+      std::cout << "Value::get_null() ERROR" << std::endl;
+    }
+    case AttrType::FLOATS: {
+      std::cout << "Value::get_null() ERROR" << std::endl;
+    }
+    case AttrType::BOOLEANS: {
+      std::cout << "Value::get_null() ERROR" << std::endl;
+    }
+    case AttrType::DATES: {
+      std::cout << "Value::get_null() ERROR" << std::endl;
+    }
+    case AttrType::NULLS: {
+      return value_.null_value_;
+    }
+    default: {
+      LOG_WARN("unknown data type. type=%d", attr_type_);
+      return 0;
+    }
+  }
+  return 0;
 }

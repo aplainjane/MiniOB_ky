@@ -88,8 +88,9 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     sql_result->close();
     if(tuple_list.size()==0)
     {
+      //等待null
       Value *tempvalue=new Value();
-      tempvalue->make_null();
+      tempvalue->set_null(999);
       new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
     }
     else{

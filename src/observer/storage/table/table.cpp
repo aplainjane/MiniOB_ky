@@ -30,6 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
 #include "storage/trx/trx.h"
+#include "cmath"
 
 Table::~Table()
 {
@@ -240,7 +241,7 @@ RC Table::update_record(Record &new_record, Record &old_record)
 {
 
   RC rc = RC::SUCCESS;
-  
+
   // 1. 删除旧记录的索引条目
   for (Index *index : indexes_) {
     rc = index->delete_entry(old_record.data(), &old_record.rid());
@@ -252,7 +253,7 @@ RC Table::update_record(Record &new_record, Record &old_record)
     LOG_ERROR("Failed to delete index entries for old record. table name=%s, rc=%s", table_meta_.name(), strrc(rc));
     return rc;
   }
-  
+
   // 2. 删除旧记录
   rc = record_handler_->delete_record(&old_record.rid());
   if (rc != RC::SUCCESS) {
@@ -334,33 +335,34 @@ const TableMeta &Table::table_meta() const { return table_meta_; }
 RC Table::make_record(int value_num, const Value *values, Record &record)
 {
   RC rc = RC::SUCCESS;
-  // 检查字段类型是否一致
-   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
+
+  // 检查字段数量是否一致
+  // 同样，由于bitmap列的存在，value_num需要+1
+  if (1 + value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
+
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
     return RC::SCHEMA_FIELD_MISSING;
   }
 
+  // 检查字段类型是否一致
+  // 当不一致时，要判断该字段是否允许NULL值
+  std::vector<int> bit_map(value_num, !NULL_FLAG);
   const int normal_field_start_index = table_meta_.sys_field_num();
-  // 复制所有字段的值
-  int   record_size = table_meta_.record_size();
+    // 复制所有字段的值
+  int record_size = table_meta_.record_size();
   char *record_data = (char *)malloc(record_size);
-  // std::cout<<"record_size:"<<record_size<<std::endl;
-  memset(record_data, 0, record_size);
-  
-  // null field
-  const FieldMeta* null_field = table_meta_.null_field();
-  common::Bitmap null_bitmap(record_data + null_field->offset(), table_meta_.field_num());
-  null_bitmap.clear_bits();
-  
-  for (int i = 0; i < value_num && OB_SUCC(rc); i++) {
+
+  for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &    value = values[i];
-    if (field->nullable() && value.is_null()) {
-      // 如果为 NULL，则不进行赋值
-      null_bitmap.set_bit(normal_field_start_index + i);
+    const Value &value = values[i];
+
+    
+    // 类型不一致，字段nullable，且value为INTS && NULL_VALUE，表明该记录的该字段为null
+    if (field->nullable() && value.attr_type() == AttrType::NULLS) {
+      bit_map[i] = NULL_FLAG;
       continue;
     }
-    if (!field->nullable() && value.is_null()) {
+    if (!field->nullable() && value.attr_type() == AttrType::NULLS) {
       rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
       LOG_WARN("field can not be null. table name:%s,field name:%s", table_meta_.name(), field->name());
       return rc;
@@ -377,12 +379,21 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
     } else {
       rc = set_value_to_record(record_data, value, field);
     }
+
+    
   }
+
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to make record. table name:%s", table_meta_.name());
     free(record_data);
     return rc;
   }
+
+  // 写入bitmap字段的值
+  const FieldMeta *field = table_meta_.field(value_num + normal_field_start_index);
+  Value* value = new Value(bitmap2int(bit_map));
+  size_t copy_len = field->len();
+  memcpy(record_data + field->offset(), value->data(), copy_len);
 
   record.set_data_owner(record_data, record_size);
   return RC::SUCCESS;
@@ -397,10 +408,7 @@ RC Table::set_value_to_record(char *record_data, const Value &value, const Field
       copy_len = data_len + 1;
     }
   }
-  if (field->type() == AttrType::VECTORS) {
-    copy_len = strlen(value.data())+1;
-  }
-  // std::cout<<"copy_len:"<<copy_len<<std::endl;
+
   memcpy(record_data + field->offset(), value.data(), copy_len);
   return RC::SUCCESS;
 }
@@ -625,4 +633,26 @@ RC Table::sync()
   rc = data_buffer_pool_->flush_all_pages();
   LOG_INFO("Sync table over. table=%s", name());
   return rc;
+}
+
+
+int bitmap2int(std::vector<int>& bitmap) {
+  int ret = 0;
+  for(int i = 0; i < bitmap.size(); i++) {      
+    ret |= (bitmap[i] << i); 
+  }
+  return ret;
+}
+
+std::vector<int> int2bitmap(int num,int size) {
+  std::vector<int> bitmap;
+  while (num != 0)
+  {
+    bitmap.push_back(num & 1);
+    num = num >> 1;
+  }
+  while(bitmap.size() < size) {
+    bitmap.push_back(!NULL_FLAG);
+  }
+  return bitmap;
 }

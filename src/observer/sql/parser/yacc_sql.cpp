@@ -248,7 +248,7 @@ enum yysymbol_kind_t
   YYSYMBOL_create_table_stmt = 95,         /* create_table_stmt  */
   YYSYMBOL_attr_def_list = 96,             /* attr_def_list  */
   YYSYMBOL_attr_def = 97,                  /* attr_def  */
-  YYSYMBOL_null_choice = 98,               /* null_choice  */
+  YYSYMBOL_isnull = 98,                    /* isnull  */
   YYSYMBOL_number = 99,                    /* number  */
   YYSYMBOL_type = 100,                     /* type  */
   YYSYMBOL_insert_stmt = 101,              /* insert_stmt  */
@@ -726,11 +726,11 @@ static const char *const yytname[] =
   "sync_stmt", "begin_stmt", "commit_stmt", "rollback_stmt",
   "drop_table_stmt", "show_tables_stmt", "desc_table_stmt",
   "create_index_stmt", "drop_index_stmt", "create_table_stmt",
-  "attr_def_list", "attr_def", "null_choice", "number", "type",
-  "insert_stmt", "value_list", "value", "storage_format", "delete_stmt",
-  "update_stmt", "set_clause_list", "set_clause", "select_stmt",
-  "calc_stmt", "expression_list", "expression", "simple_expression",
-  "arith_expr", "aggr_expr", "rel_attr", "rel_list", "join_list", "where",
+  "attr_def_list", "attr_def", "isnull", "number", "type", "insert_stmt",
+  "value_list", "value", "storage_format", "delete_stmt", "update_stmt",
+  "set_clause_list", "set_clause", "select_stmt", "calc_stmt",
+  "expression_list", "expression", "simple_expression", "arith_expr",
+  "aggr_expr", "rel_attr", "rel_list", "join_list", "where",
   "condition_list", "condition", "is_null_choice", "comp_op", "func_op",
   "group_by", "having", "load_data_stmt", "explain_stmt",
   "set_variable_stmt", "opt_semicolon", YY_NULLPTR
@@ -2131,6 +2131,14 @@ yyreduce:
       create_table.attr_infos.emplace_back(*(yyvsp[-3].attr_info));
       std::reverse(create_table.attr_infos.begin(), create_table.attr_infos.end());
       delete (yyvsp[-3].attr_info);
+
+      AttrInfoSqlNode null_field;
+      null_field.type = AttrType::INTS;
+      null_field.name = NULL_FIELD_NAME;
+      null_field.length = 4;
+      null_field.isnull = false;
+      create_table.attr_infos.push_back(null_field);
+
       if ((yyvsp[0].string) != nullptr) {
         create_table.storage_format = (yyvsp[0].string);
         free((yyvsp[0].string));
@@ -2168,7 +2176,7 @@ yyreduce:
       (yyval.attr_info)->type = (AttrType)(yyvsp[-4].number);
       (yyval.attr_info)->name = (yyvsp[-5].string);
       (yyval.attr_info)->length = (yyvsp[-2].number);
-      (yyval.attr_info)->nullable = (yyvsp[0].boolean);
+      (yyval.attr_info)->isnull = (yyvsp[0].boolean);
       free((yyvsp[-5].string));
     }
 #line 2175 "yacc_sql.cpp"
@@ -2181,7 +2189,7 @@ yyreduce:
       (yyval.attr_info)->type = (AttrType)(yyvsp[-1].number);
       (yyval.attr_info)->name = (yyvsp[-2].string);
       (yyval.attr_info)->length = 4;
-      (yyval.attr_info)->nullable = (yyvsp[0].boolean);
+      (yyval.attr_info)->isnull = (yyvsp[0].boolean);
       free((yyvsp[-2].string));
     }
 #line 2188 "yacc_sql.cpp"
@@ -2190,7 +2198,7 @@ yyreduce:
   case 40: /* null_choice: %empty  */
 #line 426 "yacc_sql.y"
     {
-      (yyval.boolean) = true;
+      (yyval.boolean) = false;
     }
 #line 2196 "yacc_sql.cpp"
     break;
@@ -2329,8 +2337,7 @@ yyreduce:
   case 56: /* value: NULL_KY  */
 #line 501 "yacc_sql.y"
               {
-      (yyval.value) = new Value();
-      (yyval.value)->make_null();
+      (yyval.value) = new Value(NULL_VALUE, 1);
     }
 #line 2336 "yacc_sql.cpp"
     break;
@@ -3439,7 +3446,7 @@ yyreduce:
                            {
       (yyval.condition) = new ConditionSqlNode;
       Value val;
-      val.make_null();
+      val.set_null(0);
         
       (yyval.condition)->left_is_attr = 0;
       (yyval.condition)->left_value = *(yyvsp[-1].value);  
@@ -3456,8 +3463,8 @@ yyreduce:
                               {
       (yyval.condition) = new ConditionSqlNode;
       Value val;
-      val.make_null();
-      
+      val.set_null(0);
+
       (yyval.condition)->left_is_attr = 1;
       (yyval.condition)->left_attr = *(yyvsp[-1].rel_attr);
       (yyval.condition)->right_is_attr = 0;

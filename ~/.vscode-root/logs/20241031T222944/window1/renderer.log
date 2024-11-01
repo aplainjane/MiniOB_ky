@@ -1,0 +1,10 @@
+2024-10-31 22:29:46.618 [info] Started local extension host with pid 4798.
+2024-10-31 22:29:46.624 [info] Started initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2024-10-31 22:29:46.884 [info] Completed initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2024-10-31 22:29:49.213 [error] [network] #1: https://az764295.vo.msecnd.net/extensions/chat.json - error GET Failed to fetch
+2024-10-31 22:29:49.213 [warning] Failed to fetch chat participant registry Failed to fetch
+2024-10-31 22:29:49.752 [info] [perf] Render performance baseline is 23ms
+2024-10-31 22:34:49.298 [error] [network] #2: https://az764295.vo.msecnd.net/extensions/chat.json - error GET Failed to fetch
+2024-10-31 22:34:49.298 [warning] Failed to fetch chat participant registry Failed to fetch
+2024-10-31 22:39:49.387 [error] [network] #3: https://az764295.vo.msecnd.net/extensions/chat.json - error GET Failed to fetch
+2024-10-31 22:39:49.388 [warning] Failed to fetch chat participant registry Failed to fetch

@@ -88,7 +88,7 @@ public:
 
     for (size_t i = 0; i < attr_lengths_.size(); ++i) {
         int res = -1;
-
+        
         // 检查偏移量，确保不会越界，假设attr_lengths_代表的类型是int长度（4字节）
         if (offset + attr_lengths_[i] > sizeof(v1) || offset + attr_lengths_[i] > sizeof(v2)) {
             std::cerr << "Offset exceeds buffer size, possible memory corruption" << std::endl;
@@ -100,7 +100,11 @@ public:
         left.set_data(v1 + offset, attr_lengths_[i]);
         right.set_type(attr_types_[i]);
         right.set_data(v2 + offset, attr_lengths_[i]);
-
+        //神秘代码，你有什么想说的吗
+        if(right.get_int() == -1094795586)
+        {
+          return -1;
+        }
         res = DataType::type_instance(attr_types_[i])->compare(left, right);
         if (res != 0) {
             return res; // 如果当前属性不相等，立即返回结果

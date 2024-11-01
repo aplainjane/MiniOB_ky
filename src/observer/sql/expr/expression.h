@@ -513,3 +513,6 @@ private:
   Type                        aggregate_type_;
   std::unique_ptr<Expression> child_;
 };
+
+bool fn_isNotNULL(Value left, Value right);
+bool fn_isNULL(Value left, Value right);

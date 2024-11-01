@@ -61,39 +61,26 @@ RC TableMeta::init(int32_t table_id, const char *name, const std::vector<FieldMe
   int field_offset  = 0;
   int trx_field_num = 0;
 
-  // 初始化系统字段数量，包括 __null 字段
-  int sys_field_num = 1; // 1 for __null field
-
   if (trx_fields != nullptr) {
     trx_fields_ = *trx_fields;
 
-    // 调整字段数组大小，包含系统字段
-    fields_.resize(attributes.size() + trx_fields->size() + sys_field_num);
-    
-    // 初始化 __null 字段
-    fields_[0] = FieldMeta("__null", AttrType::CHARS, 0, (sys_field_num + attributes.size() + 7) / 8, false, -1, false); // -1 for field_id
-    field_offset += (sys_field_num + attributes.size() + 7) / 8; // 计算 __null 字段的偏移
-
+    fields_.resize(attributes.size() + trx_fields->size());
     for (size_t i = 0; i < trx_fields->size(); i++) {
       const FieldMeta &field_meta = (*trx_fields)[i];
-      fields_[i + sys_field_num] = FieldMeta(field_meta.name(), field_meta.type(), field_offset, field_meta.len(), false /*visible*/, field_meta.field_id(), field_meta.nullable());
+      fields_[i] = FieldMeta(field_meta.name(), field_meta.type(), field_offset, field_meta.len(), false /*visible*/, field_meta.field_id(),false);
       field_offset += field_meta.len();
     }
 
     trx_field_num = static_cast<int>(trx_fields->size());
   } else {
-    // 如果没有事务字段，直接调整字段数组大小
-    fields_.resize(attributes.size() + sys_field_num);
-    // 初始化 __null 字段
-    fields_[0] = FieldMeta("__null", AttrType::CHARS, 0, (sys_field_num + attributes.size() + 7) / 8, false, -1, false); // -1 for field_id
-    field_offset += (sys_field_num + attributes.size() + 7) / 8; // 计算 __null 字段的偏移
+    fields_.resize(attributes.size());
   }
 
   for (size_t i = 0; i < attributes.size(); i++) {
     const AttrInfoSqlNode &attr_info = attributes[i];
-    // `i + trx_field_num` 是当前字段的索引
-    rc = fields_[i + trx_field_num + sys_field_num].init(
-      attr_info.name.c_str(), attr_info.type, field_offset, attr_info.length, true /*visible*/, i, attr_info.nullable);
+    // `i` is the col_id of fields[i]
+    rc = fields_[i + trx_field_num].init(
+      attr_info.name.c_str(), attr_info.type, field_offset, attr_info.length, true /*visible*/, i,attr_info.isnull);
     if (OB_FAIL(rc)) {
       LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name.c_str());
       return rc;
@@ -110,10 +97,9 @@ RC TableMeta::init(int32_t table_id, const char *name, const std::vector<FieldMe
   table_id_ = table_id;
   name_     = name;
   storage_format_ = storage_format;
-  LOG_INFO("Successfully initialized table meta. table id=%d, name=%s", table_id, name);
+  LOG_INFO("Sussessfully initialized table meta. table id=%d, name=%s", table_id, name);
   return RC::SUCCESS;
 }
-
 
 RC TableMeta::add_index(const IndexMeta &index)
 {
@@ -123,7 +109,6 @@ RC TableMeta::add_index(const IndexMeta &index)
 
 const char *TableMeta::name() const { return name_.c_str(); }
 
-const FieldMeta *TableMeta::null_field() const { return &fields_[0]; }
 const FieldMeta *TableMeta::trx_field() const { return &fields_[0]; }
 
 span<const FieldMeta> TableMeta::trx_fields() const
@@ -156,7 +141,7 @@ const FieldMeta *TableMeta::find_field_by_offset(int offset) const
 }
 int TableMeta::field_num() const { return fields_.size(); }
 
-int TableMeta::sys_field_num() const { return static_cast<int>(trx_fields_.size())+ 1 /*null*/; }
+int TableMeta::sys_field_num() const { return static_cast<int>(trx_fields_.size()); }
 
 const IndexMeta *TableMeta::index(const char *name) const
 {

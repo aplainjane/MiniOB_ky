@@ -1,0 +1,6 @@
+2024-10-31 22:29:46.983 [info] Started initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2024-10-31 22:29:46.985 [error] [network] #1: https://az764295.vo.msecnd.net/extensions/marketplace.json - error GET net::ERR_CONNECTION_RESET
+2024-10-31 22:29:47.030 [warning] Failed to create default profile extensions manifest in extensions installation folder. file:///root/.vscode/extensions Unable to create file 'vscode-userdata:/root/.vscode/extensions/extensions.json' that already exists when overwrite flag is not set
+2024-10-31 22:29:47.030 [info] Completed initializing default profile extensions in extensions installation folder. file:///root/.vscode/extensions
+2024-10-31 22:34:49.231 [error] [network] #10: https://az764295.vo.msecnd.net/extensions/marketplace.json - error GET net::ERR_CONNECTION_RESET
+2024-10-31 22:39:49.360 [error] [network] #14: https://az764295.vo.msecnd.net/extensions/marketplace.json - error GET net::ERR_CONNECTION_RESET

@@ -151,8 +151,6 @@ bool DefaultConditionFilter::filter(const Record &rec) const
     case NOTIN_LIST: return !left_value.in(right_value);
     case EXIST_LIST: return left_value.exist(right_value);
     case NOTEXIST_LIST: return !left_value.exist(right_value);
-    case IS_NULL: return left_value.is_null();
-    case IS_NOT_NULL: return !left_value.is_null();
     default: break;
   }
 

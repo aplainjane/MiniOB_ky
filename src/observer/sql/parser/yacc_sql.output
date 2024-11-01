@@ -53,12 +53,12 @@
    35 attr_def_list: ε
    36              | COMMA attr_def attr_def_list
 
-   37 attr_def: ID type LBRACE number RBRACE null_choice
-   38         | ID type null_choice
+   37 attr_def: ID type LBRACE number RBRACE isnull
+   38         | ID type isnull
 
-   39 null_choice: ε
-   40            | NULL_KY
-   41            | NOT NULL_KY
+   39 isnull: ε
+   40       | NULL_KY
+   41       | NOT NULL_KY
 
    42 number: NUMBER
 
@@ -359,7 +359,7 @@
     attr_def <attr_info> (94)
         on left: 37 38
         on right: 34 36
-    null_choice <boolean> (95)
+    isnull <boolean> (95)
         on left: 39 40 41
         on right: 37 38
     number <number> (96)
@@ -1837,8 +1837,8 @@
 
 状态 131
 
-   37 attr_def: ID • type LBRACE number RBRACE null_choice
-   38         | ID • type null_choice
+   37 attr_def: ID • type LBRACE number RBRACE isnull
+   38         | ID • type isnull
 
     INT_T     偏移，并进入状态 158
     STRING_T  偏移，并进入状态 159
@@ -2235,16 +2235,16 @@
 
 状态 163
 
-   37 attr_def: ID type • LBRACE number RBRACE null_choice
-   38         | ID type • null_choice
+   37 attr_def: ID type • LBRACE number RBRACE isnull
+   38         | ID type • isnull
 
     LBRACE   偏移，并进入状态 211
     NOT      偏移，并进入状态 212
     NULL_KY  偏移，并进入状态 213
 
-    $default  使用规则 39 以归约 (null_choice)
+    $default  使用规则 39 以归约 (isnull)
 
-    null_choice  转到状态 214
+    isnull  转到状态 214
 
 
 状态 164
@@ -2873,7 +2873,7 @@
 
 状态 211
 
-   37 attr_def: ID type LBRACE • number RBRACE null_choice
+   37 attr_def: ID type LBRACE • number RBRACE isnull
 
     NUMBER  偏移，并进入状态 276
 
@@ -2882,21 +2882,21 @@
 
 状态 212
 
-   41 null_choice: NOT • NULL_KY
+   41 isnull: NOT • NULL_KY
 
     NULL_KY  偏移，并进入状态 278
 
 
 状态 213
 
-   40 null_choice: NULL_KY •
+   40 isnull: NULL_KY •
 
-    $default  使用规则 40 以归约 (null_choice)
+    $default  使用规则 40 以归约 (isnull)
 
 
 状态 214
 
-   38 attr_def: ID type null_choice •
+   38 attr_def: ID type isnull •
 
     $default  使用规则 38 以归约 (attr_def)
 
@@ -3795,16 +3795,16 @@
 
 状态 277
 
-   37 attr_def: ID type LBRACE number • RBRACE null_choice
+   37 attr_def: ID type LBRACE number • RBRACE isnull
 
     RBRACE  偏移，并进入状态 302
 
 
 状态 278
 
-   41 null_choice: NOT NULL_KY •
+   41 isnull: NOT NULL_KY •
 
-    $default  使用规则 41 以归约 (null_choice)
+    $default  使用规则 41 以归约 (isnull)
 
 
 状态 279
@@ -4163,14 +4163,14 @@
 
 状态 302
 
-   37 attr_def: ID type LBRACE number RBRACE • null_choice
+   37 attr_def: ID type LBRACE number RBRACE • isnull
 
     NOT      偏移，并进入状态 212
     NULL_KY  偏移，并进入状态 213
 
-    $default  使用规则 39 以归约 (null_choice)
+    $default  使用规则 39 以归约 (isnull)
 
-    null_choice  转到状态 323
+    isnull  转到状态 323
 
 
 状态 303
@@ -4375,7 +4375,7 @@
 
 状态 323
 
-   37 attr_def: ID type LBRACE number RBRACE null_choice •
+   37 attr_def: ID type LBRACE number RBRACE isnull •
 
     $default  使用规则 37 以归约 (attr_def)
 

@@ -62,6 +62,7 @@ extern double atof();
 WHITE_SAPCE      [\ \t\b\f]
 DIGIT            [0-9]+
 SUBQUERY         \(SELECT(?:[^()]*|\([^()]*\))*FROM(?:[^()]*|\([^()]*\))*\)
+VECTOR_LIST      \[[^\[\]]*\]
 ID               [A-Za-z_]+[A-Za-z0-9_]*
 DOT              \.
 QUOTE            [\'\"]
@@ -146,7 +147,7 @@ MIN                                     RETURN_TOKEN(MIN);
                 yylval->string = subquery;
                 RETURN_TOKEN(SUB_QUERY);
              }
-
+{VECTOR_LIST}                           yylval->string=strdup(yytext); RETURN_TOKEN(VECTOR_LIST);
 {ID}                                    yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("                                     RETURN_TOKEN(LBRACE);
 ")"                                     RETURN_TOKEN(RBRACE);

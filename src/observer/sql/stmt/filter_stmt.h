@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/expression.h"
 #include "sql/parser/parse_defs.h"
 #include "sql/stmt/stmt.h"
+#include "sql/parser/expression_binder.h"
 
 #include <unordered_map>
 #include <vector>
@@ -28,29 +29,58 @@ class FieldMeta;
 class FilterObj
 {
   public:
-  bool is_tuple=false;
-  bool  is_attr;
+  // 进行类型判断，默认为value
+  bool                  is_tuple=false;
+  bool                  is_attr;
+  bool                  is_aggr;
+  bool                  is_arthi; 
+  
   Field field;
   Value value;
-  vector<Value> tuple_list;
+  unique_ptr<Expression>   expr;
+  vector<Value>         tuple_list;
   void init_attr(const Field &field)
   {
     is_attr     = true;
+    is_aggr     = false;
+    is_arthi    = false;
     is_tuple    = false;
     this->field = field;
+    
   }
 
   void init_value(const Value &value)
   {
     is_attr     = false;
+    is_aggr     = false;
+    is_arthi    = false;
     is_tuple    = false;
     this->value = value;
   }
   void init_tuple(vector<Value>& tuple)
   {
-    is_attr = false;
-    is_tuple = true;
+    is_attr          = false;
+    is_aggr          = false;
+    is_arthi         = false;
+    is_tuple         = true;
     this->tuple_list = tuple;
+  }
+  
+  void init_aggr(unique_ptr<Expression> &aggr)
+  {
+    is_attr    = false;
+    is_aggr    = true;
+    is_arthi   = false;
+    is_tuple   = false;
+    this->expr = std::move(aggr);
+  }
+  void init_arthi(unique_ptr<Expression> &arthi)
+  {
+    is_attr     = false;
+    is_aggr     = false;
+    is_arthi    = true;
+    is_tuple    = false;
+    this->expr = std::move(arthi);
   }
 };
 
@@ -64,11 +94,11 @@ public:
 
   CompOp comp() const { return comp_; }
 
-  void set_left(const FilterObj &obj) { left_ = obj; }
-  void set_right(const FilterObj &obj) { right_ = obj; }
+  void set_left(FilterObj &obj) { left_ = std::move(obj); }
+  void set_right(FilterObj &obj) { right_ = std::move(obj); }
 
-  const FilterObj &left() const { return left_; }
-  const FilterObj &right() const { return right_; }
+  FilterObj &left() { return left_; }
+  FilterObj &right() { return right_; }
 
 private:
   CompOp    comp_ = NO_OP;
@@ -87,7 +117,7 @@ public:
   virtual ~FilterStmt();
 
 public:
-  const std::vector<FilterUnit *> &filter_units() const { return filter_units_; }
+  std::vector<FilterUnit *> &filter_units() { return filter_units_; }
 
 public:
   static RC create(Db *db, Table *default_table, std::unordered_map<std::string, Table *> *tables,

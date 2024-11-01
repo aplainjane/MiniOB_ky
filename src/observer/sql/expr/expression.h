@@ -135,7 +135,7 @@ protected:
   int pos_ = -1;
 
 private:
-  std::string name_;
+  std::string   name_;
 };
 
 class StarExpr : public Expression
@@ -241,6 +241,7 @@ public:
      } 
      return RC::SUCCESS;
   }
+  
   RC get_value(const Tuple &tuple, Value &value) const override { return RC::UNIMPLEMENTED;}
 private:
   vector<Value> tuple_list;
@@ -400,6 +401,9 @@ public:
   };
 
 public:
+
+  // 拷贝构造函数
+  ArithmeticExpr();
   ArithmeticExpr(Type type, Expression *left, Expression *right);
   ArithmeticExpr(Type type, std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
   virtual ~ArithmeticExpr() = default;

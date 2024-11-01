@@ -1,0 +1,4502 @@
+语法
+
+    0 $accept: commands $end
+
+    1 commands: command_wrapper opt_semicolon
+
+    2 command_wrapper: calc_stmt
+    3                | select_stmt
+    4                | insert_stmt
+    5                | update_stmt
+    6                | delete_stmt
+    7                | create_table_stmt
+    8                | drop_table_stmt
+    9                | show_tables_stmt
+   10                | desc_table_stmt
+   11                | create_index_stmt
+   12                | drop_index_stmt
+   13                | sync_stmt
+   14                | begin_stmt
+   15                | commit_stmt
+   16                | rollback_stmt
+   17                | load_data_stmt
+   18                | explain_stmt
+   19                | set_variable_stmt
+   20                | help_stmt
+   21                | exit_stmt
+
+   22 exit_stmt: EXIT
+
+   23 help_stmt: HELP
+
+   24 sync_stmt: SYNC
+
+   25 begin_stmt: TRX_BEGIN
+
+   26 commit_stmt: TRX_COMMIT
+
+   27 rollback_stmt: TRX_ROLLBACK
+
+   28 drop_table_stmt: DROP TABLE ID
+
+   29 show_tables_stmt: SHOW TABLES
+
+   30 desc_table_stmt: DESC ID
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID rel_list RBRACE
+   32                  | CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE
+
+   33 drop_index_stmt: DROP INDEX ID ON ID
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE storage_format
+
+   35 attr_def_list: ε
+   36              | COMMA attr_def attr_def_list
+
+   37 attr_def: ID type LBRACE number RBRACE null_choice
+   38         | ID type null_choice
+
+   39 null_choice: ε
+   40            | NULL_KY
+   41            | NOT NULL_KY
+
+   42 number: NUMBER
+
+   43 type: INT_T
+   44     | STRING_T
+   45     | FLOAT_T
+   46     | VECTOR_T
+   47     | DATE_T
+
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE
+
+   49 value_list: ε
+   50           | COMMA value value_list
+
+   51 value: NUMBER
+   52      | FLOAT
+   53      | SSS
+   54      | VECTOR_LIST
+   55      | NULL_KY
+
+   56 storage_format: ε
+   57               | STORAGE FORMAT EQ ID
+
+   58 delete_stmt: DELETE FROM ID where
+
+   59 update_stmt: UPDATE ID SET set_clause_list where
+
+   60 set_clause_list: set_clause
+   61                | set_clause_list COMMA set_clause
+
+   62 set_clause: ID EQ value
+   63           | ID EQ SUB_QUERY
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list join_list where group_by having
+
+   65 calc_stmt: CALC expression_list
+
+   66 expression_list: expression
+   67                | expression COMMA expression_list
+
+   68 expression: LBRACE expression RBRACE
+   69           | expression '+' expression
+   70           | expression '-' expression
+   71           | expression '*' expression
+   72           | expression '/' expression
+   73           | value
+   74           | rel_attr
+   75           | '*'
+   76           | '-' expression
+   77           | aggr_expr
+
+   78 simple_expression: value
+   79                  | rel_attr
+
+   80 arith_expr: LBRACE arith_expr RBRACE
+   81           | arith_expr '+' LBRACE simple_expression RBRACE
+   82           | arith_expr '-' LBRACE simple_expression RBRACE
+   83           | arith_expr '*' LBRACE simple_expression RBRACE
+   84           | arith_expr '/' LBRACE simple_expression RBRACE
+   85           | simple_expression '+' LBRACE simple_expression RBRACE
+   86           | simple_expression '-' LBRACE simple_expression RBRACE
+   87           | simple_expression '*' LBRACE simple_expression RBRACE
+   88           | simple_expression '/' LBRACE simple_expression RBRACE
+   89           | '-' arith_expr
+   90           | '-' simple_expression
+   91           | arith_expr '+' simple_expression
+   92           | arith_expr '-' simple_expression
+   93           | arith_expr '*' simple_expression
+   94           | arith_expr '/' simple_expression
+   95           | simple_expression '+' arith_expr
+   96           | simple_expression '-' arith_expr
+   97           | simple_expression '*' arith_expr
+   98           | simple_expression '/' arith_expr
+   99           | arith_expr '+' arith_expr
+  100           | arith_expr '-' arith_expr
+  101           | arith_expr '*' arith_expr
+  102           | arith_expr '/' arith_expr
+  103           | simple_expression '+' simple_expression
+  104           | simple_expression '-' simple_expression
+  105           | simple_expression '*' simple_expression
+  106           | simple_expression '/' simple_expression
+
+  107 aggr_expr: SUM LBRACE expression_list RBRACE
+  108          | AVG LBRACE expression_list RBRACE
+  109          | MAX LBRACE expression_list RBRACE
+  110          | MIN LBRACE expression_list RBRACE
+  111          | COUNT LBRACE expression_list RBRACE
+  112          | SUM LBRACE RBRACE
+  113          | AVG LBRACE RBRACE
+  114          | MIN LBRACE RBRACE
+  115          | MAX LBRACE RBRACE
+  116          | COUNT LBRACE RBRACE
+
+  117 rel_attr: ID
+  118         | ID DOT ID
+
+  119 rel_list: ε
+  120         | COMMA ID rel_list
+
+  121 join_list: ε
+  122          | INNER join_list
+  123          | JOIN ID ON condition_list join_list
+
+  124 where: ε
+  125      | WHERE condition_list
+
+  126 condition_list: ε
+  127               | condition
+  128               | condition AND condition_list
+
+  129 condition: arith_expr comp_op value
+  130          | arith_expr comp_op rel_attr
+  131          | value comp_op arith_expr
+  132          | rel_attr comp_op arith_expr
+  133          | arith_expr comp_op arith_expr
+  134          | rel_attr comp_op value
+  135          | value comp_op value
+  136          | rel_attr comp_op rel_attr
+  137          | value comp_op rel_attr
+  138          | rel_attr comp_op SUB_QUERY
+  139          | SUB_QUERY comp_op rel_attr
+  140          | SUB_QUERY comp_op SUB_QUERY
+  141          | value comp_op LBRACE value value_list RBRACE
+  142          | rel_attr comp_op LBRACE value value_list RBRACE
+  143          | SUB_QUERY comp_op LBRACE value value_list RBRACE
+  144          | LBRACE value value_list RBRACE comp_op value
+  145          | LBRACE value value_list RBRACE comp_op rel_attr
+  146          | LBRACE value value_list RBRACE comp_op SUB_QUERY
+  147          | LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE
+  148          | aggr_expr comp_op value
+  149          | aggr_expr comp_op rel_attr
+  150          | aggr_expr comp_op aggr_expr
+  151          | value is_null_choice
+  152          | rel_attr is_null_choice
+
+  153 is_null_choice: IS NULL_KY
+  154               | IS NOT NULL_KY
+
+  155 comp_op: EQ
+  156        | LT
+  157        | GT
+  158        | LE
+  159        | GE
+  160        | NE
+  161        | LIKE
+  162        | NOT LIKE
+  163        | IN
+  164        | NOT IN
+  165        | EXIST
+  166        | NOT EXIST
+
+  167 group_by: ε
+  168         | GROUP BY expression_list
+
+  169 having: ε
+  170       | HAVING condition_list
+
+  171 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID
+
+  172 explain_stmt: EXPLAIN command_wrapper
+
+  173 set_variable_stmt: SET ID EQ value
+
+  174 opt_semicolon: ε
+  175              | SEMICOLON
+
+
+终结语词，附有它们出现处的规则
+
+    $end (0) 0
+    '*' (42) 71 75 83 87 93 97 101 105
+    '+' (43) 69 81 85 91 95 99 103
+    '-' (45) 70 76 82 86 89 90 92 96 100 104
+    '/' (47) 72 84 88 94 98 102 106
+    error (256)
+    SEMICOLON (258) 175
+    BY (259) 168
+    CREATE (260) 31 32 34
+    DROP (261) 28 33
+    GROUP (262) 168
+    TABLE (263) 28 34 171
+    TABLES (264) 29
+    UNIQUE (265) 32
+    INDEX (266) 31 32 33
+    CALC (267) 65
+    SELECT (268) 64
+    DESC (269) 30
+    SHOW (270) 29
+    SYNC (271) 24
+    INSERT (272) 48
+    DELETE (273) 58
+    UPDATE (274) 59
+    LBRACE (275) 31 32 34 37 48 68 80 81 82 83 84 85 86 87 88 107 108 109 110 111 112 113 114 115 116 141 142 143 144 145 146 147
+    RBRACE (276) 31 32 34 37 48 68 80 81 82 83 84 85 86 87 88 107 108 109 110 111 112 113 114 115 116 141 142 143 144 145 146 147
+    COMMA (277) 36 50 61 67 120
+    TRX_BEGIN (278) 25
+    TRX_COMMIT (279) 26
+    TRX_ROLLBACK (280) 27
+    INT_T (281) 43
+    STRING_T (282) 44
+    DATE_T (283) 47
+    FLOAT_T (284) 45
+    VECTOR_T (285) 46
+    HELP (286) 23
+    EXIT (287) 22
+    DOT (288) 118
+    INTO (289) 48 171
+    VALUES (290) 48
+    FROM (291) 58 64
+    WHERE (292) 125
+    HAVING (293) 170
+    AND (294) 128
+    SET (295) 59 173
+    ON (296) 31 32 33 123
+    LOAD (297) 171
+    DATA (298) 171
+    INFILE (299) 171
+    EXPLAIN (300) 172
+    STORAGE (301) 57
+    FORMAT (302) 57
+    NOT (303) 41 154 162 164 166
+    LIKE (304) 161 162
+    IN (305) 163 164
+    IS (306) 153 154
+    EXIST (307) 165 166
+    NULL_KY (308) 40 41 55 153 154
+    INNER (309) 122
+    JOIN (310) 123
+    EQ (311) 57 62 63 155 173
+    LT (312) 156
+    GT (313) 157
+    LE (314) 158
+    GE (315) 159
+    NE (316) 160
+    SUM (317) 107 112
+    AVG (318) 108 113
+    COUNT (319) 111 116
+    MAX (320) 109 115
+    MIN (321) 110 114
+    NUMBER <number> (322) 42 51
+    FLOAT <floats> (323) 52
+    ID <string> (324) 28 30 31 32 33 34 37 38 48 57 58 59 62 63 64 117 118 120 123 171 173
+    SSS <string> (325) 53 171
+    SUB_QUERY <string> (326) 63 138 139 140 143 146
+    VECTOR_LIST <string> (327) 54
+    UMINUS (328)
+
+
+非终结语词，附有它们出现处的规则
+
+    $accept (78)
+        on left: 0
+    commands <sql_node> (79)
+        on left: 1
+        on right: 0
+    command_wrapper <sql_node> (80)
+        on left: 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+        on right: 1 172
+    exit_stmt <sql_node> (81)
+        on left: 22
+        on right: 21
+    help_stmt <sql_node> (82)
+        on left: 23
+        on right: 20
+    sync_stmt <sql_node> (83)
+        on left: 24
+        on right: 13
+    begin_stmt <sql_node> (84)
+        on left: 25
+        on right: 14
+    commit_stmt <sql_node> (85)
+        on left: 26
+        on right: 15
+    rollback_stmt <sql_node> (86)
+        on left: 27
+        on right: 16
+    drop_table_stmt <sql_node> (87)
+        on left: 28
+        on right: 8
+    show_tables_stmt <sql_node> (88)
+        on left: 29
+        on right: 9
+    desc_table_stmt <sql_node> (89)
+        on left: 30
+        on right: 10
+    create_index_stmt <sql_node> (90)
+        on left: 31 32
+        on right: 11
+    drop_index_stmt <sql_node> (91)
+        on left: 33
+        on right: 12
+    create_table_stmt <sql_node> (92)
+        on left: 34
+        on right: 7
+    attr_def_list <attr_infos> (93)
+        on left: 35 36
+        on right: 34 36
+    attr_def <attr_info> (94)
+        on left: 37 38
+        on right: 34 36
+    null_choice <boolean> (95)
+        on left: 39 40 41
+        on right: 37 38
+    number <number> (96)
+        on left: 42
+        on right: 37
+    type <number> (97)
+        on left: 43 44 45 46 47
+        on right: 37 38
+    insert_stmt <sql_node> (98)
+        on left: 48
+        on right: 4
+    value_list <value_list> (99)
+        on left: 49 50
+        on right: 48 50 141 142 143 144 145 146 147
+    value <value> (100)
+        on left: 51 52 53 54 55
+        on right: 48 50 62 73 78 129 131 134 135 137 141 142 143 144 145 146 147 148 151 173
+    storage_format <string> (101)
+        on left: 56 57
+        on right: 34
+    delete_stmt <sql_node> (102)
+        on left: 58
+        on right: 6
+    update_stmt <sql_node> (103)
+        on left: 59
+        on right: 5
+    set_clause_list <set_clause_list> (104)
+        on left: 60 61
+        on right: 59 61
+    set_clause <set_clause> (105)
+        on left: 62 63
+        on right: 60 61
+    select_stmt <sql_node> (106)
+        on left: 64
+        on right: 3
+    calc_stmt <sql_node> (107)
+        on left: 65
+        on right: 2
+    expression_list <expression_list> (108)
+        on left: 66 67
+        on right: 64 65 67 107 108 109 110 111 168
+    expression <expression> (109)
+        on left: 68 69 70 71 72 73 74 75 76 77
+        on right: 66 67 68 69 70 71 72 76
+    simple_expression <expression> (110)
+        on left: 78 79
+        on right: 81 82 83 84 85 86 87 88 90 91 92 93 94 95 96 97 98 103 104 105 106
+    arith_expr <expression> (111)
+        on left: 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106
+        on right: 80 81 82 83 84 89 91 92 93 94 95 96 97 98 99 100 101 102 129 130 131 132 133
+    aggr_expr <expression> (112)
+        on left: 107 108 109 110 111 112 113 114 115 116
+        on right: 77 148 149 150
+    rel_attr <rel_attr> (113)
+        on left: 117 118
+        on right: 74 79 130 132 134 136 137 138 139 142 145 149 152
+    rel_list <relation_list> (114)
+        on left: 119 120
+        on right: 31 32 64 120
+    join_list <join_sql_node> (115)
+        on left: 121 122 123
+        on right: 64 122 123
+    where <condition_list> (116)
+        on left: 124 125
+        on right: 58 59 64
+    condition_list <condition_list> (117)
+        on left: 126 127 128
+        on right: 123 125 128 170
+    condition <condition> (118)
+        on left: 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152
+        on right: 127 128
+    is_null_choice <comp> (119)
+        on left: 153 154
+        on right: 151 152
+    comp_op <comp> (120)
+        on left: 155 156 157 158 159 160 161 162 163 164 165 166
+        on right: 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150
+    group_by <expression_list> (121)
+        on left: 167 168
+        on right: 64
+    having <condition_list> (122)
+        on left: 169 170
+        on right: 64
+    load_data_stmt <sql_node> (123)
+        on left: 171
+        on right: 17
+    explain_stmt <sql_node> (124)
+        on left: 172
+        on right: 18
+    set_variable_stmt <sql_node> (125)
+        on left: 173
+        on right: 19
+    opt_semicolon (126)
+        on left: 174 175
+        on right: 1
+
+
+状态 0
+
+    0 $accept: • commands $end
+
+    CREATE        偏移，并进入状态 1
+    DROP          偏移，并进入状态 2
+    CALC          偏移，并进入状态 3
+    SELECT        偏移，并进入状态 4
+    DESC          偏移，并进入状态 5
+    SHOW          偏移，并进入状态 6
+    SYNC          偏移，并进入状态 7
+    INSERT        偏移，并进入状态 8
+    DELETE        偏移，并进入状态 9
+    UPDATE        偏移，并进入状态 10
+    TRX_BEGIN     偏移，并进入状态 11
+    TRX_COMMIT    偏移，并进入状态 12
+    TRX_ROLLBACK  偏移，并进入状态 13
+    HELP          偏移，并进入状态 14
+    EXIT          偏移，并进入状态 15
+    SET           偏移，并进入状态 16
+    LOAD          偏移，并进入状态 17
+    EXPLAIN       偏移，并进入状态 18
+
+    commands           转到状态 19
+    command_wrapper    转到状态 20
+    exit_stmt          转到状态 21
+    help_stmt          转到状态 22
+    sync_stmt          转到状态 23
+    begin_stmt         转到状态 24
+    commit_stmt        转到状态 25
+    rollback_stmt      转到状态 26
+    drop_table_stmt    转到状态 27
+    show_tables_stmt   转到状态 28
+    desc_table_stmt    转到状态 29
+    create_index_stmt  转到状态 30
+    drop_index_stmt    转到状态 31
+    create_table_stmt  转到状态 32
+    insert_stmt        转到状态 33
+    delete_stmt        转到状态 34
+    update_stmt        转到状态 35
+    select_stmt        转到状态 36
+    calc_stmt          转到状态 37
+    load_data_stmt     转到状态 38
+    explain_stmt       转到状态 39
+    set_variable_stmt  转到状态 40
+
+
+状态 1
+
+   31 create_index_stmt: CREATE • INDEX ID ON ID LBRACE ID rel_list RBRACE
+   32                  | CREATE • UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE
+   34 create_table_stmt: CREATE • TABLE ID LBRACE attr_def attr_def_list RBRACE storage_format
+
+    TABLE   偏移，并进入状态 41
+    UNIQUE  偏移，并进入状态 42
+    INDEX   偏移，并进入状态 43
+
+
+状态 2
+
+   28 drop_table_stmt: DROP • TABLE ID
+   33 drop_index_stmt: DROP • INDEX ID ON ID
+
+    TABLE  偏移，并进入状态 44
+    INDEX  偏移，并进入状态 45
+
+
+状态 3
+
+   65 calc_stmt: CALC • expression_list
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 61
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 4
+
+   64 select_stmt: SELECT • expression_list FROM ID rel_list join_list where group_by having
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 65
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 5
+
+   30 desc_table_stmt: DESC • ID
+
+    ID  偏移，并进入状态 66
+
+
+状态 6
+
+   29 show_tables_stmt: SHOW • TABLES
+
+    TABLES  偏移，并进入状态 67
+
+
+状态 7
+
+   24 sync_stmt: SYNC •
+
+    $default  使用规则 24 以归约 (sync_stmt)
+
+
+状态 8
+
+   48 insert_stmt: INSERT • INTO ID VALUES LBRACE value value_list RBRACE
+
+    INTO  偏移，并进入状态 68
+
+
+状态 9
+
+   58 delete_stmt: DELETE • FROM ID where
+
+    FROM  偏移，并进入状态 69
+
+
+状态 10
+
+   59 update_stmt: UPDATE • ID SET set_clause_list where
+
+    ID  偏移，并进入状态 70
+
+
+状态 11
+
+   25 begin_stmt: TRX_BEGIN •
+
+    $default  使用规则 25 以归约 (begin_stmt)
+
+
+状态 12
+
+   26 commit_stmt: TRX_COMMIT •
+
+    $default  使用规则 26 以归约 (commit_stmt)
+
+
+状态 13
+
+   27 rollback_stmt: TRX_ROLLBACK •
+
+    $default  使用规则 27 以归约 (rollback_stmt)
+
+
+状态 14
+
+   23 help_stmt: HELP •
+
+    $default  使用规则 23 以归约 (help_stmt)
+
+
+状态 15
+
+   22 exit_stmt: EXIT •
+
+    $default  使用规则 22 以归约 (exit_stmt)
+
+
+状态 16
+
+  173 set_variable_stmt: SET • ID EQ value
+
+    ID  偏移，并进入状态 71
+
+
+状态 17
+
+  171 load_data_stmt: LOAD • DATA INFILE SSS INTO TABLE ID
+
+    DATA  偏移，并进入状态 72
+
+
+状态 18
+
+  172 explain_stmt: EXPLAIN • command_wrapper
+
+    CREATE        偏移，并进入状态 1
+    DROP          偏移，并进入状态 2
+    CALC          偏移，并进入状态 3
+    SELECT        偏移，并进入状态 4
+    DESC          偏移，并进入状态 5
+    SHOW          偏移，并进入状态 6
+    SYNC          偏移，并进入状态 7
+    INSERT        偏移，并进入状态 8
+    DELETE        偏移，并进入状态 9
+    UPDATE        偏移，并进入状态 10
+    TRX_BEGIN     偏移，并进入状态 11
+    TRX_COMMIT    偏移，并进入状态 12
+    TRX_ROLLBACK  偏移，并进入状态 13
+    HELP          偏移，并进入状态 14
+    EXIT          偏移，并进入状态 15
+    SET           偏移，并进入状态 16
+    LOAD          偏移，并进入状态 17
+    EXPLAIN       偏移，并进入状态 18
+
+    command_wrapper    转到状态 73
+    exit_stmt          转到状态 21
+    help_stmt          转到状态 22
+    sync_stmt          转到状态 23
+    begin_stmt         转到状态 24
+    commit_stmt        转到状态 25
+    rollback_stmt      转到状态 26
+    drop_table_stmt    转到状态 27
+    show_tables_stmt   转到状态 28
+    desc_table_stmt    转到状态 29
+    create_index_stmt  转到状态 30
+    drop_index_stmt    转到状态 31
+    create_table_stmt  转到状态 32
+    insert_stmt        转到状态 33
+    delete_stmt        转到状态 34
+    update_stmt        转到状态 35
+    select_stmt        转到状态 36
+    calc_stmt          转到状态 37
+    load_data_stmt     转到状态 38
+    explain_stmt       转到状态 39
+    set_variable_stmt  转到状态 40
+
+
+状态 19
+
+    0 $accept: commands • $end
+
+    $end  偏移，并进入状态 74
+
+
+状态 20
+
+    1 commands: command_wrapper • opt_semicolon
+
+    SEMICOLON  偏移，并进入状态 75
+
+    $default  使用规则 174 以归约 (opt_semicolon)
+
+    opt_semicolon  转到状态 76
+
+
+状态 21
+
+   21 command_wrapper: exit_stmt •
+
+    $default  使用规则 21 以归约 (command_wrapper)
+
+
+状态 22
+
+   20 command_wrapper: help_stmt •
+
+    $default  使用规则 20 以归约 (command_wrapper)
+
+
+状态 23
+
+   13 command_wrapper: sync_stmt •
+
+    $default  使用规则 13 以归约 (command_wrapper)
+
+
+状态 24
+
+   14 command_wrapper: begin_stmt •
+
+    $default  使用规则 14 以归约 (command_wrapper)
+
+
+状态 25
+
+   15 command_wrapper: commit_stmt •
+
+    $default  使用规则 15 以归约 (command_wrapper)
+
+
+状态 26
+
+   16 command_wrapper: rollback_stmt •
+
+    $default  使用规则 16 以归约 (command_wrapper)
+
+
+状态 27
+
+    8 command_wrapper: drop_table_stmt •
+
+    $default  使用规则 8 以归约 (command_wrapper)
+
+
+状态 28
+
+    9 command_wrapper: show_tables_stmt •
+
+    $default  使用规则 9 以归约 (command_wrapper)
+
+
+状态 29
+
+   10 command_wrapper: desc_table_stmt •
+
+    $default  使用规则 10 以归约 (command_wrapper)
+
+
+状态 30
+
+   11 command_wrapper: create_index_stmt •
+
+    $default  使用规则 11 以归约 (command_wrapper)
+
+
+状态 31
+
+   12 command_wrapper: drop_index_stmt •
+
+    $default  使用规则 12 以归约 (command_wrapper)
+
+
+状态 32
+
+    7 command_wrapper: create_table_stmt •
+
+    $default  使用规则 7 以归约 (command_wrapper)
+
+
+状态 33
+
+    4 command_wrapper: insert_stmt •
+
+    $default  使用规则 4 以归约 (command_wrapper)
+
+
+状态 34
+
+    6 command_wrapper: delete_stmt •
+
+    $default  使用规则 6 以归约 (command_wrapper)
+
+
+状态 35
+
+    5 command_wrapper: update_stmt •
+
+    $default  使用规则 5 以归约 (command_wrapper)
+
+
+状态 36
+
+    3 command_wrapper: select_stmt •
+
+    $default  使用规则 3 以归约 (command_wrapper)
+
+
+状态 37
+
+    2 command_wrapper: calc_stmt •
+
+    $default  使用规则 2 以归约 (command_wrapper)
+
+
+状态 38
+
+   17 command_wrapper: load_data_stmt •
+
+    $default  使用规则 17 以归约 (command_wrapper)
+
+
+状态 39
+
+   18 command_wrapper: explain_stmt •
+
+    $default  使用规则 18 以归约 (command_wrapper)
+
+
+状态 40
+
+   19 command_wrapper: set_variable_stmt •
+
+    $default  使用规则 19 以归约 (command_wrapper)
+
+
+状态 41
+
+   34 create_table_stmt: CREATE TABLE • ID LBRACE attr_def attr_def_list RBRACE storage_format
+
+    ID  偏移，并进入状态 77
+
+
+状态 42
+
+   32 create_index_stmt: CREATE UNIQUE • INDEX ID ON ID LBRACE ID rel_list RBRACE
+
+    INDEX  偏移，并进入状态 78
+
+
+状态 43
+
+   31 create_index_stmt: CREATE INDEX • ID ON ID LBRACE ID rel_list RBRACE
+
+    ID  偏移，并进入状态 79
+
+
+状态 44
+
+   28 drop_table_stmt: DROP TABLE • ID
+
+    ID  偏移，并进入状态 80
+
+
+状态 45
+
+   33 drop_index_stmt: DROP INDEX • ID ON ID
+
+    ID  偏移，并进入状态 81
+
+
+状态 46
+
+   68 expression: LBRACE • expression RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 82
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 47
+
+   55 value: NULL_KY •
+
+    $default  使用规则 55 以归约 (value)
+
+
+状态 48
+
+  107 aggr_expr: SUM • LBRACE expression_list RBRACE
+  112          | SUM • LBRACE RBRACE
+
+    LBRACE  偏移，并进入状态 83
+
+
+状态 49
+
+  108 aggr_expr: AVG • LBRACE expression_list RBRACE
+  113          | AVG • LBRACE RBRACE
+
+    LBRACE  偏移，并进入状态 84
+
+
+状态 50
+
+  111 aggr_expr: COUNT • LBRACE expression_list RBRACE
+  116          | COUNT • LBRACE RBRACE
+
+    LBRACE  偏移，并进入状态 85
+
+
+状态 51
+
+  109 aggr_expr: MAX • LBRACE expression_list RBRACE
+  115          | MAX • LBRACE RBRACE
+
+    LBRACE  偏移，并进入状态 86
+
+
+状态 52
+
+  110 aggr_expr: MIN • LBRACE expression_list RBRACE
+  114          | MIN • LBRACE RBRACE
+
+    LBRACE  偏移，并进入状态 87
+
+
+状态 53
+
+   51 value: NUMBER •
+
+    $default  使用规则 51 以归约 (value)
+
+
+状态 54
+
+   52 value: FLOAT •
+
+    $default  使用规则 52 以归约 (value)
+
+
+状态 55
+
+  117 rel_attr: ID •
+  118         | ID • DOT ID
+
+    DOT  偏移，并进入状态 88
+
+    $default  使用规则 117 以归约 (rel_attr)
+
+
+状态 56
+
+   53 value: SSS •
+
+    $default  使用规则 53 以归约 (value)
+
+
+状态 57
+
+   54 value: VECTOR_LIST •
+
+    $default  使用规则 54 以归约 (value)
+
+
+状态 58
+
+   76 expression: '-' • expression
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 89
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 59
+
+   75 expression: '*' •
+
+    $default  使用规则 75 以归约 (expression)
+
+
+状态 60
+
+   73 expression: value •
+
+    $default  使用规则 73 以归约 (expression)
+
+
+状态 61
+
+   65 calc_stmt: CALC expression_list •
+
+    $default  使用规则 65 以归约 (calc_stmt)
+
+
+状态 62
+
+   66 expression_list: expression •
+   67                | expression • COMMA expression_list
+   69 expression: expression • '+' expression
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+
+    COMMA  偏移，并进入状态 90
+    '+'    偏移，并进入状态 91
+    '-'    偏移，并进入状态 92
+    '*'    偏移，并进入状态 93
+    '/'    偏移，并进入状态 94
+
+    $default  使用规则 66 以归约 (expression_list)
+
+
+状态 63
+
+   77 expression: aggr_expr •
+
+    $default  使用规则 77 以归约 (expression)
+
+
+状态 64
+
+   74 expression: rel_attr •
+
+    $default  使用规则 74 以归约 (expression)
+
+
+状态 65
+
+   64 select_stmt: SELECT expression_list • FROM ID rel_list join_list where group_by having
+
+    FROM  偏移，并进入状态 95
+
+
+状态 66
+
+   30 desc_table_stmt: DESC ID •
+
+    $default  使用规则 30 以归约 (desc_table_stmt)
+
+
+状态 67
+
+   29 show_tables_stmt: SHOW TABLES •
+
+    $default  使用规则 29 以归约 (show_tables_stmt)
+
+
+状态 68
+
+   48 insert_stmt: INSERT INTO • ID VALUES LBRACE value value_list RBRACE
+
+    ID  偏移，并进入状态 96
+
+
+状态 69
+
+   58 delete_stmt: DELETE FROM • ID where
+
+    ID  偏移，并进入状态 97
+
+
+状态 70
+
+   59 update_stmt: UPDATE ID • SET set_clause_list where
+
+    SET  偏移，并进入状态 98
+
+
+状态 71
+
+  173 set_variable_stmt: SET ID • EQ value
+
+    EQ  偏移，并进入状态 99
+
+
+状态 72
+
+  171 load_data_stmt: LOAD DATA • INFILE SSS INTO TABLE ID
+
+    INFILE  偏移，并进入状态 100
+
+
+状态 73
+
+  172 explain_stmt: EXPLAIN command_wrapper •
+
+    $default  使用规则 172 以归约 (explain_stmt)
+
+
+状态 74
+
+    0 $accept: commands $end •
+
+    $default  接受
+
+
+状态 75
+
+  175 opt_semicolon: SEMICOLON •
+
+    $default  使用规则 175 以归约 (opt_semicolon)
+
+
+状态 76
+
+    1 commands: command_wrapper opt_semicolon •
+
+    $default  使用规则 1 以归约 (commands)
+
+
+状态 77
+
+   34 create_table_stmt: CREATE TABLE ID • LBRACE attr_def attr_def_list RBRACE storage_format
+
+    LBRACE  偏移，并进入状态 101
+
+
+状态 78
+
+   32 create_index_stmt: CREATE UNIQUE INDEX • ID ON ID LBRACE ID rel_list RBRACE
+
+    ID  偏移，并进入状态 102
+
+
+状态 79
+
+   31 create_index_stmt: CREATE INDEX ID • ON ID LBRACE ID rel_list RBRACE
+
+    ON  偏移，并进入状态 103
+
+
+状态 80
+
+   28 drop_table_stmt: DROP TABLE ID •
+
+    $default  使用规则 28 以归约 (drop_table_stmt)
+
+
+状态 81
+
+   33 drop_index_stmt: DROP INDEX ID • ON ID
+
+    ON  偏移，并进入状态 104
+
+
+状态 82
+
+   68 expression: LBRACE expression • RBRACE
+   69           | expression • '+' expression
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+
+    RBRACE  偏移，并进入状态 105
+    '+'     偏移，并进入状态 91
+    '-'     偏移，并进入状态 92
+    '*'     偏移，并进入状态 93
+    '/'     偏移，并进入状态 94
+
+
+状态 83
+
+  107 aggr_expr: SUM LBRACE • expression_list RBRACE
+  112          | SUM LBRACE • RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    RBRACE       偏移，并进入状态 106
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 107
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 84
+
+  108 aggr_expr: AVG LBRACE • expression_list RBRACE
+  113          | AVG LBRACE • RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    RBRACE       偏移，并进入状态 108
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 109
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 85
+
+  111 aggr_expr: COUNT LBRACE • expression_list RBRACE
+  116          | COUNT LBRACE • RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    RBRACE       偏移，并进入状态 110
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 111
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 86
+
+  109 aggr_expr: MAX LBRACE • expression_list RBRACE
+  115          | MAX LBRACE • RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    RBRACE       偏移，并进入状态 112
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 113
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 87
+
+  110 aggr_expr: MIN LBRACE • expression_list RBRACE
+  114          | MIN LBRACE • RBRACE
+
+    LBRACE       偏移，并进入状态 46
+    RBRACE       偏移，并进入状态 114
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 115
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 88
+
+  118 rel_attr: ID DOT • ID
+
+    ID  偏移，并进入状态 116
+
+
+状态 89
+
+   69 expression: expression • '+' expression
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+   76           | '-' expression •
+
+    $default  使用规则 76 以归约 (expression)
+
+
+状态 90
+
+   67 expression_list: expression COMMA • expression_list
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 117
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 91
+
+   69 expression: expression '+' • expression
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 118
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 92
+
+   70 expression: expression '-' • expression
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 119
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 93
+
+   71 expression: expression '*' • expression
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 120
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 94
+
+   72 expression: expression '/' • expression
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value       转到状态 60
+    expression  转到状态 121
+    aggr_expr   转到状态 63
+    rel_attr    转到状态 64
+
+
+状态 95
+
+   64 select_stmt: SELECT expression_list FROM • ID rel_list join_list where group_by having
+
+    ID  偏移，并进入状态 122
+
+
+状态 96
+
+   48 insert_stmt: INSERT INTO ID • VALUES LBRACE value value_list RBRACE
+
+    VALUES  偏移，并进入状态 123
+
+
+状态 97
+
+   58 delete_stmt: DELETE FROM ID • where
+
+    WHERE  偏移，并进入状态 124
+
+    $default  使用规则 124 以归约 (where)
+
+    where  转到状态 125
+
+
+状态 98
+
+   59 update_stmt: UPDATE ID SET • set_clause_list where
+
+    ID  偏移，并进入状态 126
+
+    set_clause_list  转到状态 127
+    set_clause       转到状态 128
+
+
+状态 99
+
+  173 set_variable_stmt: SET ID EQ • value
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 129
+
+
+状态 100
+
+  171 load_data_stmt: LOAD DATA INFILE • SSS INTO TABLE ID
+
+    SSS  偏移，并进入状态 130
+
+
+状态 101
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE • attr_def attr_def_list RBRACE storage_format
+
+    ID  偏移，并进入状态 131
+
+    attr_def  转到状态 132
+
+
+状态 102
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID • ON ID LBRACE ID rel_list RBRACE
+
+    ON  偏移，并进入状态 133
+
+
+状态 103
+
+   31 create_index_stmt: CREATE INDEX ID ON • ID LBRACE ID rel_list RBRACE
+
+    ID  偏移，并进入状态 134
+
+
+状态 104
+
+   33 drop_index_stmt: DROP INDEX ID ON • ID
+
+    ID  偏移，并进入状态 135
+
+
+状态 105
+
+   68 expression: LBRACE expression RBRACE •
+
+    $default  使用规则 68 以归约 (expression)
+
+
+状态 106
+
+  112 aggr_expr: SUM LBRACE RBRACE •
+
+    $default  使用规则 112 以归约 (aggr_expr)
+
+
+状态 107
+
+  107 aggr_expr: SUM LBRACE expression_list • RBRACE
+
+    RBRACE  偏移，并进入状态 136
+
+
+状态 108
+
+  113 aggr_expr: AVG LBRACE RBRACE •
+
+    $default  使用规则 113 以归约 (aggr_expr)
+
+
+状态 109
+
+  108 aggr_expr: AVG LBRACE expression_list • RBRACE
+
+    RBRACE  偏移，并进入状态 137
+
+
+状态 110
+
+  116 aggr_expr: COUNT LBRACE RBRACE •
+
+    $default  使用规则 116 以归约 (aggr_expr)
+
+
+状态 111
+
+  111 aggr_expr: COUNT LBRACE expression_list • RBRACE
+
+    RBRACE  偏移，并进入状态 138
+
+
+状态 112
+
+  115 aggr_expr: MAX LBRACE RBRACE •
+
+    $default  使用规则 115 以归约 (aggr_expr)
+
+
+状态 113
+
+  109 aggr_expr: MAX LBRACE expression_list • RBRACE
+
+    RBRACE  偏移，并进入状态 139
+
+
+状态 114
+
+  114 aggr_expr: MIN LBRACE RBRACE •
+
+    $default  使用规则 114 以归约 (aggr_expr)
+
+
+状态 115
+
+  110 aggr_expr: MIN LBRACE expression_list • RBRACE
+
+    RBRACE  偏移，并进入状态 140
+
+
+状态 116
+
+  118 rel_attr: ID DOT ID •
+
+    $default  使用规则 118 以归约 (rel_attr)
+
+
+状态 117
+
+   67 expression_list: expression COMMA expression_list •
+
+    $default  使用规则 67 以归约 (expression_list)
+
+
+状态 118
+
+   69 expression: expression • '+' expression
+   69           | expression '+' expression •
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+
+    '*'  偏移，并进入状态 93
+    '/'  偏移，并进入状态 94
+
+    $default  使用规则 69 以归约 (expression)
+
+
+状态 119
+
+   69 expression: expression • '+' expression
+   70           | expression • '-' expression
+   70           | expression '-' expression •
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+
+    '*'  偏移，并进入状态 93
+    '/'  偏移，并进入状态 94
+
+    $default  使用规则 70 以归约 (expression)
+
+
+状态 120
+
+   69 expression: expression • '+' expression
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   71           | expression '*' expression •
+   72           | expression • '/' expression
+
+    $default  使用规则 71 以归约 (expression)
+
+
+状态 121
+
+   69 expression: expression • '+' expression
+   70           | expression • '-' expression
+   71           | expression • '*' expression
+   72           | expression • '/' expression
+   72           | expression '/' expression •
+
+    $default  使用规则 72 以归约 (expression)
+
+
+状态 122
+
+   64 select_stmt: SELECT expression_list FROM ID • rel_list join_list where group_by having
+
+    COMMA  偏移，并进入状态 141
+
+    $default  使用规则 119 以归约 (rel_list)
+
+    rel_list  转到状态 142
+
+
+状态 123
+
+   48 insert_stmt: INSERT INTO ID VALUES • LBRACE value value_list RBRACE
+
+    LBRACE  偏移，并进入状态 143
+
+
+状态 124
+
+  125 where: WHERE • condition_list
+
+    LBRACE       偏移，并进入状态 144
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 145
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    $default  使用规则 126 以归约 (condition_list)
+
+    value              转到状态 147
+    simple_expression  转到状态 148
+    arith_expr         转到状态 149
+    aggr_expr          转到状态 150
+    rel_attr           转到状态 151
+    condition_list     转到状态 152
+    condition          转到状态 153
+
+
+状态 125
+
+   58 delete_stmt: DELETE FROM ID where •
+
+    $default  使用规则 58 以归约 (delete_stmt)
+
+
+状态 126
+
+   62 set_clause: ID • EQ value
+   63           | ID • EQ SUB_QUERY
+
+    EQ  偏移，并进入状态 154
+
+
+状态 127
+
+   59 update_stmt: UPDATE ID SET set_clause_list • where
+   61 set_clause_list: set_clause_list • COMMA set_clause
+
+    COMMA  偏移，并进入状态 155
+    WHERE  偏移，并进入状态 124
+
+    $default  使用规则 124 以归约 (where)
+
+    where  转到状态 156
+
+
+状态 128
+
+   60 set_clause_list: set_clause •
+
+    $default  使用规则 60 以归约 (set_clause_list)
+
+
+状态 129
+
+  173 set_variable_stmt: SET ID EQ value •
+
+    $default  使用规则 173 以归约 (set_variable_stmt)
+
+
+状态 130
+
+  171 load_data_stmt: LOAD DATA INFILE SSS • INTO TABLE ID
+
+    INTO  偏移，并进入状态 157
+
+
+状态 131
+
+   37 attr_def: ID • type LBRACE number RBRACE null_choice
+   38         | ID • type null_choice
+
+    INT_T     偏移，并进入状态 158
+    STRING_T  偏移，并进入状态 159
+    DATE_T    偏移，并进入状态 160
+    FLOAT_T   偏移，并进入状态 161
+    VECTOR_T  偏移，并进入状态 162
+
+    type  转到状态 163
+
+
+状态 132
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def • attr_def_list RBRACE storage_format
+
+    COMMA  偏移，并进入状态 164
+
+    $default  使用规则 35 以归约 (attr_def_list)
+
+    attr_def_list  转到状态 165
+
+
+状态 133
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON • ID LBRACE ID rel_list RBRACE
+
+    ID  偏移，并进入状态 166
+
+
+状态 134
+
+   31 create_index_stmt: CREATE INDEX ID ON ID • LBRACE ID rel_list RBRACE
+
+    LBRACE  偏移，并进入状态 167
+
+
+状态 135
+
+   33 drop_index_stmt: DROP INDEX ID ON ID •
+
+    $default  使用规则 33 以归约 (drop_index_stmt)
+
+
+状态 136
+
+  107 aggr_expr: SUM LBRACE expression_list RBRACE •
+
+    $default  使用规则 107 以归约 (aggr_expr)
+
+
+状态 137
+
+  108 aggr_expr: AVG LBRACE expression_list RBRACE •
+
+    $default  使用规则 108 以归约 (aggr_expr)
+
+
+状态 138
+
+  111 aggr_expr: COUNT LBRACE expression_list RBRACE •
+
+    $default  使用规则 111 以归约 (aggr_expr)
+
+
+状态 139
+
+  109 aggr_expr: MAX LBRACE expression_list RBRACE •
+
+    $default  使用规则 109 以归约 (aggr_expr)
+
+
+状态 140
+
+  110 aggr_expr: MIN LBRACE expression_list RBRACE •
+
+    $default  使用规则 110 以归约 (aggr_expr)
+
+
+状态 141
+
+  120 rel_list: COMMA • ID rel_list
+
+    ID  偏移，并进入状态 168
+
+
+状态 142
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list • join_list where group_by having
+
+    INNER  偏移，并进入状态 169
+    JOIN   偏移，并进入状态 170
+
+    $default  使用规则 121 以归约 (join_list)
+
+    join_list  转到状态 171
+
+
+状态 143
+
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE • value value_list RBRACE
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 172
+
+
+状态 144
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+  144 condition: LBRACE • value value_list RBRACE comp_op value
+  145          | LBRACE • value value_list RBRACE comp_op rel_attr
+  146          | LBRACE • value value_list RBRACE comp_op SUB_QUERY
+  147          | LBRACE • value value_list RBRACE comp_op LBRACE value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 174
+    simple_expression  转到状态 148
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 145
+
+  139 condition: SUB_QUERY • comp_op rel_attr
+  140          | SUB_QUERY • comp_op SUB_QUERY
+  143          | SUB_QUERY • comp_op LBRACE value value_list RBRACE
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+
+    comp_op  转到状态 187
+
+
+状态 146
+
+   89 arith_expr: '-' • arith_expr
+   90           | '-' • simple_expression
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 189
+    arith_expr         转到状态 190
+    rel_attr           转到状态 176
+
+
+状态 147
+
+   78 simple_expression: value •
+  131 condition: value • comp_op arith_expr
+  135          | value • comp_op value
+  137          | value • comp_op rel_attr
+  141          | value • comp_op LBRACE value value_list RBRACE
+  151          | value • is_null_choice
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    IS     偏移，并进入状态 191
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+
+    $default  使用规则 78 以归约 (simple_expression)
+
+    is_null_choice  转到状态 192
+    comp_op         转到状态 193
+
+
+状态 148
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '+'  偏移，并进入状态 194
+    '-'  偏移，并进入状态 195
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+
+状态 149
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+  129 condition: arith_expr • comp_op value
+  130          | arith_expr • comp_op rel_attr
+  133          | arith_expr • comp_op arith_expr
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+    '+'    偏移，并进入状态 198
+    '-'    偏移，并进入状态 199
+    '*'    偏移，并进入状态 200
+    '/'    偏移，并进入状态 201
+
+    comp_op  转到状态 202
+
+
+状态 150
+
+  148 condition: aggr_expr • comp_op value
+  149          | aggr_expr • comp_op rel_attr
+  150          | aggr_expr • comp_op aggr_expr
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+
+    comp_op  转到状态 203
+
+
+状态 151
+
+   79 simple_expression: rel_attr •
+  132 condition: rel_attr • comp_op arith_expr
+  134          | rel_attr • comp_op value
+  136          | rel_attr • comp_op rel_attr
+  138          | rel_attr • comp_op SUB_QUERY
+  142          | rel_attr • comp_op LBRACE value value_list RBRACE
+  152          | rel_attr • is_null_choice
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    IS     偏移，并进入状态 191
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+
+    $default  使用规则 79 以归约 (simple_expression)
+
+    is_null_choice  转到状态 204
+    comp_op         转到状态 205
+
+
+状态 152
+
+  125 where: WHERE condition_list •
+
+    $default  使用规则 125 以归约 (where)
+
+
+状态 153
+
+  127 condition_list: condition •
+  128               | condition • AND condition_list
+
+    AND  偏移，并进入状态 206
+
+    $default  使用规则 127 以归约 (condition_list)
+
+
+状态 154
+
+   62 set_clause: ID EQ • value
+   63           | ID EQ • SUB_QUERY
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 207
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 208
+
+
+状态 155
+
+   61 set_clause_list: set_clause_list COMMA • set_clause
+
+    ID  偏移，并进入状态 126
+
+    set_clause  转到状态 209
+
+
+状态 156
+
+   59 update_stmt: UPDATE ID SET set_clause_list where •
+
+    $default  使用规则 59 以归约 (update_stmt)
+
+
+状态 157
+
+  171 load_data_stmt: LOAD DATA INFILE SSS INTO • TABLE ID
+
+    TABLE  偏移，并进入状态 210
+
+
+状态 158
+
+   43 type: INT_T •
+
+    $default  使用规则 43 以归约 (type)
+
+
+状态 159
+
+   44 type: STRING_T •
+
+    $default  使用规则 44 以归约 (type)
+
+
+状态 160
+
+   47 type: DATE_T •
+
+    $default  使用规则 47 以归约 (type)
+
+
+状态 161
+
+   45 type: FLOAT_T •
+
+    $default  使用规则 45 以归约 (type)
+
+
+状态 162
+
+   46 type: VECTOR_T •
+
+    $default  使用规则 46 以归约 (type)
+
+
+状态 163
+
+   37 attr_def: ID type • LBRACE number RBRACE null_choice
+   38         | ID type • null_choice
+
+    LBRACE   偏移，并进入状态 211
+    NOT      偏移，并进入状态 212
+    NULL_KY  偏移，并进入状态 213
+
+    $default  使用规则 39 以归约 (null_choice)
+
+    null_choice  转到状态 214
+
+
+状态 164
+
+   36 attr_def_list: COMMA • attr_def attr_def_list
+
+    ID  偏移，并进入状态 131
+
+    attr_def  转到状态 215
+
+
+状态 165
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list • RBRACE storage_format
+
+    RBRACE  偏移，并进入状态 216
+
+
+状态 166
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID • LBRACE ID rel_list RBRACE
+
+    LBRACE  偏移，并进入状态 217
+
+
+状态 167
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE • ID rel_list RBRACE
+
+    ID  偏移，并进入状态 218
+
+
+状态 168
+
+  120 rel_list: COMMA ID • rel_list
+
+    COMMA  偏移，并进入状态 141
+
+    $default  使用规则 119 以归约 (rel_list)
+
+    rel_list  转到状态 219
+
+
+状态 169
+
+  122 join_list: INNER • join_list
+
+    INNER  偏移，并进入状态 169
+    JOIN   偏移，并进入状态 170
+
+    $default  使用规则 121 以归约 (join_list)
+
+    join_list  转到状态 220
+
+
+状态 170
+
+  123 join_list: JOIN • ID ON condition_list join_list
+
+    ID  偏移，并进入状态 221
+
+
+状态 171
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list join_list • where group_by having
+
+    WHERE  偏移，并进入状态 124
+
+    $default  使用规则 124 以归约 (where)
+
+    where  转到状态 222
+
+
+状态 172
+
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value • value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    $default  使用规则 49 以归约 (value_list)
+
+    value_list  转到状态 224
+
+
+状态 173
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 148
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 174
+
+   78 simple_expression: value •
+  144 condition: LBRACE value • value_list RBRACE comp_op value
+  145          | LBRACE value • value_list RBRACE comp_op rel_attr
+  146          | LBRACE value • value_list RBRACE comp_op SUB_QUERY
+  147          | LBRACE value • value_list RBRACE comp_op LBRACE value value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    RBRACE    使用规则 49 以归约 (value_list)
+    $default  使用规则 78 以归约 (simple_expression)
+
+    value_list  转到状态 225
+
+
+状态 175
+
+   80 arith_expr: LBRACE arith_expr • RBRACE
+   81           | arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    RBRACE  偏移，并进入状态 226
+    '+'     偏移，并进入状态 198
+    '-'     偏移，并进入状态 199
+    '*'     偏移，并进入状态 200
+    '/'     偏移，并进入状态 201
+
+
+状态 176
+
+   79 simple_expression: rel_attr •
+
+    $default  使用规则 79 以归约 (simple_expression)
+
+
+状态 177
+
+  162 comp_op: NOT • LIKE
+  164        | NOT • IN
+  166        | NOT • EXIST
+
+    LIKE   偏移，并进入状态 227
+    IN     偏移，并进入状态 228
+    EXIST  偏移，并进入状态 229
+
+
+状态 178
+
+  161 comp_op: LIKE •
+
+    $default  使用规则 161 以归约 (comp_op)
+
+
+状态 179
+
+  163 comp_op: IN •
+
+    $default  使用规则 163 以归约 (comp_op)
+
+
+状态 180
+
+  165 comp_op: EXIST •
+
+    $default  使用规则 165 以归约 (comp_op)
+
+
+状态 181
+
+  155 comp_op: EQ •
+
+    $default  使用规则 155 以归约 (comp_op)
+
+
+状态 182
+
+  156 comp_op: LT •
+
+    $default  使用规则 156 以归约 (comp_op)
+
+
+状态 183
+
+  157 comp_op: GT •
+
+    $default  使用规则 157 以归约 (comp_op)
+
+
+状态 184
+
+  158 comp_op: LE •
+
+    $default  使用规则 158 以归约 (comp_op)
+
+
+状态 185
+
+  159 comp_op: GE •
+
+    $default  使用规则 159 以归约 (comp_op)
+
+
+状态 186
+
+  160 comp_op: NE •
+
+    $default  使用规则 160 以归约 (comp_op)
+
+
+状态 187
+
+  139 condition: SUB_QUERY comp_op • rel_attr
+  140          | SUB_QUERY comp_op • SUB_QUERY
+  143          | SUB_QUERY comp_op • LBRACE value value_list RBRACE
+
+    LBRACE     偏移，并进入状态 230
+    ID         偏移，并进入状态 55
+    SUB_QUERY  偏移，并进入状态 231
+
+    rel_attr  转到状态 232
+
+
+状态 188
+
+   78 simple_expression: value •
+
+    $default  使用规则 78 以归约 (simple_expression)
+
+
+状态 189
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   90           | '-' simple_expression •
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+    $default  使用规则 90 以归约 (arith_expr)
+
+
+状态 190
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   89           | '-' arith_expr •
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 89 以归约 (arith_expr)
+
+
+状态 191
+
+  153 is_null_choice: IS • NULL_KY
+  154               | IS • NOT NULL_KY
+
+    NOT      偏移，并进入状态 233
+    NULL_KY  偏移，并进入状态 234
+
+
+状态 192
+
+  151 condition: value is_null_choice •
+
+    $default  使用规则 151 以归约 (condition)
+
+
+状态 193
+
+  131 condition: value comp_op • arith_expr
+  135          | value comp_op • value
+  137          | value comp_op • rel_attr
+  141          | value comp_op • LBRACE value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 235
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 236
+    simple_expression  转到状态 148
+    arith_expr         转到状态 237
+    rel_attr           转到状态 238
+
+
+状态 194
+
+   85 arith_expr: simple_expression '+' • LBRACE simple_expression RBRACE
+   95           | simple_expression '+' • arith_expr
+  103           | simple_expression '+' • simple_expression
+
+    LBRACE       偏移，并进入状态 239
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 240
+    arith_expr         转到状态 241
+    rel_attr           转到状态 176
+
+
+状态 195
+
+   86 arith_expr: simple_expression '-' • LBRACE simple_expression RBRACE
+   96           | simple_expression '-' • arith_expr
+  104           | simple_expression '-' • simple_expression
+
+    LBRACE       偏移，并进入状态 242
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 243
+    arith_expr         转到状态 244
+    rel_attr           转到状态 176
+
+
+状态 196
+
+   87 arith_expr: simple_expression '*' • LBRACE simple_expression RBRACE
+   97           | simple_expression '*' • arith_expr
+  105           | simple_expression '*' • simple_expression
+
+    LBRACE       偏移，并进入状态 245
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 246
+    arith_expr         转到状态 247
+    rel_attr           转到状态 176
+
+
+状态 197
+
+   88 arith_expr: simple_expression '/' • LBRACE simple_expression RBRACE
+   98           | simple_expression '/' • arith_expr
+  106           | simple_expression '/' • simple_expression
+
+    LBRACE       偏移，并进入状态 248
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 249
+    arith_expr         转到状态 250
+    rel_attr           转到状态 176
+
+
+状态 198
+
+   81 arith_expr: arith_expr '+' • LBRACE simple_expression RBRACE
+   91           | arith_expr '+' • simple_expression
+   99           | arith_expr '+' • arith_expr
+
+    LBRACE       偏移，并进入状态 251
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 252
+    arith_expr         转到状态 253
+    rel_attr           转到状态 176
+
+
+状态 199
+
+   82 arith_expr: arith_expr '-' • LBRACE simple_expression RBRACE
+   92           | arith_expr '-' • simple_expression
+  100           | arith_expr '-' • arith_expr
+
+    LBRACE       偏移，并进入状态 254
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 255
+    arith_expr         转到状态 256
+    rel_attr           转到状态 176
+
+
+状态 200
+
+   83 arith_expr: arith_expr '*' • LBRACE simple_expression RBRACE
+   93           | arith_expr '*' • simple_expression
+  101           | arith_expr '*' • arith_expr
+
+    LBRACE       偏移，并进入状态 257
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 258
+    arith_expr         转到状态 259
+    rel_attr           转到状态 176
+
+
+状态 201
+
+   84 arith_expr: arith_expr '/' • LBRACE simple_expression RBRACE
+   94           | arith_expr '/' • simple_expression
+  102           | arith_expr '/' • arith_expr
+
+    LBRACE       偏移，并进入状态 260
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 261
+    arith_expr         转到状态 262
+    rel_attr           转到状态 176
+
+
+状态 202
+
+  129 condition: arith_expr comp_op • value
+  130          | arith_expr comp_op • rel_attr
+  133          | arith_expr comp_op • arith_expr
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 263
+    simple_expression  转到状态 148
+    arith_expr         转到状态 264
+    rel_attr           转到状态 265
+
+
+状态 203
+
+  148 condition: aggr_expr comp_op • value
+  149          | aggr_expr comp_op • rel_attr
+  150          | aggr_expr comp_op • aggr_expr
+
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value      转到状态 266
+    aggr_expr  转到状态 267
+    rel_attr   转到状态 268
+
+
+状态 204
+
+  152 condition: rel_attr is_null_choice •
+
+    $default  使用规则 152 以归约 (condition)
+
+
+状态 205
+
+  132 condition: rel_attr comp_op • arith_expr
+  134          | rel_attr comp_op • value
+  136          | rel_attr comp_op • rel_attr
+  138          | rel_attr comp_op • SUB_QUERY
+  142          | rel_attr comp_op • LBRACE value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 269
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 270
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 271
+    simple_expression  转到状态 148
+    arith_expr         转到状态 272
+    rel_attr           转到状态 273
+
+
+状态 206
+
+  128 condition_list: condition AND • condition_list
+
+    LBRACE       偏移，并进入状态 144
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 145
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    $default  使用规则 126 以归约 (condition_list)
+
+    value              转到状态 147
+    simple_expression  转到状态 148
+    arith_expr         转到状态 149
+    aggr_expr          转到状态 150
+    rel_attr           转到状态 151
+    condition_list     转到状态 274
+    condition          转到状态 153
+
+
+状态 207
+
+   63 set_clause: ID EQ SUB_QUERY •
+
+    $default  使用规则 63 以归约 (set_clause)
+
+
+状态 208
+
+   62 set_clause: ID EQ value •
+
+    $default  使用规则 62 以归约 (set_clause)
+
+
+状态 209
+
+   61 set_clause_list: set_clause_list COMMA set_clause •
+
+    $default  使用规则 61 以归约 (set_clause_list)
+
+
+状态 210
+
+  171 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE • ID
+
+    ID  偏移，并进入状态 275
+
+
+状态 211
+
+   37 attr_def: ID type LBRACE • number RBRACE null_choice
+
+    NUMBER  偏移，并进入状态 276
+
+    number  转到状态 277
+
+
+状态 212
+
+   41 null_choice: NOT • NULL_KY
+
+    NULL_KY  偏移，并进入状态 278
+
+
+状态 213
+
+   40 null_choice: NULL_KY •
+
+    $default  使用规则 40 以归约 (null_choice)
+
+
+状态 214
+
+   38 attr_def: ID type null_choice •
+
+    $default  使用规则 38 以归约 (attr_def)
+
+
+状态 215
+
+   36 attr_def_list: COMMA attr_def • attr_def_list
+
+    COMMA  偏移，并进入状态 164
+
+    $default  使用规则 35 以归约 (attr_def_list)
+
+    attr_def_list  转到状态 279
+
+
+状态 216
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE • storage_format
+
+    STORAGE  偏移，并进入状态 280
+
+    $default  使用规则 56 以归约 (storage_format)
+
+    storage_format  转到状态 281
+
+
+状态 217
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE • ID rel_list RBRACE
+
+    ID  偏移，并进入状态 282
+
+
+状态 218
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID • rel_list RBRACE
+
+    COMMA  偏移，并进入状态 141
+
+    $default  使用规则 119 以归约 (rel_list)
+
+    rel_list  转到状态 283
+
+
+状态 219
+
+  120 rel_list: COMMA ID rel_list •
+
+    $default  使用规则 120 以归约 (rel_list)
+
+
+状态 220
+
+  122 join_list: INNER join_list •
+
+    $default  使用规则 122 以归约 (join_list)
+
+
+状态 221
+
+  123 join_list: JOIN ID • ON condition_list join_list
+
+    ON  偏移，并进入状态 284
+
+
+状态 222
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list join_list where • group_by having
+
+    GROUP  偏移，并进入状态 285
+
+    $default  使用规则 167 以归约 (group_by)
+
+    group_by  转到状态 286
+
+
+状态 223
+
+   50 value_list: COMMA • value value_list
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 287
+
+
+状态 224
+
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 288
+
+
+状态 225
+
+  144 condition: LBRACE value value_list • RBRACE comp_op value
+  145          | LBRACE value value_list • RBRACE comp_op rel_attr
+  146          | LBRACE value value_list • RBRACE comp_op SUB_QUERY
+  147          | LBRACE value value_list • RBRACE comp_op LBRACE value value_list RBRACE
+
+    RBRACE  偏移，并进入状态 289
+
+
+状态 226
+
+   80 arith_expr: LBRACE arith_expr RBRACE •
+
+    $default  使用规则 80 以归约 (arith_expr)
+
+
+状态 227
+
+  162 comp_op: NOT LIKE •
+
+    $default  使用规则 162 以归约 (comp_op)
+
+
+状态 228
+
+  164 comp_op: NOT IN •
+
+    $default  使用规则 164 以归约 (comp_op)
+
+
+状态 229
+
+  166 comp_op: NOT EXIST •
+
+    $default  使用规则 166 以归约 (comp_op)
+
+
+状态 230
+
+  143 condition: SUB_QUERY comp_op LBRACE • value value_list RBRACE
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 290
+
+
+状态 231
+
+  140 condition: SUB_QUERY comp_op SUB_QUERY •
+
+    $default  使用规则 140 以归约 (condition)
+
+
+状态 232
+
+  139 condition: SUB_QUERY comp_op rel_attr •
+
+    $default  使用规则 139 以归约 (condition)
+
+
+状态 233
+
+  154 is_null_choice: IS NOT • NULL_KY
+
+    NULL_KY  偏移，并进入状态 291
+
+
+状态 234
+
+  153 is_null_choice: IS NULL_KY •
+
+    $default  使用规则 153 以归约 (is_null_choice)
+
+
+状态 235
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+  141 condition: value comp_op LBRACE • value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 292
+    simple_expression  转到状态 148
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 236
+
+   78 simple_expression: value •
+  135 condition: value comp_op value •
+
+    '+'       使用规则 78 以归约 (simple_expression)
+    '-'       使用规则 78 以归约 (simple_expression)
+    '*'       使用规则 78 以归约 (simple_expression)
+    '/'       使用规则 78 以归约 (simple_expression)
+    $default  使用规则 135 以归约 (condition)
+
+
+状态 237
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+  131 condition: value comp_op arith_expr •
+
+    '+'  偏移，并进入状态 198
+    '-'  偏移，并进入状态 199
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 131 以归约 (condition)
+
+
+状态 238
+
+   79 simple_expression: rel_attr •
+  137 condition: value comp_op rel_attr •
+
+    '+'       使用规则 79 以归约 (simple_expression)
+    '-'       使用规则 79 以归约 (simple_expression)
+    '*'       使用规则 79 以归约 (simple_expression)
+    '/'       使用规则 79 以归约 (simple_expression)
+    $default  使用规则 137 以归约 (condition)
+
+
+状态 239
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   85           | simple_expression '+' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 293
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 240
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  103           | simple_expression '+' simple_expression •
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+    $default  使用规则 103 以归约 (arith_expr)
+
+
+状态 241
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   95           | simple_expression '+' arith_expr •
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 95 以归约 (arith_expr)
+
+
+状态 242
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   86           | simple_expression '-' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 294
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 243
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  104           | simple_expression '-' simple_expression •
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+    $default  使用规则 104 以归约 (arith_expr)
+
+
+状态 244
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   96           | simple_expression '-' arith_expr •
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 96 以归约 (arith_expr)
+
+
+状态 245
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   87           | simple_expression '*' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 295
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 246
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  105           | simple_expression '*' simple_expression •
+  106           | simple_expression • '/' simple_expression
+
+    $default  使用规则 105 以归约 (arith_expr)
+
+
+状态 247
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   97           | simple_expression '*' arith_expr •
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    $default  使用规则 97 以归约 (arith_expr)
+
+
+状态 248
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   88           | simple_expression '/' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 296
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 249
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+  106           | simple_expression '/' simple_expression •
+
+    $default  使用规则 106 以归约 (arith_expr)
+
+
+状态 250
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   98           | simple_expression '/' arith_expr •
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    $default  使用规则 98 以归约 (arith_expr)
+
+
+状态 251
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   81           | arith_expr '+' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 297
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 252
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr '+' simple_expression •
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+    $default  使用规则 91 以归约 (arith_expr)
+
+
+状态 253
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+   99           | arith_expr '+' arith_expr •
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 99 以归约 (arith_expr)
+
+
+状态 254
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   82           | arith_expr '-' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 298
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 255
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   92           | arith_expr '-' simple_expression •
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    '*'  偏移，并进入状态 196
+    '/'  偏移，并进入状态 197
+
+    $default  使用规则 92 以归约 (arith_expr)
+
+
+状态 256
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  100           | arith_expr '-' arith_expr •
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 100 以归约 (arith_expr)
+
+
+状态 257
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   83           | arith_expr '*' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 299
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 258
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   93           | arith_expr '*' simple_expression •
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    $default  使用规则 93 以归约 (arith_expr)
+
+
+状态 259
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  101           | arith_expr '*' arith_expr •
+  102           | arith_expr • '/' arith_expr
+
+    $default  使用规则 101 以归约 (arith_expr)
+
+
+状态 260
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+   84           | arith_expr '/' LBRACE • simple_expression RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 188
+    simple_expression  转到状态 300
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 261
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   94           | arith_expr '/' simple_expression •
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    $default  使用规则 94 以归约 (arith_expr)
+
+
+状态 262
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+  102           | arith_expr '/' arith_expr •
+
+    $default  使用规则 102 以归约 (arith_expr)
+
+
+状态 263
+
+   78 simple_expression: value •
+  129 condition: arith_expr comp_op value •
+
+    '+'       使用规则 78 以归约 (simple_expression)
+    '-'       使用规则 78 以归约 (simple_expression)
+    '*'       使用规则 78 以归约 (simple_expression)
+    '/'       使用规则 78 以归约 (simple_expression)
+    $default  使用规则 129 以归约 (condition)
+
+
+状态 264
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+  133 condition: arith_expr comp_op arith_expr •
+
+    '+'  偏移，并进入状态 198
+    '-'  偏移，并进入状态 199
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 133 以归约 (condition)
+
+
+状态 265
+
+   79 simple_expression: rel_attr •
+  130 condition: arith_expr comp_op rel_attr •
+
+    '+'       使用规则 79 以归约 (simple_expression)
+    '-'       使用规则 79 以归约 (simple_expression)
+    '*'       使用规则 79 以归约 (simple_expression)
+    '/'       使用规则 79 以归约 (simple_expression)
+    $default  使用规则 130 以归约 (condition)
+
+
+状态 266
+
+  148 condition: aggr_expr comp_op value •
+
+    $default  使用规则 148 以归约 (condition)
+
+
+状态 267
+
+  150 condition: aggr_expr comp_op aggr_expr •
+
+    $default  使用规则 150 以归约 (condition)
+
+
+状态 268
+
+  149 condition: aggr_expr comp_op rel_attr •
+
+    $default  使用规则 149 以归约 (condition)
+
+
+状态 269
+
+   80 arith_expr: LBRACE • arith_expr RBRACE
+  142 condition: rel_attr comp_op LBRACE • value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 173
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    value              转到状态 301
+    simple_expression  转到状态 148
+    arith_expr         转到状态 175
+    rel_attr           转到状态 176
+
+
+状态 270
+
+  138 condition: rel_attr comp_op SUB_QUERY •
+
+    $default  使用规则 138 以归约 (condition)
+
+
+状态 271
+
+   78 simple_expression: value •
+  134 condition: rel_attr comp_op value •
+
+    '+'       使用规则 78 以归约 (simple_expression)
+    '-'       使用规则 78 以归约 (simple_expression)
+    '*'       使用规则 78 以归约 (simple_expression)
+    '/'       使用规则 78 以归约 (simple_expression)
+    $default  使用规则 134 以归约 (condition)
+
+
+状态 272
+
+   81 arith_expr: arith_expr • '+' LBRACE simple_expression RBRACE
+   82           | arith_expr • '-' LBRACE simple_expression RBRACE
+   83           | arith_expr • '*' LBRACE simple_expression RBRACE
+   84           | arith_expr • '/' LBRACE simple_expression RBRACE
+   91           | arith_expr • '+' simple_expression
+   92           | arith_expr • '-' simple_expression
+   93           | arith_expr • '*' simple_expression
+   94           | arith_expr • '/' simple_expression
+   99           | arith_expr • '+' arith_expr
+  100           | arith_expr • '-' arith_expr
+  101           | arith_expr • '*' arith_expr
+  102           | arith_expr • '/' arith_expr
+  132 condition: rel_attr comp_op arith_expr •
+
+    '+'  偏移，并进入状态 198
+    '-'  偏移，并进入状态 199
+    '*'  偏移，并进入状态 200
+    '/'  偏移，并进入状态 201
+
+    $default  使用规则 132 以归约 (condition)
+
+
+状态 273
+
+   79 simple_expression: rel_attr •
+  136 condition: rel_attr comp_op rel_attr •
+
+    '+'       使用规则 79 以归约 (simple_expression)
+    '-'       使用规则 79 以归约 (simple_expression)
+    '*'       使用规则 79 以归约 (simple_expression)
+    '/'       使用规则 79 以归约 (simple_expression)
+    $default  使用规则 136 以归约 (condition)
+
+
+状态 274
+
+  128 condition_list: condition AND condition_list •
+
+    $default  使用规则 128 以归约 (condition_list)
+
+
+状态 275
+
+  171 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID •
+
+    $default  使用规则 171 以归约 (load_data_stmt)
+
+
+状态 276
+
+   42 number: NUMBER •
+
+    $default  使用规则 42 以归约 (number)
+
+
+状态 277
+
+   37 attr_def: ID type LBRACE number • RBRACE null_choice
+
+    RBRACE  偏移，并进入状态 302
+
+
+状态 278
+
+   41 null_choice: NOT NULL_KY •
+
+    $default  使用规则 41 以归约 (null_choice)
+
+
+状态 279
+
+   36 attr_def_list: COMMA attr_def attr_def_list •
+
+    $default  使用规则 36 以归约 (attr_def_list)
+
+
+状态 280
+
+   57 storage_format: STORAGE • FORMAT EQ ID
+
+    FORMAT  偏移，并进入状态 303
+
+
+状态 281
+
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE storage_format •
+
+    $default  使用规则 34 以归约 (create_table_stmt)
+
+
+状态 282
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE ID • rel_list RBRACE
+
+    COMMA  偏移，并进入状态 141
+
+    $default  使用规则 119 以归约 (rel_list)
+
+    rel_list  转到状态 304
+
+
+状态 283
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID rel_list • RBRACE
+
+    RBRACE  偏移，并进入状态 305
+
+
+状态 284
+
+  123 join_list: JOIN ID ON • condition_list join_list
+
+    LBRACE       偏移，并进入状态 144
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 145
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    $default  使用规则 126 以归约 (condition_list)
+
+    value              转到状态 147
+    simple_expression  转到状态 148
+    arith_expr         转到状态 149
+    aggr_expr          转到状态 150
+    rel_attr           转到状态 151
+    condition_list     转到状态 306
+    condition          转到状态 153
+
+
+状态 285
+
+  168 group_by: GROUP • BY expression_list
+
+    BY  偏移，并进入状态 307
+
+
+状态 286
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list join_list where group_by • having
+
+    HAVING  偏移，并进入状态 308
+
+    $default  使用规则 169 以归约 (having)
+
+    having  转到状态 309
+
+
+状态 287
+
+   50 value_list: COMMA value • value_list
+
+    COMMA  偏移，并进入状态 223
+
+    $default  使用规则 49 以归约 (value_list)
+
+    value_list  转到状态 310
+
+
+状态 288
+
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE •
+
+    $default  使用规则 48 以归约 (insert_stmt)
+
+
+状态 289
+
+  144 condition: LBRACE value value_list RBRACE • comp_op value
+  145          | LBRACE value value_list RBRACE • comp_op rel_attr
+  146          | LBRACE value value_list RBRACE • comp_op SUB_QUERY
+  147          | LBRACE value value_list RBRACE • comp_op LBRACE value value_list RBRACE
+
+    NOT    偏移，并进入状态 177
+    LIKE   偏移，并进入状态 178
+    IN     偏移，并进入状态 179
+    EXIST  偏移，并进入状态 180
+    EQ     偏移，并进入状态 181
+    LT     偏移，并进入状态 182
+    GT     偏移，并进入状态 183
+    LE     偏移，并进入状态 184
+    GE     偏移，并进入状态 185
+    NE     偏移，并进入状态 186
+
+    comp_op  转到状态 311
+
+
+状态 290
+
+  143 condition: SUB_QUERY comp_op LBRACE value • value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    $default  使用规则 49 以归约 (value_list)
+
+    value_list  转到状态 312
+
+
+状态 291
+
+  154 is_null_choice: IS NOT NULL_KY •
+
+    $default  使用规则 154 以归约 (is_null_choice)
+
+
+状态 292
+
+   78 simple_expression: value •
+  141 condition: value comp_op LBRACE value • value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    RBRACE    使用规则 49 以归约 (value_list)
+    $default  使用规则 78 以归约 (simple_expression)
+
+    value_list  转到状态 313
+
+
+状态 293
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   85           | simple_expression '+' LBRACE simple_expression • RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 314
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 294
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   86           | simple_expression '-' LBRACE simple_expression • RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 315
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 295
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   87           | simple_expression '*' LBRACE simple_expression • RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 316
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 296
+
+   85 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   88           | simple_expression '/' LBRACE simple_expression • RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 317
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 297
+
+   81 arith_expr: arith_expr '+' LBRACE simple_expression • RBRACE
+   85           | simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 318
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 298
+
+   82 arith_expr: arith_expr '-' LBRACE simple_expression • RBRACE
+   85           | simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 319
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 299
+
+   83 arith_expr: arith_expr '*' LBRACE simple_expression • RBRACE
+   85           | simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 320
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 300
+
+   84 arith_expr: arith_expr '/' LBRACE simple_expression • RBRACE
+   85           | simple_expression • '+' LBRACE simple_expression RBRACE
+   86           | simple_expression • '-' LBRACE simple_expression RBRACE
+   87           | simple_expression • '*' LBRACE simple_expression RBRACE
+   88           | simple_expression • '/' LBRACE simple_expression RBRACE
+   95           | simple_expression • '+' arith_expr
+   96           | simple_expression • '-' arith_expr
+   97           | simple_expression • '*' arith_expr
+   98           | simple_expression • '/' arith_expr
+  103           | simple_expression • '+' simple_expression
+  104           | simple_expression • '-' simple_expression
+  105           | simple_expression • '*' simple_expression
+  106           | simple_expression • '/' simple_expression
+
+    RBRACE  偏移，并进入状态 321
+    '+'     偏移，并进入状态 194
+    '-'     偏移，并进入状态 195
+    '*'     偏移，并进入状态 196
+    '/'     偏移，并进入状态 197
+
+
+状态 301
+
+   78 simple_expression: value •
+  142 condition: rel_attr comp_op LBRACE value • value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    RBRACE    使用规则 49 以归约 (value_list)
+    $default  使用规则 78 以归约 (simple_expression)
+
+    value_list  转到状态 322
+
+
+状态 302
+
+   37 attr_def: ID type LBRACE number RBRACE • null_choice
+
+    NOT      偏移，并进入状态 212
+    NULL_KY  偏移，并进入状态 213
+
+    $default  使用规则 39 以归约 (null_choice)
+
+    null_choice  转到状态 323
+
+
+状态 303
+
+   57 storage_format: STORAGE FORMAT • EQ ID
+
+    EQ  偏移，并进入状态 324
+
+
+状态 304
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list • RBRACE
+
+    RBRACE  偏移，并进入状态 325
+
+
+状态 305
+
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID rel_list RBRACE •
+
+    $default  使用规则 31 以归约 (create_index_stmt)
+
+
+状态 306
+
+  123 join_list: JOIN ID ON condition_list • join_list
+
+    INNER  偏移，并进入状态 169
+    JOIN   偏移，并进入状态 170
+
+    $default  使用规则 121 以归约 (join_list)
+
+    join_list  转到状态 326
+
+
+状态 307
+
+  168 group_by: GROUP BY • expression_list
+
+    LBRACE       偏移，并进入状态 46
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 58
+    '*'          偏移，并进入状态 59
+
+    value            转到状态 60
+    expression_list  转到状态 327
+    expression       转到状态 62
+    aggr_expr        转到状态 63
+    rel_attr         转到状态 64
+
+
+状态 308
+
+  170 having: HAVING • condition_list
+
+    LBRACE       偏移，并进入状态 144
+    NULL_KY      偏移，并进入状态 47
+    SUM          偏移，并进入状态 48
+    AVG          偏移，并进入状态 49
+    COUNT        偏移，并进入状态 50
+    MAX          偏移，并进入状态 51
+    MIN          偏移，并进入状态 52
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 145
+    VECTOR_LIST  偏移，并进入状态 57
+    '-'          偏移，并进入状态 146
+
+    $default  使用规则 126 以归约 (condition_list)
+
+    value              转到状态 147
+    simple_expression  转到状态 148
+    arith_expr         转到状态 149
+    aggr_expr          转到状态 150
+    rel_attr           转到状态 151
+    condition_list     转到状态 328
+    condition          转到状态 153
+
+
+状态 309
+
+   64 select_stmt: SELECT expression_list FROM ID rel_list join_list where group_by having •
+
+    $default  使用规则 64 以归约 (select_stmt)
+
+
+状态 310
+
+   50 value_list: COMMA value value_list •
+
+    $default  使用规则 50 以归约 (value_list)
+
+
+状态 311
+
+  144 condition: LBRACE value value_list RBRACE comp_op • value
+  145          | LBRACE value value_list RBRACE comp_op • rel_attr
+  146          | LBRACE value value_list RBRACE comp_op • SUB_QUERY
+  147          | LBRACE value value_list RBRACE comp_op • LBRACE value value_list RBRACE
+
+    LBRACE       偏移，并进入状态 329
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    ID           偏移，并进入状态 55
+    SSS          偏移，并进入状态 56
+    SUB_QUERY    偏移，并进入状态 330
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value     转到状态 331
+    rel_attr  转到状态 332
+
+
+状态 312
+
+  143 condition: SUB_QUERY comp_op LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 333
+
+
+状态 313
+
+  141 condition: value comp_op LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 334
+
+
+状态 314
+
+   85 arith_expr: simple_expression '+' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 85 以归约 (arith_expr)
+
+
+状态 315
+
+   86 arith_expr: simple_expression '-' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 86 以归约 (arith_expr)
+
+
+状态 316
+
+   87 arith_expr: simple_expression '*' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 87 以归约 (arith_expr)
+
+
+状态 317
+
+   88 arith_expr: simple_expression '/' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 88 以归约 (arith_expr)
+
+
+状态 318
+
+   81 arith_expr: arith_expr '+' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 81 以归约 (arith_expr)
+
+
+状态 319
+
+   82 arith_expr: arith_expr '-' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 82 以归约 (arith_expr)
+
+
+状态 320
+
+   83 arith_expr: arith_expr '*' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 83 以归约 (arith_expr)
+
+
+状态 321
+
+   84 arith_expr: arith_expr '/' LBRACE simple_expression RBRACE •
+
+    $default  使用规则 84 以归约 (arith_expr)
+
+
+状态 322
+
+  142 condition: rel_attr comp_op LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 335
+
+
+状态 323
+
+   37 attr_def: ID type LBRACE number RBRACE null_choice •
+
+    $default  使用规则 37 以归约 (attr_def)
+
+
+状态 324
+
+   57 storage_format: STORAGE FORMAT EQ • ID
+
+    ID  偏移，并进入状态 336
+
+
+状态 325
+
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE •
+
+    $default  使用规则 32 以归约 (create_index_stmt)
+
+
+状态 326
+
+  123 join_list: JOIN ID ON condition_list join_list •
+
+    $default  使用规则 123 以归约 (join_list)
+
+
+状态 327
+
+  168 group_by: GROUP BY expression_list •
+
+    $default  使用规则 168 以归约 (group_by)
+
+
+状态 328
+
+  170 having: HAVING condition_list •
+
+    $default  使用规则 170 以归约 (having)
+
+
+状态 329
+
+  147 condition: LBRACE value value_list RBRACE comp_op LBRACE • value value_list RBRACE
+
+    NULL_KY      偏移，并进入状态 47
+    NUMBER       偏移，并进入状态 53
+    FLOAT        偏移，并进入状态 54
+    SSS          偏移，并进入状态 56
+    VECTOR_LIST  偏移，并进入状态 57
+
+    value  转到状态 337
+
+
+状态 330
+
+  146 condition: LBRACE value value_list RBRACE comp_op SUB_QUERY •
+
+    $default  使用规则 146 以归约 (condition)
+
+
+状态 331
+
+  144 condition: LBRACE value value_list RBRACE comp_op value •
+
+    $default  使用规则 144 以归约 (condition)
+
+
+状态 332
+
+  145 condition: LBRACE value value_list RBRACE comp_op rel_attr •
+
+    $default  使用规则 145 以归约 (condition)
+
+
+状态 333
+
+  143 condition: SUB_QUERY comp_op LBRACE value value_list RBRACE •
+
+    $default  使用规则 143 以归约 (condition)
+
+
+状态 334
+
+  141 condition: value comp_op LBRACE value value_list RBRACE •
+
+    $default  使用规则 141 以归约 (condition)
+
+
+状态 335
+
+  142 condition: rel_attr comp_op LBRACE value value_list RBRACE •
+
+    $default  使用规则 142 以归约 (condition)
+
+
+状态 336
+
+   57 storage_format: STORAGE FORMAT EQ ID •
+
+    $default  使用规则 57 以归约 (storage_format)
+
+
+状态 337
+
+  147 condition: LBRACE value value_list RBRACE comp_op LBRACE value • value_list RBRACE
+
+    COMMA  偏移，并进入状态 223
+
+    $default  使用规则 49 以归约 (value_list)
+
+    value_list  转到状态 338
+
+
+状态 338
+
+  147 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 339
+
+
+状态 339
+
+  147 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE •
+
+    $default  使用规则 147 以归约 (condition)

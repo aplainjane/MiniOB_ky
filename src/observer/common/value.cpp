@@ -20,6 +20,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/sstream.h"
 #include "common/lang/string.h"
 #include "common/log/log.h"
+#include <iomanip>
+#include <cmath>
 
 using ElementType = std::variant<int, float>;
 char* vectorToCharArray(const std::vector<ElementType>& vector_values);
@@ -158,8 +160,8 @@ void Value::set_data(char *data, int length)
       length_           = length;
     } break;
     case AttrType::VECTORS: {
-      std::cout<<"data: "<<data<<std::endl;
-      std::cout<<"length: "<<length<<std::endl;
+      // std::cout<<"data: "<<data<<std::endl;
+      // std::cout<<"length: "<<length<<std::endl;
       parse_vector(data);
       length_        = length;
     } break;
@@ -230,7 +232,7 @@ void Value::parse_vector(const char *s)
   std::istringstream ss(content);
   std::string item;
   std::vector<ElementType> vector_values;
-  std::cout<<"content: "<<content<<std::endl;
+  // std::cout<<"content: "<<content<<std::endl;
   while (std::getline(ss, item, ',')) {
     // 去掉可能的空格
     item.erase(std::remove_if(item.begin(), item.end(), ::isspace), item.end());
@@ -241,7 +243,16 @@ void Value::parse_vector(const char *s)
         if (item.find('.') != std::string::npos) {
           // 处理 float 类型
           float value = std::stof(item);
-          vector_values.push_back(value);
+
+          // 四舍五入保留两位小数
+          value = std::round(value * 100.0f) / 100.0f;
+
+          // 如果结果是整型（例如 1.00），将其转换为 int
+          if (value == static_cast<int>(value)) {
+            vector_values.push_back(static_cast<int>(value)); // 插入为 int
+          } else {
+            vector_values.push_back(value); // 插入为 float
+          }
         } else {
           // 处理 int 类型
           int value = std::stoi(item);

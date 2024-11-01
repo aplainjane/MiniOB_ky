@@ -339,7 +339,6 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   // 检查字段数量是否一致
   // 同样，由于bitmap列的存在，value_num需要+1
   if (1 + value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
-
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
     return RC::SCHEMA_FIELD_MISSING;
   }
@@ -348,8 +347,8 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
   // 当不一致时，要判断该字段是否允许NULL值
   std::vector<int> bit_map(value_num, !NULL_FLAG);
   const int normal_field_start_index = table_meta_.sys_field_num();
-    // 复制所有字段的值
-  int record_size = table_meta_.record_size();
+  // 复制所有字段的值
+  int record_size = table_meta_.record_size() + 4;
   char *record_data = (char *)malloc(record_size);
 
   for (int i = 0; i < value_num; i++) {
@@ -379,8 +378,6 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
     } else {
       rc = set_value_to_record(record_data, value, field);
     }
-
-    
   }
 
   if (OB_FAIL(rc)) {
@@ -402,8 +399,8 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
 RC Table::set_value_to_record(char *record_data, const Value &value, const FieldMeta *field)
 {
   size_t       copy_len = field->len();
-  const size_t data_len = value.length();
-  if (field->type() == AttrType::CHARS) {
+  const size_t data_len = strlen(value.data());
+  if (field->type() == AttrType::CHARS || field->type() == AttrType::VECTORS) {
     if (copy_len > data_len) {
       copy_len = data_len + 1;
     }

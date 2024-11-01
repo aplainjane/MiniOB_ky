@@ -90,7 +90,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     {
       //等待null
       Value *tempvalue=new Value();
-      tempvalue->set_null(999);
+      tempvalue->set_null(0);
       new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
     }
     else{

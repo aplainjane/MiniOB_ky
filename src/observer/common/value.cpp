@@ -466,11 +466,11 @@ char* vectorToCharArray(const std::vector<ElementType>& vector_values) {
   oss << "]"; // 结束括号
 
   std::string result = oss.str();
-  result += '\0'; // 添加字符串终止符
+  
+  // 不再手动添加终止符
+  size_t result_size = result.size(); // 不需要 +1，因为 c_str() 已有终止符
 
-  size_t result_size = result.size() + 1; // +1 for null terminato
-
-  char* char_array = new char[result_size];
+  char* char_array = new char[result_size + 1]; // +1 for null terminator
   std::strcpy(char_array, result.c_str());
 
   return char_array;

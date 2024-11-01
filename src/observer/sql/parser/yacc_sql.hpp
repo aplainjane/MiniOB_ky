@@ -113,18 +113,21 @@ extern int yydebug;
     LE = 314,                      /* LE  */
     GE = 315,                      /* GE  */
     NE = 316,                      /* NE  */
-    SUM = 317,                     /* SUM  */
-    AVG = 318,                     /* AVG  */
-    COUNT = 319,                   /* COUNT  */
-    MAX = 320,                     /* MAX  */
-    MIN = 321,                     /* MIN  */
-    NUMBER = 322,                  /* NUMBER  */
-    FLOAT = 323,                   /* FLOAT  */
-    ID = 324,                      /* ID  */
-    SSS = 325,                     /* SSS  */
-    SUB_QUERY = 326,               /* SUB_QUERY  */
-    VECTOR_LIST = 327,             /* VECTOR_LIST  */
-    UMINUS = 328                   /* UMINUS  */
+    I2_DISTANCE_T = 317,           /* I2_DISTANCE_T  */
+    COSINE_DISTANCE_T = 318,       /* COSINE_DISTANCE_T  */
+    INNER_PRODUCT_T = 319,         /* INNER_PRODUCT_T  */
+    SUM = 320,                     /* SUM  */
+    AVG = 321,                     /* AVG  */
+    COUNT = 322,                   /* COUNT  */
+    MAX = 323,                     /* MAX  */
+    MIN = 324,                     /* MIN  */
+    NUMBER = 325,                  /* NUMBER  */
+    FLOAT = 326,                   /* FLOAT  */
+    ID = 327,                      /* ID  */
+    SSS = 328,                     /* SSS  */
+    SUB_QUERY = 329,               /* SUB_QUERY  */
+    VECTOR_LIST = 330,             /* VECTOR_LIST  */
+    UMINUS = 331                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -133,13 +136,14 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 135 "yacc_sql.y"
+#line 138 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
@@ -156,7 +160,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 160 "yacc_sql.hpp"
+#line 164 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

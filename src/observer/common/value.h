@@ -125,15 +125,16 @@ public:
    * 获取对应的值
    * 如果当前的类型与期望获取的类型不符，就会执行转换操作
    */
-  int    get_int() const;
-  float  get_float() const;
-  string get_string() const;
-  bool   get_boolean() const;
+  int                 get_int() const;
+  float               get_float() const;
+  string              get_string() const;
+  bool                get_boolean() const;
   vector<ElementType> get_vector() const;
 
+  void                set_float(float val);
+  void                set_int(int val); 
+
 private:
-  void set_int(int val);
-  void set_float(float val);
   void set_string(const char *s, int len = 0);
   void parse_vector(const char *s);
   void set_string_from_other(const Value &other);

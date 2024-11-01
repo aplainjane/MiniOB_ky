@@ -65,6 +65,16 @@ enum CompOp
 };
 
 /**
+ * @brief 描述函数类型
+ * @ingroup SQLParser
+ */
+enum FuncOp {
+  I2_DISTANCE,
+  COSINE_DISTANCE,
+  INNER_PRODUCT
+};
+
+/**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
  * @details 条件比较就是SQL查询中的 where a>b 这种。

@@ -124,6 +124,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         LE
         GE
         NE
+        I2_DISTANCE_T
+        COSINE_DISTANCE_T
+        INNER_PRODUCT_T
         SUM
         AVG
         COUNT
@@ -138,6 +141,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
@@ -169,6 +173,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
+%type <func>                func_op
 %type <boolean>             null_choice
 %type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
@@ -683,6 +688,15 @@ expression:
     }
     | aggr_expr {
       $$ = $1;
+    }
+    | func_op LBRACE expression_list RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::move(*$3));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $3;
+    }
+    | func_op LBRACE RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::vector<std::unique_ptr<Expression>>());
+      $$->set_name(token_name(sql_string, &@$));
     }
     ;
 simple_expression:
@@ -1211,6 +1225,11 @@ comp_op:
     | EXIST { $$ = EXIST_LIST; }
     | NOT EXIST { $$ = NOTEXIST_LIST; }
     ;
+
+func_op:
+      I2_DISTANCE_T { $$ = I2_DISTANCE; }
+    | COSINE_DISTANCE_T { $$ = COSINE_DISTANCE; }
+    | INNER_PRODUCT_T { $$ = INNER_PRODUCT; }
 
 // your code here
 group_by:

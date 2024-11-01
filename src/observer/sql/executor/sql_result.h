@@ -45,6 +45,10 @@ public:
   const TupleSchema &tuple_schema() const { return tuple_schema_; }
   RC                 return_code() const { return return_code_; }
   const std::string &state_string() const { return state_string_; }
+  const PhysicalOperatorType get_physicalOperator_type() const 
+  {
+    return operator_->type();
+  }
 
   RC open();
   RC close();

@@ -46,7 +46,6 @@ public:
 public:
   int32_t             table_id() const { return table_id_; }
   const char         *name() const;
-  const FieldMeta    *null_field() const;
   const FieldMeta    *trx_field() const;
   const FieldMeta    *field(int index) const;
   const FieldMeta    *field(const char *name) const;
@@ -82,3 +81,6 @@ protected:
 
   int record_size_ = 0;
 };
+
+std::vector<int> int2bitmap(int num, int size);
+int bitmap2int(std::vector<int>& bitmap);

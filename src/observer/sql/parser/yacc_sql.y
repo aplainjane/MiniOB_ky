@@ -168,7 +168,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
-%type <boolean>             null_choice
+%type <boolean>             isnull
 %type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
@@ -368,6 +368,14 @@ create_table_stmt:    /*create table 语句的语法解析树*/
       create_table.attr_infos.emplace_back(*$5);
       std::reverse(create_table.attr_infos.begin(), create_table.attr_infos.end());
       delete $5;
+
+      AttrInfoSqlNode null_field;
+      null_field.type = AttrType::INTS;
+      null_field.name = NULL_FIELD_NAME;
+      null_field.length = 4;
+      null_field.isnull = false;
+      create_table.attr_infos.push_back(null_field);
+
       if ($8 != nullptr) {
         create_table.storage_format = $8;
         free($8);
@@ -392,30 +400,30 @@ attr_def_list:
     ;
     
 attr_def:
-    ID type LBRACE number RBRACE null_choice
+    ID type LBRACE number RBRACE isnull
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = $4;
-      $$->nullable = $6;
+      $$->isnull = $6;
       free($1);
     }
-    | ID type null_choice
+    | ID type isnull
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = 4;
-      $$->nullable = $3;
+      $$->isnull = $3;
       free($1);
     }
     ;
 
-null_choice:
+isnull:
     /* empty */
     {
-      $$ = true;
+      $$ = false;
     }
     | NULL_KY
     {
@@ -484,8 +492,7 @@ value:
       free($1);
     }
     | NULL_KY {
-      $$ = new Value();
-      $$->make_null();
+      $$ = new Value(NULL_VALUE, 1);
     }
     ;
 storage_format:
@@ -989,7 +996,7 @@ condition:
     | value is_null_choice {
       $$ = new ConditionSqlNode;
       Value val;
-      val.make_null();
+      val.set_null(0);
         
       $$->left_is_attr = 0;
       $$->left_value = *$1;  
@@ -1001,8 +1008,8 @@ condition:
     | rel_attr is_null_choice {
       $$ = new ConditionSqlNode;
       Value val;
-      val.make_null();
-      
+      val.set_null(0);
+
       $$->left_is_attr = 1;
       $$->left_attr = *$1;
       $$->right_is_attr = 0;
@@ -1013,8 +1020,8 @@ condition:
     ;
 
 is_null_choice:
-      IS NULL_KY { $$ = IS_NULL; }
-    | IS NOT NULL_KY { $$ = IS_NOT_NULL; }
+      IS NULL_KY { $$ =  OP_ISNULL; }
+    | IS NOT NULL_KY { $$ = OP_ISNOTNULL; }
     ;
       
 comp_op:

@@ -23,8 +23,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/tuple_cell.h"
 #include "sql/parser/parse.h"
 #include "common/value.h"
+#include "storage/table/table.h"
 #include "storage/record/record.h"
-#include "common/lang/bitmap.h"
 
 class Table;
 
@@ -172,16 +172,7 @@ public:
     speces_.clear();
   }
 
-  void set_record(Record *record)
-  {
-    this->record_ = record;
-    ASSERT(!this->speces_.empty(), "RowTuple speces empty!");
-    const FieldMeta* null_field = this->speces_.front()->field().meta();
-    // 确保第一行是我们规定的null bitmap
-    ASSERT(nullptr != null_field && AttrType::CHARS == null_field->type(), "RowTuple get null field failed!");
-    bitmap_.init(record->data() + null_field->offset(), this->speces_.size());
-
-  }
+  void set_record(Record *record) { this->record_ = record; }
 
   void set_schema(const Table *table, const std::vector<FieldMeta> *fields)
   {
@@ -206,15 +197,23 @@ public:
       LOG_WARN("invalid argument. index=%d", index);
       return RC::INVALID_ARGUMENT;
     }
-    
-    if (bitmap_.get_bit(index)) {
-      cell.make_null();
-    } else {
-      FieldExpr       *field_expr = speces_[index];
-      const FieldMeta *field_meta = field_expr->field().meta();
+        /**
+     * 在读取index对应的Value之前，需要读该行最后一个Value中的bitmap信息
+    */
+    Value _bitmap;
+    FieldExpr *field_bitmap = speces_[speces_.size() - 1];
+    const FieldMeta *filed_meta_bitmap = field_bitmap->field().meta();
+    _bitmap.set_type(filed_meta_bitmap->type());
+    _bitmap.set_data(this->record_->data() + filed_meta_bitmap->offset(), filed_meta_bitmap->len());
+    std::vector<int> bitmap = int2bitmap(_bitmap.get_int(),(cell_num()));
+
+    FieldExpr       *field_expr = speces_[index];
+    const FieldMeta *field_meta = field_expr->field().meta();
+    if(bitmap[index] == NULL_FLAG)
+      cell.set_type(AttrType::NULLS);
+    else
       cell.set_type(field_meta->type());
-      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
-    }
+    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
     return RC::SUCCESS;
   }
 
@@ -262,7 +261,6 @@ public:
 private:
   Record                  *record_ = nullptr;
   const Table             *table_  = nullptr;
-  common::Bitmap          bitmap_;
   std::vector<FieldExpr *> speces_;
 };
 

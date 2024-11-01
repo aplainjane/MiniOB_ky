@@ -37,7 +37,7 @@ RC SumAggregator::evaluate(Value& result)
 {
   if (value_.attr_type() == AttrType::UNDEFINED) {
     Value vals;
-    vals.make_null();
+    vals.set_null(0);
     result = vals; 
   } else {
     result = value_;
@@ -67,7 +67,7 @@ RC AvgAggregator::evaluate(Value& result)
 { 
   if (value_.attr_type() == AttrType::UNDEFINED) {
     Value vals;
-    vals.make_null();
+    vals.set_null(0);
     result = vals; 
   } else {
     float tempresult=value_.get_float()/count_;
@@ -124,7 +124,7 @@ RC MaxAggregator::evaluate(Value& result)
   // 检查是否是未定义，以便返回 NULL
   if (value_.attr_type() == AttrType::UNDEFINED) {
     Value vals;
-    vals.make_null();
+    vals.set_null(0);
     result = vals; 
   } else {
     result = value_;
@@ -155,7 +155,7 @@ RC MinAggregator::evaluate(Value& result)
   // 检查是否是未定义，以便返回 NULL
   if (value_.attr_type() == AttrType::UNDEFINED) {
     Value vals;
-    vals.make_null();
+    vals.set_null(0);
     result = vals; 
   } else {
     result = value_;

@@ -198,12 +198,27 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   }
 
   const TupleSchema &schema   = sql_result->tuple_schema();
-  const int          cell_num = schema.cell_num();
+    int cell_num = schema.cell_num();
+
+  // 因为增加了bitmap列，因此cellnum减1
+  // if (false && sql_result->get_physicalOperator_type() == PhysicalOperatorType::PROJECT)
+  //   cell_num--;
+  // 增加bitmap列后，如果是联表查询，那么结果会出现多个bitmap列
+  // 存储每个bitmap的索引，后续投影时忽略
+  std::vector<int> ignored_index;
 
   for (int i = 0; i < cell_num; i++) {
-    const TupleCellSpec &spec  = schema.cell_at(i);
-    const char          *alias = spec.alias();
-    if (nullptr != alias || alias[0] != 0) {
+    const TupleCellSpec &spec = schema.cell_at(i);
+    const char *alias = spec.alias();
+    // std::cout  << spec.table_name() << " & " << spec.field_name() << " & " << spec.alias() << std::endl;
+    if (strcmp(alias, NULL_FIELD_NAME.c_str()) == 0 || strcmp(spec.field_name(), NULL_FIELD_NAME.c_str()) == 0){
+      ignored_index.push_back(i);
+    }
+    bool ffflag = false;
+    if(ignored_index.size() != 0 && ignored_index[ignored_index.size() - 1] == i){
+      ffflag = true;
+    }
+    if (!ffflag && (nullptr != alias || alias[0] != 0)) {
       if (0 != i) {
         const char *delim = " | ";
 
@@ -241,7 +256,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       && event->session()->used_chunk_mode()) {
     rc = write_chunk_result(sql_result);
   } else {
-    rc = write_tuple_result(sql_result);
+    rc = write_tuple_result(sql_result,ignored_index);
   }
 
   if (OB_FAIL(rc)) {
@@ -270,15 +285,29 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   return rc;
 }
 
-RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
+RC PlainCommunicator::write_tuple_result(SqlResult *sql_result,std::vector<int> ignored_index)
 {
   RC rc = RC::SUCCESS;
   Tuple *tuple = nullptr;
+
+
+  // 增加bitmap列后，如果是联表查询，那么结果会出现多个bitmap列
+  // 存储每个bitmap的索引，后续投影时忽略
+
   while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
     assert(tuple != nullptr);
 
     int cell_num = tuple->cell_num();
     for (int i = 0; i < cell_num; i++) {
+      bool need_ignore = false;
+      for (int t = 0; t < ignored_index.size(); t++) {
+        if (ignored_index[t] == i) {
+          need_ignore = true;
+          break;
+        }
+      }
+      if(need_ignore)
+        continue;
       if (i != 0) {
         const char *delim = " | ";
 

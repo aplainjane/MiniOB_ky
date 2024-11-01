@@ -54,7 +54,12 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
     case AttrType::INTS:{
       result.attr_type_ = AttrType::INTS;
       int val_int = atoi(val.value_.pointer_value_);
-      result.set_int(val_int);
+      if(val_int == 0 && val.to_string() != "0") {        
+        return RC::INTERNAL;
+      }
+      else{
+        result.set_int(val_int);
+      }
     }break;
     case AttrType::FLOATS:{ 
       result.attr_type_ = AttrType::FLOATS;

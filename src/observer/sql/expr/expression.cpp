@@ -896,7 +896,7 @@ RC FunctionExpr::get_INNER_value(const Tuple &tuple, Value &value) const
       float left_float = static_cast<float>(left_val);
       std::visit([&result, left_float](auto&& right_val) {
         float right_float = static_cast<float>(right_val);
-        result += (left_float + right_float);
+        result += (left_float * right_float);
       }, right_vec[i]);
     }, left_vec[i]);
   }

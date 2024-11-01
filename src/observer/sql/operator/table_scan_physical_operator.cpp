@@ -44,7 +44,7 @@ RC TableScanPhysicalOperator::next()
     }
 
     if (filter_result) {
-      //sql_debug("get a tuple: %s", tuple_.to_string().c_str());
+      sql_debug("in table: %s get a tuple: %s", table_->name(), tuple_.to_string().c_str());
       break;
     } else {
       sql_debug("a tuple is filtered: %s", tuple_.to_string().c_str());

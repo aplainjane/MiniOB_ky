@@ -175,7 +175,6 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <comp>                comp_op
 %type <boolean>             isnull
 %type <func>                func_op
-%type <boolean>             null_choice
 %type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list

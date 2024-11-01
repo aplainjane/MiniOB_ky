@@ -2995,65 +2995,23 @@
 
 状态 215
 
-   84 arith_expr: arith_expr '-' • LBRACE simple_expression RBRACE
-   94           | arith_expr '-' • simple_expression
-  102           | arith_expr '-' • arith_expr
+   63 set_clause: ID EQ SUB_QUERY •
 
-    LBRACE       偏移，并进入状态 262
-    NULL_KY      偏移，并进入状态 47
-    NUMBER       偏移，并进入状态 56
-    FLOAT        偏移，并进入状态 57
-    ID           偏移，并进入状态 58
-    SSS          偏移，并进入状态 59
-    VECTOR_LIST  偏移，并进入状态 60
-    '-'          偏移，并进入状态 154
-
-    value              转到状态 196
-    simple_expression  转到状态 263
-    arith_expr         转到状态 264
-    rel_attr           转到状态 184
+    $default  使用规则 63 以归约 (set_clause)
 
 
 状态 216
 
-   85 arith_expr: arith_expr '*' • LBRACE simple_expression RBRACE
-   95           | arith_expr '*' • simple_expression
-  103           | arith_expr '*' • arith_expr
+   62 set_clause: ID EQ value •
 
-    LBRACE       偏移，并进入状态 265
-    NULL_KY      偏移，并进入状态 47
-    NUMBER       偏移，并进入状态 56
-    FLOAT        偏移，并进入状态 57
-    ID           偏移，并进入状态 58
-    SSS          偏移，并进入状态 59
-    VECTOR_LIST  偏移，并进入状态 60
-    '-'          偏移，并进入状态 154
-
-    value              转到状态 196
-    simple_expression  转到状态 266
-    arith_expr         转到状态 267
-    rel_attr           转到状态 184
+    $default  使用规则 62 以归约 (set_clause)
 
 
 状态 217
 
-   86 arith_expr: arith_expr '/' • LBRACE simple_expression RBRACE
-   96           | arith_expr '/' • simple_expression
-  104           | arith_expr '/' • arith_expr
+   61 set_clause_list: set_clause_list COMMA set_clause •
 
-    LBRACE       偏移，并进入状态 268
-    NULL_KY      偏移，并进入状态 47
-    NUMBER       偏移，并进入状态 56
-    FLOAT        偏移，并进入状态 57
-    ID           偏移，并进入状态 58
-    SSS          偏移，并进入状态 59
-    VECTOR_LIST  偏移，并进入状态 60
-    '-'          偏移，并进入状态 154
-
-    value              转到状态 196
-    simple_expression  转到状态 269
-    arith_expr         转到状态 270
-    rel_attr           转到状态 184
+    $default  使用规则 61 以归约 (set_clause_list)
 
 
 状态 218
@@ -3065,7 +3023,7 @@
 
 状态 219
 
-   37 attr_def: ID type LBRACE • number RBRACE null_choice
+   37 attr_def: ID type LBRACE • number RBRACE isnull
 
     NUMBER  偏移，并进入状态 284
 
@@ -3074,21 +3032,21 @@
 
 状态 220
 
-   41 null_choice: NOT • NULL_KY
+   41 isnull: NOT • NULL_KY
 
     NULL_KY  偏移，并进入状态 286
 
 
 状态 221
 
-   40 null_choice: NULL_KY •
+   40 isnull: NULL_KY •
 
-    $default  使用规则 40 以归约 (null_choice)
+    $default  使用规则 40 以归约 (isnull)
 
 
 状态 222
 
-   38 attr_def: ID type null_choice •
+   38 attr_def: ID type isnull •
 
     $default  使用规则 38 以归约 (attr_def)
 
@@ -3117,14 +3075,14 @@
 
 状态 225
 
-   61 set_clause_list: set_clause_list COMMA set_clause •
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE • ID rel_list RBRACE
 
     ID  偏移，并进入状态 290
 
 
 状态 226
 
-  176 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE • ID
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID • rel_list RBRACE
 
     COMMA  偏移，并进入状态 149
 
@@ -3180,7 +3138,7 @@
 
 状态 232
 
-   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE • storage_format
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list • RBRACE
 
     RBRACE  偏移，并进入状态 296
 
@@ -3980,35 +3938,30 @@
 
 状态 284
 
-  151 condition: aggr_expr comp_op rel_attr •
+   42 number: NUMBER •
 
-    $default  使用规则 151 以归约 (condition)
+    $default  使用规则 42 以归约 (number)
 
 
 状态 285
 
-   37 attr_def: ID type LBRACE number • RBRACE null_choice
+   37 attr_def: ID type LBRACE number • RBRACE isnull
 
     RBRACE  偏移，并进入状态 310
 
 
 状态 286
 
-   41 null_choice: NOT NULL_KY •
+   41 isnull: NOT NULL_KY •
 
-    $default  使用规则 41 以归约 (null_choice)
+    $default  使用规则 41 以归约 (isnull)
 
 
 状态 287
 
-   80 simple_expression: value •
-  136 condition: rel_attr comp_op value •
+   36 attr_def_list: COMMA attr_def attr_def_list •
 
-    '+'       使用规则 80 以归约 (simple_expression)
-    '-'       使用规则 80 以归约 (simple_expression)
-    '*'       使用规则 80 以归约 (simple_expression)
-    '/'       使用规则 80 以归约 (simple_expression)
-    $default  使用规则 136 以归约 (condition)
+    $default  使用规则 36 以归约 (attr_def_list)
 
 
 状态 288
@@ -4020,14 +3973,9 @@
 
 状态 289
 
-   81 simple_expression: rel_attr •
-  138 condition: rel_attr comp_op rel_attr •
+   34 create_table_stmt: CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE storage_format •
 
-    '+'       使用规则 81 以归约 (simple_expression)
-    '-'       使用规则 81 以归约 (simple_expression)
-    '*'       使用规则 81 以归约 (simple_expression)
-    '/'       使用规则 81 以归约 (simple_expression)
-    $default  使用规则 138 以归约 (condition)
+    $default  使用规则 34 以归约 (create_table_stmt)
 
 
 状态 290
@@ -4043,7 +3991,7 @@
 
 状态 291
 
-  176 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID •
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID rel_list • RBRACE
 
     RBRACE  偏移，并进入状态 313
 
@@ -4109,9 +4057,9 @@
 
 状态 296
 
-   57 storage_format: STORAGE • FORMAT EQ ID
+   48 insert_stmt: INSERT INTO ID VALUES LBRACE value value_list RBRACE •
 
-    FORMAT  偏移，并进入状态 311
+    $default  使用规则 48 以归约 (insert_stmt)
 
 
 状态 297
@@ -4141,7 +4089,7 @@
 
     COMMA  偏移，并进入状态 231
 
-    $default  使用规则 121 以归约 (rel_list)
+    $default  使用规则 49 以归约 (value_list)
 
     value_list  转到状态 320
 
@@ -4365,14 +4313,14 @@
 
 状态 310
 
-   37 attr_def: ID type LBRACE number RBRACE • null_choice
+   37 attr_def: ID type LBRACE number RBRACE • isnull
 
     NOT      偏移，并进入状态 220
     NULL_KY  偏移，并进入状态 221
 
-    $default  使用规则 39 以归约 (null_choice)
+    $default  使用规则 39 以归约 (isnull)
 
-    null_choice  转到状态 331
+    isnull  转到状态 331
 
 
 状态 311
@@ -4384,44 +4332,16 @@
 
 状态 312
 
-   87 arith_expr: simple_expression • '+' LBRACE simple_expression RBRACE
-   88           | simple_expression • '-' LBRACE simple_expression RBRACE
-   89           | simple_expression • '*' LBRACE simple_expression RBRACE
-   90           | simple_expression • '/' LBRACE simple_expression RBRACE
-   90           | simple_expression '/' LBRACE simple_expression • RBRACE
-   97           | simple_expression • '+' arith_expr
-   98           | simple_expression • '-' arith_expr
-   99           | simple_expression • '*' arith_expr
-  100           | simple_expression • '/' arith_expr
-  105           | simple_expression • '+' simple_expression
-  106           | simple_expression • '-' simple_expression
-  107           | simple_expression • '*' simple_expression
-  108           | simple_expression • '/' simple_expression
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list • RBRACE
 
     RBRACE  偏移，并进入状态 333
 
 
 状态 313
 
-   83 arith_expr: arith_expr '+' LBRACE simple_expression • RBRACE
-   87           | simple_expression • '+' LBRACE simple_expression RBRACE
-   88           | simple_expression • '-' LBRACE simple_expression RBRACE
-   89           | simple_expression • '*' LBRACE simple_expression RBRACE
-   90           | simple_expression • '/' LBRACE simple_expression RBRACE
-   97           | simple_expression • '+' arith_expr
-   98           | simple_expression • '-' arith_expr
-   99           | simple_expression • '*' arith_expr
-  100           | simple_expression • '/' arith_expr
-  105           | simple_expression • '+' simple_expression
-  106           | simple_expression • '-' simple_expression
-  107           | simple_expression • '*' simple_expression
-  108           | simple_expression • '/' simple_expression
+   31 create_index_stmt: CREATE INDEX ID ON ID LBRACE ID rel_list RBRACE •
 
-    RBRACE  偏移，并进入状态 326
-    '+'     偏移，并进入状态 202
-    '-'     偏移，并进入状态 203
-    '*'     偏移，并进入状态 204
-    '/'     偏移，并进入状态 205
+    $default  使用规则 31 以归约 (create_index_stmt)
 
 
 状态 314
@@ -4609,23 +4529,23 @@
 
 状态 331
 
-   37 attr_def: ID type LBRACE number RBRACE null_choice •
+   37 attr_def: ID type LBRACE number RBRACE isnull •
 
-    $default  使用规则 88 以归约 (arith_expr)
+    $default  使用规则 37 以归约 (attr_def)
 
 
 状态 332
 
-   89 arith_expr: simple_expression '*' LBRACE simple_expression RBRACE •
+   57 storage_format: STORAGE FORMAT EQ • ID
 
     ID  偏移，并进入状态 344
 
 
 状态 333
 
-   90 arith_expr: simple_expression '/' LBRACE simple_expression RBRACE •
+   32 create_index_stmt: CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE •
 
-    $default  使用规则 90 以归约 (arith_expr)
+    $default  使用规则 32 以归约 (create_index_stmt)
 
 
 状态 334
@@ -4706,9 +4626,9 @@
 
 状态 344
 
-  175 having: HAVING condition_list •
+   57 storage_format: STORAGE FORMAT EQ ID •
 
-    $default  使用规则 175 以归约 (having)
+    $default  使用规则 57 以归约 (storage_format)
 
 
 状态 345

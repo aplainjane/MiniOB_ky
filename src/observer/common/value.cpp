@@ -32,6 +32,8 @@ Value::Value(float val) { set_float(val); }
 
 Value::Value(bool val) { set_boolean(val); }
 
+Value::Value(int64_t val) { set_boolean(val); }
+
 Value::Value(int val, int flag)
 {
   set_null(val);
@@ -165,6 +167,10 @@ void Value::set_data(char *data, int length)
       parse_vector(data);
       length_        = length;
     } break;
+    case AttrType::LONGS: {
+      value_.long_value_ = *(int64_t *)data;
+      length_ = length;
+    } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
     } break;
@@ -221,6 +227,13 @@ void Value::set_string(const char *s, int len /*= 0*/)
     memcpy(value_.pointer_value_, s, len);
     value_.pointer_value_[len] = '\0';
   }
+}
+
+void Value::set_long(int64_t val)
+{
+  attr_type_ = AttrType::LONGS;
+  value_.long_value_ = val;
+  length_ = sizeof(int64_t);
 }
 
 void Value::parse_vector(const char *s)
@@ -288,6 +301,9 @@ void Value::set_value(const Value &value)
     case AttrType::VECTORS: {
       attr_type_ = AttrType::VECTORS;
       vector_values_ = value.vector_values_;
+    }
+    case AttrType::LONGS: {
+      set_long(value.get_long());
     }
     default: {
       ASSERT(false, "got an invalid value type");
@@ -403,6 +419,9 @@ float Value::get_float() const
 }
 
 string Value::get_string() const { return this->to_string(); }
+
+
+int64_t Value::get_long() const { return value_.long_value_; }
 
 bool Value::get_boolean() const
 {

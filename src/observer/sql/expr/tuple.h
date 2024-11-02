@@ -209,11 +209,27 @@ public:
 
     FieldExpr       *field_expr = speces_[index];
     const FieldMeta *field_meta = field_expr->field().meta();
-    if(bitmap[index] == NULL_FLAG)
-      cell.set_type(AttrType::NULLS);
-    else
-      cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+
+    if (field_meta->type() == AttrType::TEXTS) {
+      // cell.set_type(AttrType::CHARS);
+      // int64_t offset = *(int64_t*)(record_->data() + field_meta->offset());
+      // int64_t length = *(int64_t*)(record_->data() + field_meta->offset() + sizeof(int64_t));
+      // char *text = (char*)malloc(length);
+      // RC rc = RC::SUCCESS;
+      // // RC rc = table_->read_text(offset, length, text);
+      // if (RC::SUCCESS != rc) {
+      //   LOG_WARN("Failed to read text from table, rc=%s", strrc(rc));
+      //   return rc;
+      // }
+      // cell.set_data(text, length);
+      // free(text);
+    } else {
+      if(bitmap[index] == NULL_FLAG)
+        cell.set_type(AttrType::NULLS);
+      else
+        cell.set_type(field_meta->type());
+      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    }
     return RC::SUCCESS;
   }
 

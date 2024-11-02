@@ -55,6 +55,12 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
         return RC::SCHEMA_FIELD_MISSING;
       }
     }
+    if (values[i].attr_type() == AttrType::TEXTS) {
+      if (values[i].length() > MAX_TEXT_LENGTH) {
+        LOG_WARN("Text length:%d, over max_length 65535", values[i].length());
+        return RC::INVALID_ARGUMENT;
+      }
+    }
   }
 
   // everything alright

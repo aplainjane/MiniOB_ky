@@ -367,14 +367,17 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
       return rc;
     }
     if (field->type() != value.attr_type()) {
-      Value real_value;
-      rc = Value::cast_to(value, field->type(), real_value);
-      if (OB_FAIL(rc)) {
-        LOG_WARN("failed to cast value. table name:%s,field name:%s,value:%s ",
+      if (field->type() == AttrType::TEXTS && value.attr_type() == AttrType::CHARS) {
+      } else {
+        Value real_value;
+        rc = Value::cast_to(value, field->type(), real_value);
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to cast value. table name:%s,field name:%s,value:%s ",
             table_meta_.name(), field->name(), value.to_string().c_str());
-        break;
+          break;
+        }
+        rc = set_value_to_record(record_data, real_value, field);
       }
-      rc = set_value_to_record(record_data, real_value, field);
     } else {
       rc = set_value_to_record(record_data, value, field);
     }

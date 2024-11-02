@@ -187,9 +187,10 @@ class FieldExpr : public Expression
 {
 public:
   FieldExpr() = default;
-  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {}
-  FieldExpr(const Field &field) : field_(field) {}
-
+  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {
+    spec_ = TupleCellSpec(table_name(), field_name());
+  }
+  FieldExpr(const Field &field) : field_(field) { spec_ = TupleCellSpec(table_name(), field_name()); }
   virtual ~FieldExpr() = default;
 
   bool equal(const Expression &other) const override;
@@ -211,6 +212,7 @@ public:
 
 private:
   Field field_;
+  TupleCellSpec spec_;
 };
 class SubqueryExpr : public Expression
 {
@@ -246,6 +248,7 @@ public:
   RC get_value(const Tuple &tuple, Value &value) const override { return RC::UNIMPLEMENTED;}
 private:
   vector<Value> tuple_list;
+  
 };
 /**
  * @brief 常量值表达式

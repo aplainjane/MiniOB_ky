@@ -34,6 +34,7 @@ TupleCellSpec::TupleCellSpec(const char *table_name, const char *field_name, con
       alias_ = table_name_ + "." + field_name_;
     }
   }
+  init_hash();
 }
 
 TupleCellSpec::TupleCellSpec(const char *alias)
@@ -41,7 +42,17 @@ TupleCellSpec::TupleCellSpec(const char *alias)
   if (alias) {
     alias_ = alias;
   }
+  init_hash();
 }
 
 TupleCellSpec::TupleCellSpec(const string &alias) : alias_(alias)
-{}
+{
+  init_hash(); 
+}
+
+void TupleCellSpec::init_hash() {
+  static auto hasher = std::hash<std::string>{};
+  table_name_hash_ = hasher(table_name_);
+  field_name_hash_ = hasher(field_name_);
+  alias_hash_ = hasher(alias_);
+}

@@ -21,6 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/field/field.h"
 #include "sql/expr/aggregator.h"
 #include "storage/common/chunk.h"
+#include "sql/expr/tuple_cell.h"
 
 
 class Tuple;

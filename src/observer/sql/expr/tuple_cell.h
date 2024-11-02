@@ -33,13 +33,23 @@ public:
   bool alias_empty() const { return alias_.size() == 0; }
   bool table_field_empty() const { return table_name_.size() + field_name_.size() == 0; }
 
-  bool equals(const TupleCellSpec &other) const
-  {
-        return !alias_empty() && !other.alias_empty() && alias_hash_ == other.alias_hash_ && alias_ == other.alias_ ||
-           !table_field_empty() && !other.table_field_empty() && table_name_hash_ == other.table_name_hash_ &&
-               field_name_hash_ == other.field_name_hash_ && table_name_ == other.table_name_ &&
-               field_name_ == other.field_name_;
-  }
+bool equals(const TupleCellSpec &other) const
+{
+    return (
+        !alias_empty() && 
+        !other.alias_empty() && 
+        alias_hash_ == other.alias_hash_ && 
+        alias_ == other.alias_
+    ) || (
+        !table_field_empty() && 
+        !other.table_field_empty() && 
+        table_name_hash_ == other.table_name_hash_ &&
+        field_name_hash_ == other.field_name_hash_ && 
+        table_name_ == other.table_name_ &&
+        field_name_ == other.field_name_
+    );
+}
+
 
 private:
   void init_hash();

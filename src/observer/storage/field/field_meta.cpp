@@ -53,9 +53,12 @@ RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int at
   attr_len_    = attr_len;
   attr_offset_ = attr_offset;
   visible_     = visible;
-  field_id_ = field_id;
-  isnull_ = isnull;
+  field_id_    = field_id;
+  isnull_      = isnull;
 
+  if (attr_type == AttrType::TEXTS) { 
+    attr_len_ = 16; // 列中只是记录它在文件中的偏移量、长度 
+  }
   LOG_INFO("Init a field with name=%s", name);
   return RC::SUCCESS;
 }

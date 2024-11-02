@@ -48,11 +48,17 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   }
 
   for(int i=0; i<value_num; i++) {
+    const FieldMeta * fie = table_meta.field(i);
     if (values[i].attr_type() == AttrType::VECTORS) {
-      // need be checked (because null, i+1)
-      const FieldMeta * fie = table_meta.field(i);
-      if(((int)values[i].get_vector().size() * 20 + 2)!= fie->len()){
+      // need be checked 
+      if((values[i].get_vector().size() * 20 + 2)!= fie->len()){
         return RC::SCHEMA_FIELD_MISSING;
+      }
+    }
+    if (fie->type() == AttrType::TEXTS) {
+      if (values[i].length() > MAX_TEXT_LENGTH) {
+        LOG_WARN("Text length:%d, over max_length 65535", values[i].length());
+        return RC::INVALID_ARGUMENT;
       }
     }
   }

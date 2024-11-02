@@ -66,6 +66,14 @@ enum CompOp
   NO_OP
 };
 
+enum OrderOp
+{
+  ORDER_ASC,
+  ORDER_DESC,
+  ORDER_DEFAULT,
+  ORDER_NO_OP,
+};
+
 /**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
@@ -116,6 +124,7 @@ struct SelectSqlNode
   std::vector<ConditionSqlNode>            conditions;        ///< 查询条件，使用AND串联起来多个条件
   std::vector<std::unique_ptr<Expression>> group_by;          ///< group by clause
   std::vector<ConditionSqlNode>            having_conditions; ///< groupby having
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules; ///< order by clause
 };
 
 /**
@@ -374,3 +383,4 @@ const std::string NULL_FIELD_NAME = "______";
 const int         NULL_VALUE = -999;
 const AttrType    NULL_TYPE = AttrType::INTS;
 const int         NULL_FLAG = 1;
+

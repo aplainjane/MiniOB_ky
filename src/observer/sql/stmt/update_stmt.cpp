@@ -90,7 +90,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     {
       //等待null
       Value *tempvalue=new Value();
-      tempvalue->set_null(999);
+      tempvalue->set_null(0);
       new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
     }
     else{
@@ -98,7 +98,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       if(tuple_list.size()>1)
       {
         string temp=tuple_list[0].to_string();
-        for(int i = 1;i<tuple_list.size();i++)
+        for(long unsigned int i = 1;i<tuple_list.size();i++)
         {
           if(tuple_list[i].to_string()!=temp){
             flag=false;

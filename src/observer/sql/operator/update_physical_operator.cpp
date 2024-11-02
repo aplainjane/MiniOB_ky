@@ -95,7 +95,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         Value cell;
         // find field_index
         int find_flag = -1;
-        for (int k=0;k<field_idx.size();++k){
+        for (long unsigned int k=0;k<field_idx.size();++k){
           int target_index = field_idx[k];
           if (target_index == i){
             // cell.set_value(values_[k]);

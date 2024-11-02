@@ -59,76 +59,77 @@ extern int yydebug;
     CREATE = 260,                  /* CREATE  */
     DROP = 261,                    /* DROP  */
     GROUP = 262,                   /* GROUP  */
-    TABLE = 263,                   /* TABLE  */
-    TABLES = 264,                  /* TABLES  */
-    UNIQUE = 265,                  /* UNIQUE  */
-    INDEX = 266,                   /* INDEX  */
-    CALC = 267,                    /* CALC  */
-    SELECT = 268,                  /* SELECT  */
-    DESC = 269,                    /* DESC  */
-    SHOW = 270,                    /* SHOW  */
-    SYNC = 271,                    /* SYNC  */
-    INSERT = 272,                  /* INSERT  */
-    DELETE = 273,                  /* DELETE  */
-    UPDATE = 274,                  /* UPDATE  */
-    LBRACE = 275,                  /* LBRACE  */
-    RBRACE = 276,                  /* RBRACE  */
-    COMMA = 277,                   /* COMMA  */
-    TRX_BEGIN = 278,               /* TRX_BEGIN  */
-    TRX_COMMIT = 279,              /* TRX_COMMIT  */
-    TRX_ROLLBACK = 280,            /* TRX_ROLLBACK  */
-    INT_T = 281,                   /* INT_T  */
-    STRING_T = 282,                /* STRING_T  */
-    DATE_T = 283,                  /* DATE_T  */
-    TEXT_T = 284,                  /* TEXT_T  */
-    FLOAT_T = 285,                 /* FLOAT_T  */
-    VECTOR_T = 286,                /* VECTOR_T  */
-    HELP = 287,                    /* HELP  */
-    EXIT = 288,                    /* EXIT  */
-    DOT = 289,                     /* DOT  */
-    INTO = 290,                    /* INTO  */
-    VALUES = 291,                  /* VALUES  */
-    FROM = 292,                    /* FROM  */
-    WHERE = 293,                   /* WHERE  */
-    HAVING = 294,                  /* HAVING  */
-    AND = 295,                     /* AND  */
-    SET = 296,                     /* SET  */
-    ON = 297,                      /* ON  */
-    LOAD = 298,                    /* LOAD  */
-    DATA = 299,                    /* DATA  */
-    INFILE = 300,                  /* INFILE  */
-    EXPLAIN = 301,                 /* EXPLAIN  */
-    STORAGE = 302,                 /* STORAGE  */
-    FORMAT = 303,                  /* FORMAT  */
-    NOT = 304,                     /* NOT  */
-    LIKE = 305,                    /* LIKE  */
-    IN = 306,                      /* IN  */
-    IS = 307,                      /* IS  */
-    EXIST = 308,                   /* EXIST  */
-    NULL_KY = 309,                 /* NULL_KY  */
-    INNER = 310,                   /* INNER  */
-    JOIN = 311,                    /* JOIN  */
-    EQ = 312,                      /* EQ  */
-    LT = 313,                      /* LT  */
-    GT = 314,                      /* GT  */
-    LE = 315,                      /* LE  */
-    GE = 316,                      /* GE  */
-    NE = 317,                      /* NE  */
-    I2_DISTANCE_T = 318,           /* I2_DISTANCE_T  */
-    COSINE_DISTANCE_T = 319,       /* COSINE_DISTANCE_T  */
-    INNER_PRODUCT_T = 320,         /* INNER_PRODUCT_T  */
-    SUM = 321,                     /* SUM  */
-    AVG = 322,                     /* AVG  */
-    COUNT = 323,                   /* COUNT  */
-    MAX = 324,                     /* MAX  */
-    MIN = 325,                     /* MIN  */
-    NUMBER = 326,                  /* NUMBER  */
-    FLOAT = 327,                   /* FLOAT  */
-    ID = 328,                      /* ID  */
-    SSS = 329,                     /* SSS  */
-    SUB_QUERY = 330,               /* SUB_QUERY  */
-    VECTOR_LIST = 331,             /* VECTOR_LIST  */
-    UMINUS = 332                   /* UMINUS  */
+    ORDER = 263,                   /* ORDER  */
+    TABLE = 264,                   /* TABLE  */
+    TABLES = 265,                  /* TABLES  */
+    UNIQUE = 266,                  /* UNIQUE  */
+    INDEX = 267,                   /* INDEX  */
+    CALC = 268,                    /* CALC  */
+    SELECT = 269,                  /* SELECT  */
+    ASC = 270,                     /* ASC  */
+    DESC = 271,                    /* DESC  */
+    SHOW = 272,                    /* SHOW  */
+    SYNC = 273,                    /* SYNC  */
+    INSERT = 274,                  /* INSERT  */
+    DELETE = 275,                  /* DELETE  */
+    UPDATE = 276,                  /* UPDATE  */
+    LBRACE = 277,                  /* LBRACE  */
+    RBRACE = 278,                  /* RBRACE  */
+    COMMA = 279,                   /* COMMA  */
+    TRX_BEGIN = 280,               /* TRX_BEGIN  */
+    TRX_COMMIT = 281,              /* TRX_COMMIT  */
+    TRX_ROLLBACK = 282,            /* TRX_ROLLBACK  */
+    INT_T = 283,                   /* INT_T  */
+    STRING_T = 284,                /* STRING_T  */
+    DATE_T = 285,                  /* DATE_T  */
+    FLOAT_T = 286,                 /* FLOAT_T  */
+    VECTOR_T = 287,                /* VECTOR_T  */
+    HELP = 288,                    /* HELP  */
+    EXIT = 289,                    /* EXIT  */
+    DOT = 290,                     /* DOT  */
+    INTO = 291,                    /* INTO  */
+    VALUES = 292,                  /* VALUES  */
+    FROM = 293,                    /* FROM  */
+    WHERE = 294,                   /* WHERE  */
+    HAVING = 295,                  /* HAVING  */
+    AND = 296,                     /* AND  */
+    SET = 297,                     /* SET  */
+    ON = 298,                      /* ON  */
+    LOAD = 299,                    /* LOAD  */
+    DATA = 300,                    /* DATA  */
+    INFILE = 301,                  /* INFILE  */
+    EXPLAIN = 302,                 /* EXPLAIN  */
+    STORAGE = 303,                 /* STORAGE  */
+    FORMAT = 304,                  /* FORMAT  */
+    NOT = 305,                     /* NOT  */
+    LIKE = 306,                    /* LIKE  */
+    IN = 307,                      /* IN  */
+    IS = 308,                      /* IS  */
+    EXIST = 309,                   /* EXIST  */
+    NULL_KY = 310,                 /* NULL_KY  */
+    INNER = 311,                   /* INNER  */
+    JOIN = 312,                    /* JOIN  */
+    EQ = 313,                      /* EQ  */
+    LT = 314,                      /* LT  */
+    GT = 315,                      /* GT  */
+    LE = 316,                      /* LE  */
+    GE = 317,                      /* GE  */
+    NE = 318,                      /* NE  */
+    I2_DISTANCE_T = 319,           /* I2_DISTANCE_T  */
+    COSINE_DISTANCE_T = 320,       /* COSINE_DISTANCE_T  */
+    INNER_PRODUCT_T = 321,         /* INNER_PRODUCT_T  */
+    SUM = 322,                     /* SUM  */
+    AVG = 323,                     /* AVG  */
+    COUNT = 324,                   /* COUNT  */
+    MAX = 325,                     /* MAX  */
+    MIN = 326,                     /* MIN  */
+    NUMBER = 327,                  /* NUMBER  */
+    FLOAT = 328,                   /* FLOAT  */
+    ID = 329,                      /* ID  */
+    SSS = 330,                     /* SSS  */
+    SUB_QUERY = 331,               /* SUB_QUERY  */
+    VECTOR_LIST = 332,             /* VECTOR_LIST  */
+    UMINUS = 333                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -137,20 +138,22 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 139 "yacc_sql.y"
+#line 140 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum OrderOp                               orderOp;
   enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
-  std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
+  std::vector<AttrInfoSqlNode> *             attr_infos;
   Expression *                               expression;
   UpdateKV *                                 set_clause;
   std::vector<UpdateKV> *                    set_clause_list;
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -161,7 +164,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 165 "yacc_sql.hpp"
+#line 168 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

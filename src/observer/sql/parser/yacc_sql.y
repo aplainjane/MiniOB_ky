@@ -70,12 +70,14 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         CREATE
         DROP
         GROUP
+        ORDER
         TABLE
         TABLES
         UNIQUE
         INDEX
         CALC
         SELECT
+        ASC
         DESC
         SHOW
         SYNC
@@ -142,13 +144,15 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum OrderOp                               orderOp;
   enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
-  std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
+  std::vector<AttrInfoSqlNode> *             attr_infos;
   Expression *                               expression;
   UpdateKV *                                 set_clause;
   std::vector<UpdateKV> *                    set_clause_list;
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -195,6 +199,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <expression_list>     group_by
 %type <set_clause_list>     set_clause_list
 %type <set_clause>          set_clause
+%type <orderOp>             order_op
+%type <order_by_list>       order_by_list
+%type <order_by_list>       order_by
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -602,7 +609,7 @@ set_clause:
 
 
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM ID rel_list join_list where group_by having
+    SELECT expression_list FROM ID rel_list join_list where group_by having order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -634,6 +641,10 @@ select_stmt:        /*  select 语句的语法解析树*/
       if ($9 != nullptr) {
         $$->selection.having_conditions.swap(*$9);
         delete $9;
+      }
+      if ($10 != nullptr) {
+        $$->selection.order_rules.swap(*$10);
+        delete $10;
       }
     }
     ;
@@ -910,6 +921,58 @@ join_list:
       }
     }
     
+order_by:
+  {
+    $$ = nullptr;  // 没有 ORDER BY 的情况，返回空指针
+  }
+  | ORDER BY rel_attr order_op order_by_list
+  {
+    // 创建一个新的 vector 来存储排序规则
+    $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
+    
+    // 将第一个排序条件添加到 vector
+    $$->emplace_back(std::make_pair(*$3, $4));
+    
+    // 删除 rel_attr 的动态内存
+    delete $3;
+
+    // 如果后续还有排序条件，将其添加到当前 vector 中
+    if ($5 != nullptr) {
+      $$->insert($$->end(), $5->begin(), $5->end());
+      delete $5;  // 释放 order_by_list 的内存
+    }
+  }
+  ;
+
+order_by_list:
+  {
+    $$ = nullptr;  // 没有更多排序条件时，返回空指针
+  }
+  | COMMA rel_attr order_op order_by_list
+  {
+    // 创建一个新的 vector 来存储排序规则
+    $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
+    
+    // 将当前排序条件添加到 vector
+    $$->emplace_back(std::make_pair(*$2, $3));
+
+    // 删除 rel_attr 的动态内存
+    delete $2;
+
+    // 如果还有更多排序条件，将其添加到当前 vector 中
+    if ($4 != nullptr) {
+      $$->insert($$->end(), $4->begin(), $4->end());
+      delete $4;  // 释放 order_by_list 的内存
+    }
+  }
+  ;
+
+order_op:
+  DESC { $$ = ORDER_DESC; }
+| ASC  { $$ = ORDER_ASC;  }
+|      { $$ = ORDER_DEFAULT; }
+;
+
 
 where:
     /* empty */

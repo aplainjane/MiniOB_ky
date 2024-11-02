@@ -547,6 +547,3 @@ private:
   FuncOp func_type_;
   std::vector<std::unique_ptr<Expression>> params_; 
 };
-
-bool fn_isNotNULL(Value left, Value right);
-bool fn_isNULL(Value left, Value right);

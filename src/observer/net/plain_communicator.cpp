@@ -254,7 +254,6 @@ RC rc = RC::SUCCESS;
   Tuple *tuple = nullptr;
 
   auto order_rules = sql_result->get_order_rules();
-  /* 为了实现order by， 不得已只能在这里修改了  */
 
   if (order_rules.size() > 0)
   {

@@ -109,27 +109,28 @@ extern int yydebug;
     NULL_KY = 310,                 /* NULL_KY  */
     INNER = 311,                   /* INNER  */
     JOIN = 312,                    /* JOIN  */
-    EQ = 313,                      /* EQ  */
-    LT = 314,                      /* LT  */
-    GT = 315,                      /* GT  */
-    LE = 316,                      /* LE  */
-    GE = 317,                      /* GE  */
-    NE = 318,                      /* NE  */
-    I2_DISTANCE_T = 319,           /* I2_DISTANCE_T  */
-    COSINE_DISTANCE_T = 320,       /* COSINE_DISTANCE_T  */
-    INNER_PRODUCT_T = 321,         /* INNER_PRODUCT_T  */
-    SUM = 322,                     /* SUM  */
-    AVG = 323,                     /* AVG  */
-    COUNT = 324,                   /* COUNT  */
-    MAX = 325,                     /* MAX  */
-    MIN = 326,                     /* MIN  */
-    NUMBER = 327,                  /* NUMBER  */
-    FLOAT = 328,                   /* FLOAT  */
-    ID = 329,                      /* ID  */
-    SSS = 330,                     /* SSS  */
-    SUB_QUERY = 331,               /* SUB_QUERY  */
-    VECTOR_LIST = 332,             /* VECTOR_LIST  */
-    UMINUS = 333                   /* UMINUS  */
+    AS = 313,                      /* AS  */
+    EQ = 314,                      /* EQ  */
+    LT = 315,                      /* LT  */
+    GT = 316,                      /* GT  */
+    LE = 317,                      /* LE  */
+    GE = 318,                      /* GE  */
+    NE = 319,                      /* NE  */
+    I2_DISTANCE_T = 320,           /* I2_DISTANCE_T  */
+    COSINE_DISTANCE_T = 321,       /* COSINE_DISTANCE_T  */
+    INNER_PRODUCT_T = 322,         /* INNER_PRODUCT_T  */
+    SUM = 323,                     /* SUM  */
+    AVG = 324,                     /* AVG  */
+    COUNT = 325,                   /* COUNT  */
+    MAX = 326,                     /* MAX  */
+    MIN = 327,                     /* MIN  */
+    NUMBER = 328,                  /* NUMBER  */
+    FLOAT = 329,                   /* FLOAT  */
+    ID = 330,                      /* ID  */
+    SSS = 331,                     /* SSS  */
+    SUB_QUERY = 332,               /* SUB_QUERY  */
+    VECTOR_LIST = 333,             /* VECTOR_LIST  */
+    UMINUS = 334                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -138,7 +139,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 140 "yacc_sql.y"
+#line 141 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -164,7 +165,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 168 "yacc_sql.hpp"
+#line 169 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

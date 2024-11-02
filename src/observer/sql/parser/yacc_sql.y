@@ -120,6 +120,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         NULL_KY
         INNER
         JOIN
+        AS
         EQ
         LT
         GT
@@ -178,6 +179,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <number>              number
 %type <comp>                comp_op
 %type <boolean>             isnull
+%type <boolean>             as_option
 %type <func>                func_op
 %type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
@@ -397,6 +399,39 @@ create_table_stmt:    /*create table 语句的语法解析树*/
         free($8);
       }
     }
+    | CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE as_option select_stmt
+    {
+      $$ = $9;
+      $$->flag = SCF_CREATE_TABLE;
+      CreateTableSqlNode &create_table = $$->create_table;
+      create_table.relation_name = $3;
+      free($3);
+      std::vector<AttrInfoSqlNode> *src_attrs = $6;
+      if (src_attrs != nullptr) {
+        create_table.attr_infos.swap(*src_attrs);
+      }
+      create_table.attr_infos.emplace_back(*$5);
+      std::reverse(create_table.attr_infos.begin(), create_table.attr_infos.end());
+      delete $5;
+    }
+    | CREATE TABLE ID as_option select_stmt
+    {
+      $$ = $5;
+      $$->flag = SCF_CREATE_TABLE;
+      CreateTableSqlNode &create_table = $$->create_table;
+      create_table.relation_name = $3;
+      free($3);
+    }
+    ;
+as_option:
+    /* empty */
+    {
+      $$ = false;
+    }
+    | AS
+    {
+      $$ = false;
+    }
     ;
 attr_def_list:
     /* empty */
@@ -439,7 +474,7 @@ attr_def:
 isnull:
     /* empty */
     {
-      $$ = false;
+      $$ = true;
     }
     | NULL_KY
     {
@@ -607,7 +642,15 @@ set_clause:
 
 
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM ID rel_list join_list where group_by having order_by
+    SELECT expression_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {

@@ -112,6 +112,7 @@ public:
    * @brief 表达式的名字，比如是字段名称，或者用户在执行SQL语句时输入的内容
    */
   virtual const char *name() const { return name_.c_str(); }
+  virtual const char *alias() const { return alias_.c_str(); }
   virtual void        set_name(std::string name) { name_ = name; }
 
   /**
@@ -137,6 +138,7 @@ protected:
 
 private:
   std::string   name_;
+  std::string alias_;
 };
 
 class StarExpr : public Expression
@@ -209,6 +211,7 @@ public:
 
   RC get_value(const Tuple &tuple, Value &value) const override;
 
+  FieldMeta get_field_meta() const { return *field_.meta(); }
 private:
   Field field_;
 };

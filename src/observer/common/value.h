@@ -20,6 +20,9 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/data_type.h"
 #include "common/type/vector_type.h"
 
+// static constexpr int MAX_TEXT_LENGTH = 65535;
+
+// static int ATTR_TYPE_LENGTH[] = { -1, 4, 4, 4, 8, 4, 8, MAX_TEXT_LENGTH, 4, -1 };
 /**
  * @brief 属性的值
  * @ingroup DataType

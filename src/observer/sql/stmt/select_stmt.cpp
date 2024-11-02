@@ -86,7 +86,18 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
   if (tables.size() == 1) {
     default_table = tables[0];
   }
-
+  if(select_sql.group_by.size()==0){
+    for(unique_ptr<Expression> &expression :bound_expressions){
+      if(expression->type()==ExprType::AGGREGATION){
+        for(unique_ptr<Expression> &expression2 :bound_expressions){
+          if(expression2->type()==ExprType::FIELD){
+            return RC::INTERNAL;
+          }
+        }
+       break;
+      }
+    }
+  }
   // create filter statement in `where` statement
   FilterStmt *filter_stmt = nullptr;
   RC          rc          = FilterStmt::create(db,

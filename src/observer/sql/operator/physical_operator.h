@@ -37,6 +37,7 @@ class Trx;
  */
 enum class PhysicalOperatorType
 {
+  CREATE_TABLE,
   TABLE_SCAN,
   TABLE_SCAN_VEC,
   INDEX_SCAN,

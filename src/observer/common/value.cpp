@@ -450,30 +450,30 @@ vector<ElementType> Value::get_vector() const
 }
 
 char* vectorToCharArray(const std::vector<ElementType>& vector_values) {
-    std::ostringstream oss;
-    oss << "["; // 开始括号
+  std::ostringstream oss;
+  oss << "["; // 开始括号
 
-    for (size_t i = 0; i < vector_values.size(); ++i) {
-        std::visit([&oss](auto&& arg) {
-            oss << arg; // 将元素添加到输出流
-        }, vector_values[i]);
+  for (size_t i = 0; i < vector_values.size(); ++i) {
+    std::visit([&oss](auto&& arg) {
+      oss << arg; // 将元素添加到输出流
+    }, vector_values[i]);
 
-        if (i < vector_values.size() - 1) {
-            oss << ", "; // 添加逗号和空格分隔
-        }
+    if (i < vector_values.size() - 1) {
+      oss << ", "; // 添加逗号和空格分隔
     }
+  }
 
-    oss << "]"; // 结束括号
+  oss << "]"; // 结束括号
 
-    std::string result = oss.str();
-    result += '\0'; // 添加字符串终止符
+  std::string result = oss.str();
+  
+  // 不再手动添加终止符
+  size_t result_size = result.size(); // 不需要 +1，因为 c_str() 已有终止符
 
-    size_t result_size = result.size() + 1; // +1 for null terminato
+  char* char_array = new char[result_size + 1]; // +1 for null terminator
+  std::strcpy(char_array, result.c_str());
 
-    char* char_array = new char[result_size];
-    std::strcpy(char_array, result.c_str());
-
-    return char_array;
+  return char_array;
 }
 
 int Value::get_null() const

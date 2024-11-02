@@ -11,6 +11,7 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by Wangyunlai on 2022/07/05.
 //
+#include <cmath>
 
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
@@ -738,6 +739,208 @@ RC AggregateExpr::type_from_string(const char *type_str, AggregateExpr::Type &ty
     type = Type::MIN;
   } else {
     rc = RC::INVALID_ARGUMENT;
+  }
+  return rc;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+AttrType FunctionExpr::value_type() const
+{
+  switch (func_type_) {
+    case I2_DISTANCE:
+      return AttrType::FLOATS;
+      break;
+    case COSINE_DISTANCE:
+      return AttrType::FLOATS;
+      break;
+    case INNER_PRODUCT:
+      return AttrType::FLOATS;
+      break;
+    default:
+      break;
+  }
+  return AttrType::UNDEFINED;
+}
+
+RC FunctionExpr::get_I2_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float result = 0.0f;
+  for (int i = 0; i < left_vec.size(); i++) {
+    std::visit([&result, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+        return static_cast<float>(right_val);
+      }, right_vec[i]));
+    
+      result += pow(left_float - right_float, 2);
+    }, left_vec[i]);
+  }
+  result = sqrt(result);
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS); 
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::get_COSINE_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float sumA2 = 0.0f;
+  float sumB2 = 0.0f;
+  float sumAB = 0.0f;
+  float result = 0.0f;
+
+  for (size_t i = 0; i < left_vec.size(); i++) {
+    std::visit([&sumA2, &sumB2, &sumAB, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+        return static_cast<float>(right_val);
+      }, right_vec[i]));
+    
+      sumA2 += left_float * left_float;
+      sumB2 += right_float * right_float;
+      sumAB += left_float * right_float;
+    }, left_vec[i]);
+  }
+
+  result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS);
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::get_INNER_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float result = 0.0f;
+  for (int i = 0; i < left_vec.size(); i++) {
+    std::visit([&result, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      std::visit([&result, left_float](auto&& right_val) {
+        float right_float = static_cast<float>(right_val);
+        result += (left_float * right_float);
+      }, right_vec[i]);
+    }, left_vec[i]);
+  }
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS); 
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::check_param() const
+{
+  RC rc = RC::SUCCESS;
+  if (params_.size() != 2) rc = RC::INVALID_ARGUMENT;
+  if (params_[0]->value_type() != AttrType::VECTORS || params_[1]->value_type() != AttrType::VECTORS) rc = RC::INVALID_ARGUMENT;
+  return rc;
+}
+
+RC FunctionExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  RC rc = RC::SUCCESS;
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  switch (func_type_) {
+    case I2_DISTANCE: {
+      rc = get_I2_value(tuple, value);
+    } break;
+    case COSINE_DISTANCE: {
+      rc = get_COSINE_value(tuple, value);
+    } break;
+    case INNER_PRODUCT: {
+      rc = get_INNER_value(tuple, value);
+    } break;
+    default:
+      break;
   }
   return rc;
 }

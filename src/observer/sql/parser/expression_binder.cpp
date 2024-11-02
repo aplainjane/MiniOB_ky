@@ -88,6 +88,10 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
       return bind_arithmetic_expression(expr, bound_expressions);
     } break;
 
+    case ExprType::FUNCTION: {
+      return bind_function_expression(expr, bound_expressions);
+    }
+
     case ExprType::AGGREGATION: {
       ASSERT(false, "shouldn't be here");
     } break;
@@ -450,5 +454,47 @@ RC ExpressionBinder::bind_aggregate_expression(
   }
 
   bound_expressions.emplace_back(std::move(aggregate_expr));
+  return RC::SUCCESS;
+}
+
+RC ExpressionBinder::bind_function_expression(
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+{
+  if (nullptr == expr) {
+    return RC::SUCCESS;
+  }
+  auto func_expr = static_cast<FunctionExpr *>(expr.get());
+  
+  FuncOp func_type = func_expr->func_type();
+  // 验证 FunctionType
+  if (func_type != I2_DISTANCE && func_type != COSINE_DISTANCE && func_type != INNER_PRODUCT) {
+    LOG_WARN("invalid function name.");
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  // 绑定params 解决传入字段发生undefine
+  vector<unique_ptr<Expression>>  child_bound_expressions;
+  vector<unique_ptr<Expression>> &children = func_expr->children();
+  for (unique_ptr<Expression> &child_expr : children) {
+    child_bound_expressions.clear();
+    RC rc = bind_expression(child_expr, child_bound_expressions);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    unique_ptr<Expression> &child = child_bound_expressions[0];
+    if (child.get() != child_expr.get()) {
+      child_expr.reset(child.release());
+    }
+  }
+  
+  // 验证参数合法性
+  RC rc = func_expr->check_param();
+  if (OB_FAIL(rc)){
+    LOG_WARN("invalid function params.");
+    return RC::INVALID_ARGUMENT;
+  }
+  
+  // 返回更新后的expr
+  bound_expressions.emplace_back(std::move(expr));
   return RC::SUCCESS;
 }

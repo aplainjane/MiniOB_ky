@@ -49,9 +49,15 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
 
   for(int i=0; i<value_num; i++) {
     if (values[i].attr_type() == AttrType::VECTORS) {
+<<<<<<< HEAD
       // need be checked (because null, i+1)
       const FieldMeta * fie = table_meta.field(i+1);
       if(((int)values[i].get_vector().size() * 20 + 2)!= fie->len()){
+=======
+      // need be checked 
+      const FieldMeta * fie = table_meta.field(i);
+      if((values[i].get_vector().size() * 20 + 2)!= fie->len()){
+>>>>>>> 06e2e8a3bc1a8d8a816712cc6bede5bce36e2ae7
         return RC::SCHEMA_FIELD_MISSING;
       }
     }

@@ -6,36 +6,50 @@
 #include "common/log/log.h"
 #include "common/type/vector_type.h"
 #include "common/value.h"
+
 #include <cmath>
+#include <variant>
 
-int VectorType::compare(const Value &left, const Value &right) const
-{
-  if (left.attr_type()!=AttrType::VECTORS || right.attr_type()!=AttrType::VECTORS){
-    LOG_WARN("type not match");
-    return INT32_MAX;
-  }
 
-  const auto &left_values = left.get_vector();
-  const auto &right_values = right.get_vector();
-  // Compare element by element
-  size_t min_size = std::min(left_values.size(), right_values.size());
-  for (size_t i = 0; i < min_size; ++i) {
-    // Compare the two variants
-    if (left_values[i] < right_values[i]) {
+int VectorType::compare(const Value &left, const Value &right) const {
+    if (left.attr_type() != AttrType::VECTORS || right.attr_type() != AttrType::VECTORS) {
+        LOG_WARN("type not match");
+        return INT32_MAX;
+    }
+
+    const auto &left_values = left.get_vector();
+    const auto &right_values = right.get_vector();
+    
+    // Compare element by element
+    size_t min_size = std::min(left_values.size(), right_values.size());
+
+    float product = 0;
+    for (size_t i = 0; i < min_size; ++i) {
+        bool left_is_float = std::holds_alternative<float>(left.vector_values_[i]);
+        bool right_is_float = std::holds_alternative<float>(right.vector_values_[i]);
+
+        if (left_is_float || right_is_float) {
+          float left_value = left_is_float ? std::get<float>(left.vector_values_[i]) : static_cast<float>(std::get<int>(left.vector_values_[i]));
+          float right_value = right_is_float ? std::get<float>(right.vector_values_[i]) : static_cast<float>(std::get<int>(right.vector_values_[i]));
+          product = left_value - right_value;
+        } else {
+          product = std::get<int>(left.vector_values_[i]) - std::get<int>(right.vector_values_[i]);
+        }
+        if (product > 0.001) {
+            return 1;
+        } else if (product < -0.001) {
+            return -1;
+        }
+    }
+
+    // 如果所有比较的元素相等，较短的向量被认为是“较小的”
+    if (left_values.size() < right_values.size()) {
         return -1; // left is less than right
-    } else if (left_values[i] > right_values[i]) {
+    } else if (left_values.size() > right_values.size()) {
         return 1;  // left is greater than right
     }
-  }
 
-  // If all compared elements are equal, the shorter vector is "less"
-  if (left_values.size() < right_values.size()) {
-    return -1; // left is less than right
-  } else if (left_values.size() > right_values.size()) {
-    return 1;  // left is greater than right
-  }
-  
-  return 0; // They are equal
+    return 0; // They are equal
 }
 
 RC VectorType::add(const Value &left, const Value &right, Value &result) const

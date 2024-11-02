@@ -143,14 +143,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
-<<<<<<< HEAD
-  enum OrderOp                               orderOp;
-=======
   enum FuncOp                                func;
->>>>>>> 06e2e8a3bc1a8d8a816712cc6bede5bce36e2ae7
-  RelAttrSqlNode *                           rel_attr;
   std::vector<AttrInfoSqlNode> *             attr_infos;
-  AttrInfoSqlNode *                          attr_info;
   Expression *                               expression;
   UpdateKV *                                 set_clause;
   std::vector<UpdateKV> *                    set_clause_list;

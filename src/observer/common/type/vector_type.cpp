@@ -12,10 +12,6 @@
 
 
 int VectorType::compare(const Value &left, const Value &right) const {
-    if(left.attr_type() == AttrType::VECTORS && right.attr_type() == AttrType::NULLS)
-    {
-      return 1;
-    }
     if (left.attr_type() != AttrType::VECTORS || right.attr_type() != AttrType::VECTORS) {
         LOG_WARN("type not match");
         return INT32_MAX;

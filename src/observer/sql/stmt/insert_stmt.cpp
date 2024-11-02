@@ -50,7 +50,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   for(int i=0; i<value_num; i++) {
     if (values[i].attr_type() == AttrType::VECTORS) {
       // need be checked (because null, i+1)
-      const FieldMeta * fie = table_meta.field(i+1);
+      const FieldMeta * fie = table_meta.field(i);
       if(((int)values[i].get_vector().size() * 20 + 2)!= fie->len()){
         return RC::SCHEMA_FIELD_MISSING;
       }

@@ -333,7 +333,7 @@ const TupleSchema &schema   = sql_result->tuple_schema();
           int target_index = order_index[i];
           Value v1 = t1[target_index];
           Value v2 = t2[target_index];
-          if (v1.attr_type() == AttrType::NULLS || v2.attr_type() == AttrType::NULLS) {
+          if (v1.attr_type() == AttrType::NULLS && v2.attr_type() == AttrType::NULLS) {
             continue;
           }
           int ret = v1.compare(v2);

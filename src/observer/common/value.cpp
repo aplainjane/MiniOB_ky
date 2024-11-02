@@ -32,7 +32,7 @@ Value::Value(float val) { set_float(val); }
 
 Value::Value(bool val) { set_boolean(val); }
 
-Value::Value(int64_t val) { set_boolean(val); }
+Value::Value(int64_t val) { set_long(val); }
 
 Value::Value(int val, int flag)
 {
@@ -330,6 +330,9 @@ const char *Value::data() const
     case AttrType::VECTORS: {
       char *data_values = vectorToCharArray(vector_values_);
       return data_values;
+    }
+    case AttrType::LONGS: {
+      return (const char *)&value_.long_value_;
     }
     default: {
       return (const char *)&value_;

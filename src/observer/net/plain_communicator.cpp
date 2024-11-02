@@ -327,24 +327,32 @@ const TupleSchema &schema   = sql_result->tuple_schema();
 
     // 排序
     std::sort(tuple_set.begin(), tuple_set.end(), 
-      [order_index, order_op](std::vector<Value>& t1, std::vector<Value>& t2){
-        for (long unsigned int i = 0; i < order_index.size(); i++)
-        {
+      [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
+        for (size_t i = 0; i < order_index.size(); i++) {
           int target_index = order_index[i];
-          Value v1 = t1[target_index];
-          Value v2 = t2[target_index];
+          const Value& v1 = t1[target_index];
+          const Value& v2 = t2[target_index];
+          bool isAscending = (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT);
+
+          // 如果两者均为NULL，跳过当前字段
           if (v1.attr_type() == AttrType::NULLS && v2.attr_type() == AttrType::NULLS) {
             continue;
           }
+          // 如果一个为NULL，决定顺序：这里假设NULL值排在最后
+          if (v1.attr_type() == AttrType::NULLS) return isAscending ? true : false;
+          if (v2.attr_type() == AttrType::NULLS) return isAscending ? false : true;
+
           int ret = v1.compare(v2);
-          if (ret != 0)
-          {
-            return (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT) ? ret <= 0 : ret >= 0;
+          if (ret != 0) {
+            // 根据排序方向决定顺序    
+            return isAscending ? ret < 0 : ret > 0;
           }
         }
-        return true;
+        // 如果所有字段都相等，返回false表示保持当前顺序
+        return false;
       }
     );
+
 
     // 输出
     for(long unsigned int i = 0; i < tuple_set.size(); i++){

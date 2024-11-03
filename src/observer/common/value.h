@@ -99,7 +99,6 @@ public:
   void set_value(const Value &value);
   void set_null(int val);
   void set_boolean(bool val);
-  void set_long(int64_t val);
   void set_vector(const std::vector<ElementType> &values) {this->vector_values_ = values;}
   void set_date(int y,int m,int d){
     //yyyymmdd
@@ -133,7 +132,6 @@ public:
   bool                get_boolean() const;
   int                 get_null() const;
   vector<ElementType> get_vector() const;
-  int64_t             get_long() const;
 
   void                set_float(float val);
   void                set_int(int val); 
@@ -154,7 +152,6 @@ private:
     float   float_value_;
     bool    bool_value_;
     int   null_value_;
-    int64_t long_value_;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

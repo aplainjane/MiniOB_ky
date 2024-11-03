@@ -180,7 +180,7 @@ RC PlainCommunicator::write_result(SessionEvent *event, bool &need_disconnect)
 
 RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disconnect)
 {
-RC rc = RC::SUCCESS;
+  RC rc = RC::SUCCESS;
   need_disconnect = true;
 
   SqlResult *sql_result = event->sql_result();

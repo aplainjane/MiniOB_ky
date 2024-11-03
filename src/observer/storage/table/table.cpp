@@ -132,7 +132,7 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   // 创建文件存放text
   bool have_text = false;
   for (const FieldMeta &field : *table_meta_.field_metas()) {
-    if (field.type() == AttrType::TEXTS) {
+    if (field.type() == AttrType::TEXTS || field.type() == AttrType::VECTORS) {
       have_text = true;
       break;
     }
@@ -424,7 +424,12 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
         rc = set_value_to_record(record_data, real_value, field);
       }
     } else {
-      rc = set_value_to_record(record_data, value, field);
+      if (field->type() == AttrType::VECTORS && value.get_vector().size() > 1000) {
+        int64_t position[2];
+        position[1] = value.length();
+        text_buffer_pool_->append_data(position[0], position[1], value.data());
+        memcpy(record_data + field->offset(), position, 2 * sizeof(int64_t));
+      } else rc = set_value_to_record(record_data, value, field);
     }
   }
 

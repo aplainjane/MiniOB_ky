@@ -49,11 +49,15 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
 
   for(int i=0; i<value_num; i++) {
     const FieldMeta * fie = table_meta.field(i);
-    if (values[i].attr_type() == AttrType::VECTORS) {
+    if (values[i].attr_type() == AttrType::VECTORS && values[i].get_vector().size() <= 1000) {
       // need be checked 
       if((values[i].get_vector().size() * 20 + 2)!= fie->len()){
         return RC::SCHEMA_FIELD_MISSING;
       }
+    }
+    if (values[i].attr_type() == AttrType::VECTORS && values[i].get_vector().size() > 16000) {
+      LOG_WARN("vector length is too long");
+      return RC::INVALID_ARGUMENT;
     }
     if (fie->type() == AttrType::TEXTS) {
       if (values[i].length() > MAX_TEXT_LENGTH) {

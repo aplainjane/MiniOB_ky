@@ -140,6 +140,10 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
         return RC::INVALID_ARGUMENT;
       }
     }
+    if (field_meta->type() == AttrType::VECTORS && update_sql.values[i].get_vector().size() > 16000) {
+      LOG_WARN("Vector length:%d, over max_length 16000", update_sql.values[i].get_vector().size());
+      return RC::INVALID_ARGUMENT;
+    }
   }
   
 

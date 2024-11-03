@@ -210,7 +210,8 @@ public:
     FieldExpr       *field_expr = speces_[index];
     const FieldMeta *field_meta = field_expr->field().meta();
 
-    if (field_meta->type() == AttrType::TEXTS) {
+    if ((field_meta->type() == AttrType::TEXTS) || 
+        (field_meta->type() == AttrType::VECTORS && field_meta->len() == 16)) {
       cell.set_type(AttrType::CHARS);
       int64_t offset = *(int64_t*)(record_->data() + field_meta->offset());
       int64_t length = *(int64_t*)(record_->data() + field_meta->offset() + sizeof(int64_t));

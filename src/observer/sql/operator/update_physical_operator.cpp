@@ -19,8 +19,8 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values)
-    : table_(table), fields_(fields), values_(values)
+UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values,bool flag)
+    : table_(table), fields_(fields), values_(values),flag_(flag)
 {}
 
 RC UpdatePhysicalOperator::open(Trx *trx)
@@ -40,6 +40,9 @@ RC UpdatePhysicalOperator::open(Trx *trx)
   trx_ = trx;
 
   while(OB_SUCC(rc = child->next())) {
+    if(flag_==false){
+      return RC::INTERNAL;
+    }
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
       LOG_WARN("failed to get current record: %s", strrc(rc));

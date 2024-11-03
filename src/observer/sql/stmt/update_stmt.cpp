@@ -24,12 +24,13 @@ See the Mulan PSL v2 for more details. */
 #include "net/cli_communicator.h"
 #include "net/plain_communicator.h"
 
-UpdateStmt::UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> value, FilterStmt *filter_stmt)
-    : table_(table), fields_(field), values_(value), filter_stmt_(filter_stmt)
+UpdateStmt::UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> value, FilterStmt *filter_stmt,bool flag)
+    : table_(table), fields_(field), values_(value), filter_stmt_(filter_stmt),flag_(flag)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
 {
+  bool flag=true;
   // check dbb
   if (nullptr == db) {
     LOG_WARN("invalid argument. db is null");
@@ -96,7 +97,6 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
     }
     else{
-      bool flag=true;
       if(tuple_list.size()>1)
       {
         string temp=tuple_list[0].to_string();
@@ -110,17 +110,14 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       if(flag){
         new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
       }
-      else{
-        return RC::INTERNAL;
-      }
       }
     }
   std::vector<const FieldMeta *> fields;
-   // check whether the field exists
-  if (update_sql.attribute_names.size() != new_values.size()) {
-    LOG_WARN("invalid argument. fields and values are not matched.");
-    return RC::INVALID_ARGUMENT;
-  }
+  //  // check whether the field exists
+  // if (update_sql.attribute_names.size() != new_values.size()) {
+  //   LOG_WARN("invalid argument. fields and values are not matched.");
+  //   return RC::INVALID_ARGUMENT;
+  // }
 
   for( auto &attribute_name : update_sql.attribute_names){
     const FieldMeta *field_meta = table->table_meta().field(attribute_name.c_str());
@@ -173,7 +170,8 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
   UpdateStmt *update_stmt = new UpdateStmt(table,
       cons_fields, 
       new_values, 
-      filter_stmt
+      filter_stmt,
+      flag
     );
   // std::cout<<"update!"<<std::endl;
   stmt = update_stmt;

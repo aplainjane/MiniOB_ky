@@ -296,12 +296,14 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
           int target_index = order_index[i];
           const Value& v1 = t1[target_index];
           const Value& v2 = t2[target_index];
-          bool isAscending = (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT);
-
+          
           // 如果两者均为NULL，跳过当前字段
           if (v1.attr_type() == AttrType::NULLS && v2.attr_type() == AttrType::NULLS) {
             continue;
           }
+          bool isAscending = (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT);
+
+
           // 如果一个为NULL，决定顺序：这里假设NULL值排在最后
           if (v1.attr_type() == AttrType::NULLS) return isAscending ? true : false;
           if (v2.attr_type() == AttrType::NULLS) return isAscending ? false : true;

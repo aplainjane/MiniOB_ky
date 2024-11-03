@@ -440,7 +440,7 @@ attr_def:
 isnull:
     /* empty */
     {
-      $$ = false;
+      $$ = true;
     }
     | NULL_KY
     {

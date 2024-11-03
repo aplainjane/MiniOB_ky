@@ -2207,7 +2207,7 @@ yyreduce:
   case 40: /* isnull: %empty  */
 #line 442 "yacc_sql.y"
     {
-      (yyval.boolean) = false;
+      (yyval.boolean) = true;
     }
 #line 2213 "yacc_sql.cpp"
     break;

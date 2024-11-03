@@ -223,10 +223,15 @@ void Value::set_string(const char *s, int len /*= 0*/)
   }
 }
 
+
 void Value::parse_vector(const char *s)
 {
   reset();
   attr_type_ = AttrType::VECTORS;
+
+  int len = strlen(s);
+  length_ = len;
+
   own_data_ = true;
   std::string content(s + 1, s + strlen(s) - 1); // 去掉中括号
   std::istringstream ss(content);
@@ -288,6 +293,7 @@ void Value::set_value(const Value &value)
     case AttrType::VECTORS: {
       attr_type_ = AttrType::VECTORS;
       vector_values_ = value.vector_values_;
+      length_ = value.length_;
     }
     default: {
       ASSERT(false, "got an invalid value type");
@@ -404,6 +410,7 @@ float Value::get_float() const
 
 string Value::get_string() const { return this->to_string(); }
 
+
 bool Value::get_boolean() const
 {
   switch (attr_type_) {
@@ -459,7 +466,7 @@ char* vectorToCharArray(const std::vector<ElementType>& vector_values) {
     }, vector_values[i]);
 
     if (i < vector_values.size() - 1) {
-      oss << ", "; // 添加逗号和空格分隔
+      oss << ","; // 添加逗号和空格分隔
     }
   }
 

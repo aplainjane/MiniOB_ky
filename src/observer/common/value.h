@@ -20,6 +20,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/data_type.h"
 #include "common/type/vector_type.h"
 
+static constexpr int MAX_TEXT_LENGTH = 65535; // 64K
+
 /**
  * @brief 属性的值
  * @ingroup DataType
@@ -50,6 +52,7 @@ public:
   explicit Value(float val);
   explicit Value(int val, int flag);  
   explicit Value(bool val);
+  explicit Value(int64_t val);
   explicit Value(const char *s, int len = 0);
 
   Value(const Value &other);

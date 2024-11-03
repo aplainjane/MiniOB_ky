@@ -19,8 +19,8 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values)
-    : table_(table), fields_(fields), values_(values)
+UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values,bool flag)
+    : table_(table), fields_(fields), values_(values),flag_(flag)
 {}
 
 RC UpdatePhysicalOperator::open(Trx *trx)
@@ -40,6 +40,9 @@ RC UpdatePhysicalOperator::open(Trx *trx)
   trx_ = trx;
 
   while(OB_SUCC(rc = child->next())) {
+    if(flag_==false){
+      return RC::INTERNAL;
+    }
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
       LOG_WARN("failed to get current record: %s", strrc(rc));
@@ -51,7 +54,8 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     // rc = trx_->update_record(table_, record);
     // 修改record
     Record old_record = record;
-    rc = trx_->delete_record(table_, record);
+    // rc = trx_->delete_record(table_, record);
+    rc = table_->delete_record(record);
     //delete_records.emplace_back(record);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
@@ -117,11 +121,13 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       RC rc = table_->make_record(static_cast<int>(values.size()), values.data(), new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
-        trx_->insert_record(table_,old_record);
+        // trx_->insert_record(table_,old_record);
+        table_->insert_record(old_record);
         return rc;
       }
       //new_record.set_rid(delete_records[delete_records.size()-1].rid());
-      rc = trx_->insert_record(table_, new_record);
+      // rc = trx_->insert_record(table_, new_record);
+      rc = table_->insert_record(new_record);
       //insert_records.emplace_back(new_record);
       if (rc != RC::SUCCESS) {      
         LOG_WARN("failed to insert record: %s", strrc(rc));

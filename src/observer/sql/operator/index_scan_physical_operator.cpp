@@ -139,13 +139,13 @@ RC IndexScanPhysicalOperator::next()
       continue;
     }
 
-    rc = trx_->visit_record(table_, current_record_, mode_);
-    if (rc == RC::RECORD_INVISIBLE) {
-      LOG_TRACE("record invisible");
-      continue;
-    } else {
-      return rc;
-    }
+    // rc = trx_->visit_record(table_, current_record_, mode_);
+    // if (rc == RC::RECORD_INVISIBLE) {
+    //   LOG_TRACE("record invisible");
+    //   continue;
+    // } else {
+    //   return rc;
+    // }
   }
 
   return rc;

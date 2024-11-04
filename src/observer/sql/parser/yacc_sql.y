@@ -100,6 +100,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         FROM
         WHERE
         AND
+        OR
         SET
         ON
         LOAD
@@ -713,11 +714,19 @@ condition_list:
       delete $1;
     }
     | condition AND condition_list {
+      $1->conjunction="AND";
+      $3[0][0].conjunction="AND";
       $$ = $3;
       $$->emplace_back(*$1);
       delete $1;
     }
-    
+    | condition OR condition_list {
+      $1->conjunction="OR";
+      $3[0][0].conjunction="OR";
+      $$ = $3;
+      $$->emplace_back(*$1);
+      delete $1;
+    }
     ;
 condition:
     rel_attr comp_op value    {

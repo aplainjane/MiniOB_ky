@@ -230,7 +230,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   else if(left_->type()==ExprType::SUBQUERY&&left_->is_tuple_list()==false)
   {
     string sql = left_->getsqlresult();
-    std::cout<<sql<<std::endl;
+    //std::cout<<sql<<std::endl;
     CliCommunicator communicator;
     communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
     SessionEvent *event = new SessionEvent(&communicator);

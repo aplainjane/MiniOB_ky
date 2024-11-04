@@ -14,24 +14,33 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include "sql/expr/expression.h"
+
 #include "sql/parser/parse_defs.h"
 #include "sql/stmt/stmt.h"
-
+#include "sql/expr/expression.h"
+// #include "event/session_event.h"
+// #include "event/sql_event.h"
+// #include "net/sql_task_handler.h"
+// #include "net/cli_communicator.h"
 #include <unordered_map>
 #include <vector>
 
 class Db;
 class Table;
 class FieldMeta;
+class Field;
+class Expression;
 
 class FilterObj
 {
   public:
   bool is_tuple=false;
   bool  is_attr;
+  bool is_subquery=false;
   Field field;
   Value value;
+  string sql_result="";
+  std::unordered_map<std::string, Table *> tables;
   vector<Value> tuple_list;
   void init_attr(const Field &field)
   {
@@ -51,6 +60,14 @@ class FilterObj
     is_attr = false;
     is_tuple = true;
     this->tuple_list = tuple;
+  }
+  void init_sql_result(string sql_result,std::unordered_map<std::string, Table *> tables)
+  {
+    is_attr     = false;
+    is_tuple    = false;
+    is_subquery =true;
+    this->sql_result = sql_result;
+    this->tables=tables;
   }
 };
 

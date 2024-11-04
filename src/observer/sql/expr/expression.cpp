@@ -15,9 +15,15 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
 #include "sql/expr/arithmetic_operator.hpp"
-
+#include "sql/executor/sql_result.h"
+#include "event/sql_event.h"
+#include "net/sql_task_handler.h"
+#include "event/session_event.h"
+#include "net/cli_communicator.h"
 using namespace std;
-
+class SqlResult;
+class SQLStageEvent;
+class SessionEvent;
 RC FieldExpr::get_value(const Tuple &tuple, Value &value) const
 {
   return tuple.find_cell(TupleCellSpec(table_name(), field_name()), value);
@@ -132,6 +138,28 @@ ComparisonExpr::~ComparisonExpr() {}
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC  rc         = RC::SUCCESS;
+  Value templeft=left;
+  Value tempright=right;
+  // if(left.attr_type()==AttrType::INTS)
+  // {
+  //   templeft.set_boolean(false);
+  //  templeft.set_int(left.get_int());
+  // }
+  // else if(left.attr_type()==AttrType::FLOATS)
+  // {
+  //   templeft.set_boolean(false);
+  //   templeft.set_float(left.get_float());
+  // }
+  // if(right.attr_type()==AttrType::INTS)
+  // {
+  //   tempright.set_boolean(false);
+  //   tempright.set_int(right.get_int());
+  // }
+  // else if(right.attr_type()==AttrType::FLOATS)
+  // {
+  //   tempright.set_boolean(false);
+  //   tempright.set_float(right.get_float());
+  // }
   int cmp_result = left.compare(right);
   result         = false;
   switch (comp_) {
@@ -194,10 +222,84 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   Value left_value;
   Value right_value;
   bool bool_value = false;
+  vector<Value> left_tuple;
+  RC rc;
+  if(left_->type()==ExprType::SUBQUERY&&left_->is_tuple_list()){
+    rc = left_->get(left_tuple);
+  }
+  else if(left_->type()==ExprType::SUBQUERY&&left_->is_tuple_list()==false)
+  {
+    string sql = left_->getsqlresult();
+    std::cout<<sql<<std::endl;
+    CliCommunicator communicator;
+    communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(sql);
+    SQLStageEvent sql_event(event, event->query());
+    // sql_event.table_map=*left_->gettable();
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    SqlResult *sql_result=sql_event.session_event()->sql_result();
+    // sql_result->operator_->set_parent_tuple(&tuple);
+    rc=sql_result->open();
+    
+    Tuple* temptuple=nullptr;
+    
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(temptuple))){
+      Value value;
+      if(temptuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      temptuple->cell_at(0,value);
+      left_tuple.emplace_back(value);
+    }
+      sql_result->close();
+    if(!(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST)&&left_tuple.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    rc=RC::SUCCESS;
+  }
+  vector<Value> right_tuple;
+  if(right_->type()==ExprType::SUBQUERY&&right_->is_tuple_list()){
+    rc = right_->get(right_tuple);
+  }
+  else if(right_->type()==ExprType::SUBQUERY&&right_->is_tuple_list()==false)
+  {
+    string sql = right_->getsqlresult();
+    CliCommunicator communicator;
+    communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(sql);
+    SQLStageEvent sql_event(event, event->query());
+    sql_event.table_map=right_->gettable();
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    SqlResult *sql_result=event->sql_result();
+    if(sql_result->operator_.get()!=nullptr){
+      sql_result->operator_->set_parent_tuple(&tuple);
+    }
+    rc=sql_result->open();
+    
+    Tuple* temptuple=nullptr;
+    
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(temptuple))){
+      Value value;
+      if(temptuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      temptuple->cell_at(0,value);
+      right_tuple.emplace_back(value);
+    }
+      sql_result->close();
+    if(!(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST)&&right_tuple.size()>1)
+    {
+      return RC::INTERNAL;
+    }
+    rc=RC::SUCCESS;
+  }
   if(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST){
-    vector<Value> temp;
-    RC rc = right_->get(temp);
-    if(temp.size()==0){
+    if(right_tuple.size()==0){
       if(comp_==IN_LIST||comp_==EXIST_LIST){
         value.set_boolean(false);
       }
@@ -207,9 +309,14 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       return RC::SUCCESS;
     }
     else{
+      if(left_->type()==ExprType::SUBQUERY){
+        left_value=left_tuple[0];
+      }
+      else{
       rc=left_->get_value(tuple,left_value);
-      for(int i = 0;i<(int)temp.size();i++){
-        int cmp_result = left_value.compare(temp[i]);
+      }
+      for(int i = 0;i<(int)right_tuple.size();i++){
+        int cmp_result = left_value.compare(right_tuple[i]);
         bool_value = (0 == cmp_result);
         if(bool_value==true){
           if(comp_==IN_LIST||comp_==EXIST_LIST){
@@ -230,21 +337,43 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       return rc;
     }
   }
+  if(left_->type() == ExprType::SUBQUERY&&right_->type() == ExprType::SUBQUERY)
+  {
+    if(left_tuple.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    if(right_tuple.size()==0)
+    {
+      value.set_boolean(bool_value);
+      return RC::SUCCESS;
+    }
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
+      return rc;
+    }
+    rc = compare_value(left_tuple[0],right_tuple[0], bool_value);
+    value.set_boolean(bool_value);
+    return rc;
+  }
   if(left_->type() == ExprType::SUBQUERY){
     RC rc = right_->get_value(tuple, right_value);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
       return rc;
     }
-    vector<Value> temp;
-    rc = left_->get(temp);
-    if(temp.size()==0)
+    if(left_tuple.size()==0)
     {
       value.set_boolean(bool_value);
       return RC::SUCCESS;
     }
     else{
-      rc = compare_value(temp[0],right_value, bool_value);
+      rc = compare_value(left_tuple[0],right_value, bool_value);
       value.set_boolean(bool_value);
       return rc;
     }
@@ -255,15 +384,13 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
       return rc;
     }
-    vector<Value> temp;
-    rc = right_->get(temp);
-    if(temp.size()==0)
+    if(right_tuple.size()==0)
     {
       value.set_boolean(bool_value);
       return RC::SUCCESS;
     }
     else{
-      rc = compare_value(left_value,temp[0], bool_value);
+      rc = compare_value(left_value,right_tuple[0], bool_value);
       value.set_boolean(bool_value);
       return rc;
     }
@@ -274,6 +401,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
+  
   rc = right_->get_value(tuple, right_value);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));

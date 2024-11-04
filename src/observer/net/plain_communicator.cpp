@@ -242,10 +242,12 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     rc = write_chunk_result(sql_result);
   } else {
     rc = write_tuple_result(sql_result);
-  }
-
-  if (OB_FAIL(rc)) {
-    return rc;
+    if(rc!=RC::SUCCESS)
+    {
+      sql_result->close();
+      rc = writer_->clear();
+      return write_state(event, need_disconnect);
+    }
   }
 
   if (cell_num == 0) {
@@ -320,6 +322,9 @@ RC PlainCommunicator::write_tuple_result(SqlResult *sql_result)
 
   if (rc == RC::RECORD_EOF) {
     rc = RC::SUCCESS;
+  }
+  if(rc==RC::INTERNAL){
+    sql_result->set_return_code(RC::INTERNAL);
   }
   return rc;
 }

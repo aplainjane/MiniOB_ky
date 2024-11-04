@@ -154,7 +154,12 @@ void Value::set_boolean(bool val)
 {
   reset();
   attr_type_         = AttrType::BOOLEANS;
-  value_.bool_value_ = val;
+  if(val>0){
+    value_.bool_value_=true;
+  }
+  else {
+    value_.bool_value_=false;
+  }
   length_            = sizeof(val);
 }
 

@@ -164,7 +164,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     const FilterObj &filter_obj_right = filter_unit->right();
     
     std::unique_ptr<Expression> left;
-    if (filter_obj_left.is_tuple) {
+      if(filter_obj_left.is_subquery){
+      left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.sql_result,filter_obj_left.tables));
+    }
+      else if (filter_obj_left.is_tuple) {
       left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.tuple_list));
     } else if (filter_obj_left.is_attr) {
       left = std::unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
@@ -174,7 +177,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
 
 
     std::unique_ptr<Expression> right;
-    if (filter_obj_right.is_tuple) {
+    if(filter_obj_right.is_subquery){
+      right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.sql_result,filter_obj_right.tables));
+    }
+    else if (filter_obj_right.is_tuple) {
       right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.tuple_list));
     } else if (filter_obj_right.is_attr) {
       right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));

@@ -20,7 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/rc.h"
 #include "sql/stmt/stmt.h"
 #include "storage/field/field.h"
-
+#include <unordered_map>
 class FieldMeta;
 class FilterStmt;
 class Db;
@@ -39,7 +39,7 @@ public:
   StmtType type() const override { return StmtType::SELECT; }
 
 public:
-  static RC create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt);
+  static RC create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const std::unordered_map<string, Table *> &table_map1={});
 
 public:
   const std::vector<Table *> &tables() const { return tables_; }

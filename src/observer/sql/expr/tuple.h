@@ -26,7 +26,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record.h"
 
 class Table;
-
+class Expression;
+class FieldExpr;
 /**
  * @defgroup Tuple
  * @brief Tuple 元组，表示一行数据，当前返回客户端时使用
@@ -219,6 +220,8 @@ public:
     for (size_t i = 0; i < speces_.size(); ++i) {
       const FieldExpr *field_expr = speces_[i];
       const Field     &field      = field_expr->field();
+      // std::cout<<field.field_name()<<std::endl;
+      // std::cout<<field_name<<std::endl;
       if (0 == strcmp(field_name, field.field_name())) {
         return cell_at(i, cell);
       }
@@ -394,6 +397,7 @@ class JoinedTuple : public Tuple
 {
 public:
   JoinedTuple()          = default;
+  JoinedTuple(Tuple* left, Tuple* right) : left_(left), right_(right) {}
   virtual ~JoinedTuple() = default;
 
   void set_left(Tuple *left) { left_ = left; }

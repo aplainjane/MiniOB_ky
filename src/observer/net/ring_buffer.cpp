@@ -82,6 +82,13 @@ RC RingBuffer::forward(int32_t size)
   return RC::SUCCESS;
 }
 
+void RingBuffer::clear() {
+    write_pos_ = 0;       // 重置写位置
+    data_size_ = 0;       // 重置数据大小
+    // 读位置可以选择重置或保留，具体取决于设计需求
+    // read_pos_ = 0; // 如果需要重置读位置
+}
+
 RC RingBuffer::write(const char *data, int32_t size, int32_t &write_size)
 {
   if (size < 0) {

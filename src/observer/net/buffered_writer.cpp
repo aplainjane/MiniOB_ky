@@ -77,6 +77,12 @@ RC BufferedWriter::writen(const char *data, int32_t size)
   return RC::SUCCESS;
 }
 
+RC BufferedWriter::clear()
+{
+  buffer_.clear();
+  return RC::SUCCESS;
+}
+
 RC BufferedWriter::flush()
 {
   if (fd_ < 0) {

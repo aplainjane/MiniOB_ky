@@ -100,6 +100,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         FROM
         WHERE
         AND
+        OR
         SET
         ON
         LOAD
@@ -492,7 +493,15 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-     SELECT expression_list FROM ID rel_list join_list where group_by
+    SELECT expression_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -709,7 +718,11 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
-    
+    | condition OR condition_list {
+      $$ = $3;
+      $$->emplace_back(*);
+      delete $1;
+    }
     ;
 condition:
     rel_attr comp_op value    {

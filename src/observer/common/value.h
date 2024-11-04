@@ -121,9 +121,10 @@ public:
   string get_string() const;
   bool   get_boolean() const;
 
-private:
   void set_int(int val);
   void set_float(float val);
+private:
+  
   void set_string(const char *s, int len = 0);
   void set_string_from_other(const Value &other);
 
@@ -135,7 +136,7 @@ private:
   {
     int32_t int_value_;
     float   float_value_;
-    bool    bool_value_;
+    bool    bool_value_=false;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

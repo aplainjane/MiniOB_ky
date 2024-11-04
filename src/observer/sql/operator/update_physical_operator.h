@@ -50,4 +50,5 @@ private:
   //std::vector<Record> insert_records;
   Trx *trx_ = nullptr;
   bool flag_;
+  std::mutex mutex_; // 互斥锁
 };

@@ -21,7 +21,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/field/field.h"
 #include "sql/expr/aggregator.h"
 #include "storage/common/chunk.h"
-#include "sql/expr/tuple_cell.h"
 
 
 class Tuple;
@@ -188,10 +187,9 @@ class FieldExpr : public Expression
 {
 public:
   FieldExpr() = default;
-  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {
-    spec_ = TupleCellSpec(table_name(), field_name());
-  }
-  FieldExpr(const Field &field) : field_(field) { spec_ = TupleCellSpec(table_name(), field_name()); }
+  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {}
+  FieldExpr(const Field &field) : field_(field) {}
+
   virtual ~FieldExpr() = default;
 
   bool equal(const Expression &other) const override;
@@ -213,7 +211,6 @@ public:
 
 private:
   Field field_;
-  TupleCellSpec spec_;
 };
 class SubqueryExpr : public Expression
 {
@@ -249,7 +246,6 @@ public:
   RC get_value(const Tuple &tuple, Value &value) const override { return RC::UNIMPLEMENTED;}
 private:
   vector<Value> tuple_list;
-  
 };
 /**
  * @brief 常量值表达式
@@ -551,6 +547,3 @@ private:
   FuncOp func_type_;
   std::vector<std::unique_ptr<Expression>> params_; 
 };
-
-bool fn_isNotNULL(Value left, Value right);
-bool fn_isNULL(Value left, Value right);

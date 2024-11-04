@@ -267,6 +267,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         const TupleCellSpec &spec = schema.cell_at(i);
         if(  (strlen(spec.table_name()) == 0 && strcmp(spec.alias(), it.first.attribute_name.c_str()) == 0 )
           || ((strcmp(spec.table_name(), it.first.relation_name.c_str()) == 0) && strcmp(spec.field_name(), it.first.attribute_name.c_str()) == 0)
+          
         )
         {
           order_index.push_back(i);

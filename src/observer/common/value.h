@@ -151,7 +151,6 @@ private:
   {
     int32_t int_value_;
     float   float_value_;
-    bool    bool_value_;
     int     null_value_;
     bool    bool_value_=false;
     char   *pointer_value_;

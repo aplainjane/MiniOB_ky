@@ -386,8 +386,8 @@ static void yynoreturn yy_fatal_error ( const char* msg , yyscan_t yyscanner );
 	yyg->yy_hold_char = *yy_cp; \
 	*yy_cp = '\0'; \
 	yyg->yy_c_buf_p = yy_cp;
-#define YY_NUM_RULES 88
-#define YY_END_OF_BUFFER 89
+#define YY_NUM_RULES 89
+#define YY_END_OF_BUFFER 90
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -397,40 +397,40 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[314] =
     {   0,
-        0,    0,    0,    0,   89,   87,    1,    2,   87,   87,
-       87,   71,   72,   83,   81,   73,   82,    6,   84,    3,
-        5,   78,   74,   80,   70,   70,   70,   70,   70,   70,
-       70,   70,   70,   70,   70,   70,   70,   70,   70,   70,
-       70,   70,   70,   70,   70,   87,   88,   77,    0,   85,
-        0,   86,    0,    3,    0,   75,   76,   79,   70,   70,
-       70,   70,   70,   70,   56,   70,   70,   70,   70,   70,
-       70,   70,   70,   70,   70,   70,   70,   70,   70,   48,
-       46,   70,   70,   70,   70,   70,   70,   70,   70,   17,
-       25,   70,   70,   70,   70,   70,   70,   70,   70,   70,
+        0,    0,    0,    0,   90,   88,    1,    2,   88,   88,
+       88,   72,   73,   84,   82,   74,   83,    6,   85,    3,
+        5,   79,   75,   81,   71,   71,   71,   71,   71,   71,
+       71,   71,   71,   71,   71,   71,   71,   71,   71,   71,
+       71,   71,   71,   71,   71,   88,   89,   78,    0,   86,
+        0,   87,    0,    3,    0,   76,   77,   80,   71,   71,
+       71,   63,   71,   71,   56,   71,   71,   71,   71,   71,
+       71,   71,   71,   71,   71,   71,   71,   71,   71,   48,
+       46,   71,   71,   71,   71,   71,   71,   71,   71,   17,
+       25,   71,   71,   71,   71,   71,   71,   71,   71,   71,
 
-       70,   70,   70,   70,    0,   69,    0,    4,   24,   10,
-       64,   70,   70,   70,   70,   70,   70,   70,   70,   70,
-       70,   70,   70,   70,   70,   70,   70,   70,   70,   70,
-       70,   70,   70,   70,   35,   70,   70,   70,   70,   66,
-       67,   45,   70,   70,   70,   70,   31,   70,   70,   63,
-       70,   70,   70,   70,   70,   70,   70,   70,    0,   70,
-       21,   36,   70,   70,   70,   70,   42,   37,   70,    9,
-       12,   70,    7,   70,   70,   70,   22,   70,   70,    8,
-       70,   70,   70,   70,   27,   53,   70,   47,   41,   50,
-       70,   70,   70,   18,   70,   19,   70,   40,   70,   70,
+       71,   71,   71,   71,    0,   70,    0,    4,   24,   10,
+       65,   71,   71,   71,   71,   71,   71,   71,   71,   71,
+       71,   71,   71,   71,   71,   71,   71,   71,   71,   71,
+       71,   71,   71,   71,   35,   71,   71,   71,   71,   67,
+       68,   45,   71,   71,   71,   71,   31,   71,   71,   64,
+       71,   71,   71,   71,   71,   71,   71,   71,    0,   71,
+       21,   36,   71,   71,   71,   71,   42,   37,   71,    9,
+       12,   71,    7,   71,   71,   71,   22,   71,   71,    8,
+       71,   71,   71,   71,   27,   53,   71,   47,   41,   50,
+       71,   71,   71,   18,   71,   19,   71,   40,   71,   71,
 
-       70,   70,   70,    0,   32,   70,   70,   65,   70,   70,
-       49,   70,   38,   70,   54,   70,   16,   70,   52,   70,
-       70,   70,   55,   70,   70,   70,   13,   70,   70,   70,
-       70,   23,    0,   33,   70,   11,   29,   70,   59,   57,
-       43,   70,   26,   70,   70,   70,   20,   70,   14,   15,
-       30,   28,   39,    0,   70,   44,   70,   70,   70,   70,
-       58,    0,    0,    0,    0,   70,   70,   70,   51,   34,
-        0,    0,    0,    0,   70,   70,   70,    0,    0,    0,
-        0,   70,   70,   70,    0,    0,    0,   70,   70,   60,
-        0,    0,   68,    0,    0,   70,   70,    0,    0,    0,
+       71,   71,   71,    0,   32,   71,   71,   66,   71,   71,
+       49,   71,   38,   71,   54,   71,   16,   71,   52,   71,
+       71,   71,   55,   71,   71,   71,   13,   71,   71,   71,
+       71,   23,    0,   33,   71,   11,   29,   71,   59,   57,
+       43,   71,   26,   71,   71,   71,   20,   71,   14,   15,
+       30,   28,   39,    0,   71,   44,   71,   71,   71,   71,
+       58,    0,    0,    0,    0,   71,   71,   71,   51,   34,
+        0,    0,    0,    0,   71,   71,   71,    0,    0,    0,
+        0,   71,   71,   71,    0,    0,    0,   71,   71,   60,
+        0,    0,   69,    0,    0,   71,   71,    0,    0,    0,
 
-        0,   70,   62,    0,    0,    0,    0,   70,    0,    0,
+        0,   71,   62,    0,    0,    0,    0,   71,    0,    0,
         0,   61,    0
     } ;
 
@@ -1578,32 +1578,37 @@ RETURN_TOKEN(INNER_PRODUCT_T);
 case 63:
 YY_RULE_SETUP
 #line 143 "lex_sql.l"
-RETURN_TOKEN(SUM);
+RETURN_TOKEN(AS);
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
 #line 144 "lex_sql.l"
-RETURN_TOKEN(AVG);
+RETURN_TOKEN(SUM);
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
 #line 145 "lex_sql.l"
-RETURN_TOKEN(COUNT);
+RETURN_TOKEN(AVG);
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
 #line 146 "lex_sql.l"
-RETURN_TOKEN(MAX);
+RETURN_TOKEN(COUNT);
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
 #line 147 "lex_sql.l"
-RETURN_TOKEN(MIN);
+RETURN_TOKEN(MAX);
 	YY_BREAK
 case 68:
-/* rule 68 can match eol */
 YY_RULE_SETUP
 #line 148 "lex_sql.l"
+RETURN_TOKEN(MIN);
+	YY_BREAK
+case 69:
+/* rule 69 can match eol */
+YY_RULE_SETUP
+#line 149 "lex_sql.l"
 {
                 // 提取括号内的字符串
                 int len = yyleng - 2; // 去掉左右括号
@@ -1615,46 +1620,41 @@ YY_RULE_SETUP
                 RETURN_TOKEN(SUB_QUERY);
              }
 	YY_BREAK
-case 69:
-/* rule 69 can match eol */
-YY_RULE_SETUP
-#line 158 "lex_sql.l"
-yylval->string=strdup(yytext); RETURN_TOKEN(VECTOR_LIST);
-	YY_BREAK
 case 70:
+/* rule 70 can match eol */
 YY_RULE_SETUP
 #line 159 "lex_sql.l"
-yylval->string=strdup(yytext); RETURN_TOKEN(ID);
+yylval->string=strdup(yytext); RETURN_TOKEN(VECTOR_LIST);
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
 #line 160 "lex_sql.l"
-RETURN_TOKEN(LBRACE);
+yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
 #line 161 "lex_sql.l"
-RETURN_TOKEN(RBRACE);
+RETURN_TOKEN(LBRACE);
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
 #line 162 "lex_sql.l"
-RETURN_TOKEN(COMMA);
+RETURN_TOKEN(RBRACE);
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
 #line 163 "lex_sql.l"
-RETURN_TOKEN(EQ);
+RETURN_TOKEN(COMMA);
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
 #line 164 "lex_sql.l"
-RETURN_TOKEN(LE);
+RETURN_TOKEN(EQ);
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
 #line 165 "lex_sql.l"
-RETURN_TOKEN(NE);
+RETURN_TOKEN(LE);
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
@@ -1664,34 +1664,33 @@ RETURN_TOKEN(NE);
 case 78:
 YY_RULE_SETUP
 #line 167 "lex_sql.l"
-RETURN_TOKEN(LT);
+RETURN_TOKEN(NE);
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
 #line 168 "lex_sql.l"
-RETURN_TOKEN(GE);
+RETURN_TOKEN(LT);
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
 #line 169 "lex_sql.l"
-RETURN_TOKEN(GT);
+RETURN_TOKEN(GE);
 	YY_BREAK
 case 81:
-#line 172 "lex_sql.l"
+YY_RULE_SETUP
+#line 170 "lex_sql.l"
+RETURN_TOKEN(GT);
+	YY_BREAK
 case 82:
 #line 173 "lex_sql.l"
 case 83:
 #line 174 "lex_sql.l"
 case 84:
-YY_RULE_SETUP
-#line 174 "lex_sql.l"
-{ return yytext[0]; }
-	YY_BREAK
+#line 175 "lex_sql.l"
 case 85:
-/* rule 85 can match eol */
 YY_RULE_SETUP
 #line 175 "lex_sql.l"
-yylval->string = strdup(yytext); RETURN_TOKEN(SSS);
+{ return yytext[0]; }
 	YY_BREAK
 case 86:
 /* rule 86 can match eol */
@@ -1700,16 +1699,22 @@ YY_RULE_SETUP
 yylval->string = strdup(yytext); RETURN_TOKEN(SSS);
 	YY_BREAK
 case 87:
+/* rule 87 can match eol */
 YY_RULE_SETUP
-#line 179 "lex_sql.l"
-LOG_DEBUG("Unknown character [%c]",yytext[0]); return yytext[0];
+#line 177 "lex_sql.l"
+yylval->string = strdup(yytext); RETURN_TOKEN(SSS);
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
 #line 180 "lex_sql.l"
+LOG_DEBUG("Unknown character [%c]",yytext[0]); return yytext[0];
+	YY_BREAK
+case 89:
+YY_RULE_SETUP
+#line 181 "lex_sql.l"
 ECHO;
 	YY_BREAK
-#line 1713 "lex_sql.cpp"
+#line 1718 "lex_sql.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(STR):
 	yyterminate();
@@ -2865,7 +2870,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 #define YYTABLES_NAME "yytables"
 
-#line 180 "lex_sql.l"
+#line 181 "lex_sql.l"
 
 
 void scan_string(const char *str, yyscan_t scanner) {

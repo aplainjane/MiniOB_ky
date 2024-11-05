@@ -175,20 +175,21 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
     last_oper = &group_by_oper;
   }
   
-  if (select_stmt->having_filter_stmt() != nullptr) {
-    unique_ptr<LogicalOperator> having_oper;
+  unique_ptr<LogicalOperator> having_oper;
+  if(select_stmt->having_filter_stmt()){
     rc = create_plan(select_stmt->having_filter_stmt(), having_oper);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to create having logical plan. rc=%s", strrc(rc));
       return rc;
     }
-    if (having_oper) {
-      if (*last_oper) {
-        having_oper->add_child(std::move(*last_oper));
-      }
-      last_oper = &having_oper;
-    }
   }
+  if (having_oper) {
+    if (*last_oper) {
+      having_oper->add_child(std::move(*last_oper));
+    }
+    last_oper = &having_oper;
+  }
+  
 
   auto project_oper = make_unique<ProjectLogicalOperator>(std::move(select_stmt->query_expressions()));
   if (*last_oper) {

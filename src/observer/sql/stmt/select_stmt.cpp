@@ -119,7 +119,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       &table_map,
       select_sql.having_conditions.data(),
       static_cast<int>(select_sql.having_conditions.size()),
-      filter_stmt);
+      having_filter_stmt);
     if (rc != RC::SUCCESS) {
       LOG_WARN("cannot construct filter stmt");
       return rc;

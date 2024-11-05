@@ -714,8 +714,6 @@ condition_list:
       delete $1;
     }
     | condition AND condition_list {
-      $1->conjunction="AND";
-      $3[0][0].conjunction="AND";
       $$ = $3;
       $$->emplace_back(*$1);
       delete $1;

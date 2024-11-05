@@ -49,7 +49,9 @@ RC FilterStmt::create(Db *db, Table *default_table, std::unordered_map<std::stri
     }
     tmp_stmt->filter_units_.push_back(filter_unit);
   }
-  tmp_stmt->conjunction=conditions[0].conjunction;
+  if(condition_num!=0){
+    tmp_stmt->conjunction=conditions[0].conjunction;
+  }
   stmt = tmp_stmt;
   return rc;
 }

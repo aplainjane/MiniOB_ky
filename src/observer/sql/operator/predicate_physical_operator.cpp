@@ -47,7 +47,7 @@ RC PredicatePhysicalOperator::next()
       LOG_WARN("failed to get tuple from operator");
       break;
     }
-  if (parent_tuple_) {
+  if (parent_tuple_!= nullptr) {
       jt.set_left(tuple);
       jt.set_right(const_cast<Tuple*>(parent_tuple_));
       tp = &jt;

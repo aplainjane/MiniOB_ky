@@ -101,5 +101,5 @@ public:
 
 protected:
   std::vector<std::unique_ptr<PhysicalOperator>> children_;
-  const Tuple* parent_tuple_;
+  const Tuple* parent_tuple_=nullptr;
 };

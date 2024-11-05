@@ -280,7 +280,9 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       sql_result->operator_->set_parent_tuple(&tuple);
     }
     rc=sql_result->open();
-    
+    if(rc==RC::INTERNAL){
+      return rc;
+    }
     Tuple* temptuple=nullptr;
     
     while(RC::SUCCESS==(rc=sql_result->next_tuple(temptuple))){
@@ -292,6 +294,9 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
       right_tuple.emplace_back(value);
     }
       sql_result->close();
+    if(rc==RC::INTERNAL){
+      return rc;
+    }
     if(!(comp_==IN_LIST||comp_==NOTIN_LIST||comp_==EXIST_LIST||comp_==NOTEXIST_LIST)&&right_tuple.size()>1)
     {
       return RC::INTERNAL;

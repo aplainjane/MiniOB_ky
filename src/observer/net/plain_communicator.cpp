@@ -288,7 +288,13 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       }
       tuple_set.push_back(temp);    
     }
-
+    if(rc==RC::INTERNAL)
+    {
+      sql_result->set_return_code(RC::INTERNAL);
+      sql_result->close();
+      rc = writer_->clear();
+      return write_state(event, need_disconnect);
+    }
     // 排序
     std::sort(tuple_set.begin(), tuple_set.end(), 
       [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
@@ -421,7 +427,13 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   if (rc == RC::RECORD_EOF) {
     rc = RC::SUCCESS;
   }
-
+  if(rc==RC::INTERNAL)
+    {
+      sql_result->set_return_code(RC::INTERNAL);
+      sql_result->close();
+      rc = writer_->clear();
+      return write_state(event, need_disconnect);
+    }
   if (cell_num == 0) {
     // 除了select之外，其它的消息通常不会通过operator来返回结果，表头和行数据都是空的
     // 这里针对这种情况做特殊处理，当表头和行数据都是空的时候，就返回处理的结果

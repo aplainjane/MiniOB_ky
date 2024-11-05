@@ -18,7 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse_defs.h"
 
 class Db;
-
+class  SQLStageEvent;
 /**
  * @brief Statement SQL语句解析后通过Resolver转换成Stmt
  * @defgroup Statement
@@ -87,7 +87,7 @@ public:
   virtual StmtType type() const = 0;
 
 public:
-  static RC create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt);
+  static RC create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt,SQLStageEvent *sql_event=nullptr);
 
 private:
 };

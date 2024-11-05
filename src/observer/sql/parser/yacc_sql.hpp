@@ -94,43 +94,44 @@ extern int yydebug;
     WHERE = 295,                   /* WHERE  */
     HAVING = 296,                  /* HAVING  */
     AND = 297,                     /* AND  */
-    SET = 298,                     /* SET  */
-    ON = 299,                      /* ON  */
-    LOAD = 300,                    /* LOAD  */
-    DATA = 301,                    /* DATA  */
-    INFILE = 302,                  /* INFILE  */
-    EXPLAIN = 303,                 /* EXPLAIN  */
-    STORAGE = 304,                 /* STORAGE  */
-    FORMAT = 305,                  /* FORMAT  */
-    NOT = 306,                     /* NOT  */
-    LIKE = 307,                    /* LIKE  */
-    IN = 308,                      /* IN  */
-    IS = 309,                      /* IS  */
-    EXIST = 310,                   /* EXIST  */
-    NULL_KY = 311,                 /* NULL_KY  */
-    INNER = 312,                   /* INNER  */
-    JOIN = 313,                    /* JOIN  */
-    EQ = 314,                      /* EQ  */
-    LT = 315,                      /* LT  */
-    GT = 316,                      /* GT  */
-    LE = 317,                      /* LE  */
-    GE = 318,                      /* GE  */
-    NE = 319,                      /* NE  */
-    I2_DISTANCE_T = 320,           /* I2_DISTANCE_T  */
-    COSINE_DISTANCE_T = 321,       /* COSINE_DISTANCE_T  */
-    INNER_PRODUCT_T = 322,         /* INNER_PRODUCT_T  */
-    SUM = 323,                     /* SUM  */
-    AVG = 324,                     /* AVG  */
-    COUNT = 325,                   /* COUNT  */
-    MAX = 326,                     /* MAX  */
-    MIN = 327,                     /* MIN  */
-    NUMBER = 328,                  /* NUMBER  */
-    FLOAT = 329,                   /* FLOAT  */
-    ID = 330,                      /* ID  */
-    SSS = 331,                     /* SSS  */
-    SUB_QUERY = 332,               /* SUB_QUERY  */
-    VECTOR_LIST = 333,             /* VECTOR_LIST  */
-    UMINUS = 334                   /* UMINUS  */
+    OR = 298,                      /* OR  */
+    SET = 299,                     /* SET  */
+    ON = 300,                      /* ON  */
+    LOAD = 301,                    /* LOAD  */
+    DATA = 302,                    /* DATA  */
+    INFILE = 303,                  /* INFILE  */
+    EXPLAIN = 304,                 /* EXPLAIN  */
+    STORAGE = 305,                 /* STORAGE  */
+    FORMAT = 306,                  /* FORMAT  */
+    NOT = 307,                     /* NOT  */
+    LIKE = 308,                    /* LIKE  */
+    IN = 309,                      /* IN  */
+    IS = 310,                      /* IS  */
+    EXIST = 311,                   /* EXIST  */
+    NULL_KY = 312,                 /* NULL_KY  */
+    INNER = 313,                   /* INNER  */
+    JOIN = 314,                    /* JOIN  */
+    EQ = 315,                      /* EQ  */
+    LT = 316,                      /* LT  */
+    GT = 317,                      /* GT  */
+    LE = 318,                      /* LE  */
+    GE = 319,                      /* GE  */
+    NE = 320,                      /* NE  */
+    I2_DISTANCE_T = 321,           /* I2_DISTANCE_T  */
+    COSINE_DISTANCE_T = 322,       /* COSINE_DISTANCE_T  */
+    INNER_PRODUCT_T = 323,         /* INNER_PRODUCT_T  */
+    SUM = 324,                     /* SUM  */
+    AVG = 325,                     /* AVG  */
+    COUNT = 326,                   /* COUNT  */
+    MAX = 327,                     /* MAX  */
+    MIN = 328,                     /* MIN  */
+    NUMBER = 329,                  /* NUMBER  */
+    FLOAT = 330,                   /* FLOAT  */
+    ID = 331,                      /* ID  */
+    SSS = 332,                     /* SSS  */
+    SUB_QUERY = 333,               /* SUB_QUERY  */
+    VECTOR_LIST = 334,             /* VECTOR_LIST  */
+    UMINUS = 335                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -139,7 +140,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 141 "yacc_sql.y"
+#line 142 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -165,7 +166,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 169 "yacc_sql.hpp"
+#line 170 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

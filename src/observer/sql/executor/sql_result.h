@@ -59,9 +59,10 @@ public:
   RC next_tuple(Tuple *&tuple);
   RC next_chunk(Chunk &chunk);
 
+  std::unique_ptr<PhysicalOperator> operator_=nullptr;           ///< 执行计划
 private:
   Session                          *session_ = nullptr;  ///< 当前所属会话
-  std::unique_ptr<PhysicalOperator> operator_;           ///< 执行计划
+
   TupleSchema                       tuple_schema_;       ///< 返回的表头信息。可能有也可能没有
   RC                                return_code_ = RC::SUCCESS;
   std::string                       state_string_;

@@ -137,6 +137,7 @@ public:
   void                set_int(int val); 
 
 private:
+  
   void set_string(const char *s, int len = 0);
   void parse_vector(const char *s);
   void set_string_from_other(const Value &other);
@@ -150,8 +151,8 @@ private:
   {
     int32_t int_value_;
     float   float_value_;
-    bool    bool_value_;
-    int   null_value_;
+    int     null_value_;
+    bool    bool_value_=false;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

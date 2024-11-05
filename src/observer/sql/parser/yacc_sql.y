@@ -105,6 +105,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         WHERE
         HAVING
         AND
+        OR
         SET
         ON
         LOAD
@@ -609,7 +610,15 @@ set_clause:
 
 
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM ID rel_list join_list where group_by having order_by
+    SELECT expression_list
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -984,7 +993,13 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
-    
+    | condition OR condition_list {
+      $1->conjunction="OR";
+      $3[0][0].conjunction="OR";
+      $$ = $3;
+      $$->emplace_back(*$1);
+      delete $1;
+    }
     ;
 condition:
      arith_expr comp_op value {

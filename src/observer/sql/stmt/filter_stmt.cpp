@@ -49,7 +49,9 @@ RC FilterStmt::create(Db *db, Table *default_table, std::unordered_map<std::stri
     }
     tmp_stmt->filter_units_.push_back(filter_unit);
   }
-
+  if(condition_num!=0){
+    tmp_stmt->conjunction=conditions[0].conjunction;
+  }
   stmt = tmp_stmt;
   return rc;
 }
@@ -111,38 +113,38 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_unit->set_left(filter_obj);
   } else if(condition.left_is_attr==2){
     FilterObj filter_obj;
-    vector<Value> tuple_list;
-    CliCommunicator communicator;
-    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
-    SessionEvent *event = new SessionEvent(&communicator);
-    event->set_query(condition.left_subquery);
-    SQLStageEvent sql_event(event, event->query());
-    SqlTaskHandler temp;
-    rc = temp.handle_sql(&sql_event);
-    if (OB_FAIL(rc)) {
-      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
-      event->sql_result()->set_return_code(rc);
-    }
-    SqlResult *sql_result=event->sql_result();
+    // vector<Value> tuple_list;
+    // CliCommunicator communicator;
+    // communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    // SessionEvent *event = new SessionEvent(&communicator);
+    // event->set_query(condition.left_subquery);
+    // SQLStageEvent sql_event(event, event->query());
+    // SqlTaskHandler temp;
+    // rc = temp.handle_sql(&sql_event);
+    // if (OB_FAIL(rc)) {
+    //   LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+    //   event->sql_result()->set_return_code(rc);
+    // }
+    // SqlResult *sql_result=event->sql_result();
   
-    rc=sql_result->open();
+    // rc=sql_result->open();
     
-    Tuple* tuple=nullptr;
+    // Tuple* tuple=nullptr;
     
-    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
-      Value value;
-      if(tuple->cell_num()!=1){
-        return RC::INTERNAL;
-      }
-      tuple->cell_at(0,value);
-      tuple_list.emplace_back(value);
-    }
-    sql_result->close();
-    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
-    {
-      return RC::INTERNAL;
-    }
-    filter_obj.init_tuple(tuple_list);
+    // while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+    //   Value value;
+    //   if(tuple->cell_num()!=1){
+    //     return RC::INTERNAL;
+    //   }
+    //   tuple->cell_at(0,value);
+    //   tuple_list.emplace_back(value);
+    // }
+    // sql_result->close();
+    // if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
+    // {
+    //   return RC::INTERNAL;
+    // }
+    filter_obj.init_sql_result(condition.left_subquery,*tables);
     filter_unit->set_left(filter_obj);
   }
   else if(condition.left_is_attr==4){
@@ -246,37 +248,37 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
   }
   else if(condition.right_is_attr==2){
     FilterObj filter_obj;
-    CliCommunicator communicator;
-    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
-    SessionEvent *event = new SessionEvent(&communicator);
-    event->set_query(condition.right_subquery);
-    SQLStageEvent sql_event(event, event->query());
-    SqlTaskHandler temp;
-    rc = temp.handle_sql(&sql_event);
-    if (OB_FAIL(rc)) {
-      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
-      event->sql_result()->set_return_code(rc);
-    }
-    SqlResult *sql_result=event->sql_result();
+    // CliCommunicator communicator;
+    // communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    // SessionEvent *event = new SessionEvent(&communicator);
+    // event->set_query(condition.right_subquery);
+    // SQLStageEvent sql_event(event, event->query());
+    // SqlTaskHandler temp;
+    // sql_event.table_map=*tables;
+    // rc = temp.handle_sql(&sql_event);
+    // if (OB_FAIL(rc)) {
+    //   LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+    //   event->sql_result()->set_return_code(rc);
+    // }
+    // SqlResult *sql_result=event->sql_result();
   
-    rc=sql_result->open();
-    
-    Tuple* tuple=nullptr;
-    vector<Value> tuple_list;
-    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
-      Value value;
-      if(tuple->cell_num()!=1){
-        return RC::INTERNAL;
-      }
-      tuple->cell_at(0,value);
-      tuple_list.emplace_back(value);
-    }
-    sql_result->close();
-    if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
-    {
-      return RC::INTERNAL;
-    }
-    filter_obj.init_tuple(tuple_list);
+    // rc=sql_result->open();
+    // Tuple* tuple=nullptr;
+    // vector<Value> tuple_list;
+    // while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+    //   Value value;
+    //   if(tuple->cell_num()!=1){
+    //     return RC::INTERNAL;
+    //   }
+    //   tuple->cell_at(0,value);
+    //   tuple_list.emplace_back(value);
+    // }
+    // sql_result->close();
+    // if(!(comp==IN_LIST||comp==NOTIN_LIST||comp==EXIST_LIST||comp==NOTEXIST_LIST)&&tuple_list.size()>1)
+    // {
+    //   return RC::INTERNAL;
+    // }
+    filter_obj.init_sql_result(condition.right_subquery,*tables);
     filter_unit->set_right(filter_obj);
   } 
   else if(condition.right_is_attr==4){

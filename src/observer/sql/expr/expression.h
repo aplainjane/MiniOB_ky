@@ -23,8 +23,10 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/chunk.h"
 
 
-class Tuple;
 
+class Tuple;
+class SqlResult;
+class SQLStageEvent;
 /**
  * @defgroup Expression
  * @brief 表达式
@@ -127,6 +129,9 @@ public:
   virtual RC eval(Chunk &chunk, std::vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
   virtual RC get(vector<Value>& temp){return RC::UNIMPLEMENTED;}
   virtual RC get_tuple_list(){return RC::UNIMPLEMENTED;};
+  virtual bool is_tuple_list() { return true;}
+  virtual  string getsqlresult(){return nullptr;}
+  virtual  std::unordered_map<std::string, Table *> gettable( ){return {};}
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -219,14 +224,23 @@ class SubqueryExpr : public Expression
 {
 public:
   SubqueryExpr() = default;
-  SubqueryExpr(const vector<Value> sql_result)  { this->tuple_list = sql_result;}
+  SubqueryExpr(const vector<Value> sql_result)  { 
+    this->tuple_list = sql_result;
+    this->is_tuple=true; 
+  }
+  SubqueryExpr(string sql_result,std::unordered_map<std::string, Table *> tables)
+  {
+    this->sql_result = sql_result;
+    this->tables=tables;
+  }
 
   virtual ~SubqueryExpr() = default;
-
+  bool is_tuple_list(){return is_tuple;}
+  
   bool equal(const Expression &other) const override ;
 
   ExprType type() const override { return ExprType::SUBQUERY; }
-
+  RC get_value(const Tuple &tuple, Value &value) const override {return RC::UNIMPLEMENTED;}
   RC try_get_value(Value &value) const override { return RC::UNIMPLEMENTED; };
   AttrType value_type() const override 
   { 
@@ -245,10 +259,17 @@ public:
      } 
      return RC::SUCCESS;
   }
-  
-  RC get_value(const Tuple &tuple, Value &value) const override { return RC::UNIMPLEMENTED;}
+  RC getsqlresult(string sql_result1){
+    sql_result1=this->sql_result;
+    return RC::SUCCESS;
+  }
+  string getsqlresult(){return sql_result;}
+  std::unordered_map<std::string, Table *> gettable(){return tables;}
 private:
+  bool is_tuple=false;
   vector<Value> tuple_list;
+  string sql_result="";
+  std::unordered_map<std::string, Table *> tables;
 };
 /**
  * @brief 常量值表达式
@@ -550,6 +571,3 @@ private:
   FuncOp func_type_;
   std::vector<std::unique_ptr<Expression>> params_; 
 };
-
-bool fn_isNotNULL(Value left, Value right);
-bool fn_isNULL(Value left, Value right);

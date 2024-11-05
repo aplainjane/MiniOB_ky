@@ -208,7 +208,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
     FilterObj &filter_obj_right = filter_unit->right();
     
     std::unique_ptr<Expression> left;
-    if (filter_obj_left.is_tuple) {
+      if(filter_obj_left.is_subquery){
+      left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.sql_result,filter_obj_left.tables));
+    }
+      else if (filter_obj_left.is_tuple) {
       left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.tuple_list));
     } else if (filter_obj_left.is_attr) {
       left = std::unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
@@ -221,7 +224,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
 
 
     std::unique_ptr<Expression> right;
-    if (filter_obj_right.is_tuple) {
+    if(filter_obj_right.is_subquery){
+      right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.sql_result,filter_obj_right.tables));
+    }
+    else if (filter_obj_right.is_tuple) {
       right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.tuple_list));
     } else if (filter_obj_right.is_attr) {
       right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
@@ -277,8 +283,12 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
   }
 
   unique_ptr<PredicateLogicalOperator> predicate_oper;
-  if (!cmp_exprs.empty()) {
+  if (!cmp_exprs.empty()&&filter_stmt->conjunction=="AND") {
     unique_ptr<ConjunctionExpr> conjunction_expr(new ConjunctionExpr(ConjunctionExpr::Type::AND, cmp_exprs));
+    predicate_oper = unique_ptr<PredicateLogicalOperator>(new PredicateLogicalOperator(std::move(conjunction_expr)));
+  }
+  else if(!cmp_exprs.empty()&&filter_stmt->conjunction=="OR"){
+    unique_ptr<ConjunctionExpr> conjunction_expr(new ConjunctionExpr(ConjunctionExpr::Type::OR, cmp_exprs));
     predicate_oper = unique_ptr<PredicateLogicalOperator>(new PredicateLogicalOperator(std::move(conjunction_expr)));
   }
 
@@ -322,7 +332,7 @@ RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<Logical
     return rc;
   }
 
-  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->fields(), update_stmt->values()));
+  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->fields(), update_stmt->values(),update_stmt->flag()));
   if (predicate_oper) {
     predicate_oper->add_child(std::move(table_get_oper));
     update_oper->add_child(std::move(predicate_oper));

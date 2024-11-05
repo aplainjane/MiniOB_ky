@@ -274,6 +274,11 @@ public:
 
   const char *filename() const { return file_name_.c_str(); }
 
+  // 用于text数据的读写
+  RC append_data(int64_t &offset, int64_t length, const char *data);
+  
+  RC get_data(int64_t offset, int64_t length, char *data);
+
 protected:
   RC allocate_frame(PageNum page_num, Frame **buf);
 

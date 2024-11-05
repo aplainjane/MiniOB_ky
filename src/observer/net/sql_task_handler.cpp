@@ -47,7 +47,7 @@ RC SqlTaskHandler::handle_event(Communicator *communicator)
   event->session()->set_current_request(nullptr);
   Session::set_current_session(nullptr);
 
-  delete event;
+    delete event;
 
   if (need_disconnect) {
     return RC::INTERNAL;
@@ -68,6 +68,10 @@ RC SqlTaskHandler::handle_sql(SQLStageEvent *sql_event)
     LOG_TRACE("failed to do parse. rc=%s", strrc(rc));
     return rc;
   }
+
+  SessionEvent *session_event = sql_event->session_event();
+  SqlResult* sql_result = session_event->sql_result();
+  sql_result->get_order_rules() = (*(sql_event->sql_node())).selection.order_rules;
 
   rc = resolve_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {

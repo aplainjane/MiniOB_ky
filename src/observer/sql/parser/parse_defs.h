@@ -96,24 +96,22 @@ enum FuncOp {
  */
 struct ConditionSqlNode
 {
-  int                   left_is_attr;     ///< TRUE if left-hand side is an attribute
-                                          ///< 0时，是属性值，1时，是属性名，2时，是子查询，3时，是list，4时，是聚集函数，5时，是算术表达式
-  Value                 left_value;       ///< left-hand side value
-  RelAttrSqlNode        left_attr;        ///< left-hand side attribute
-  std::string           left_subquery;    ///< left-hand side subquery
-  std::vector<Value>    left_list;        ///< left-hand side list (only for subquery)
-  Expression            *left_expr;       ///< expression,includes arithmetic,aggregate
-  
-  CompOp                comp;             ///< comparison operator
-  
-  int                   right_is_attr;    ///< TRUE if right-hand side is an attribute
-                                          ///< 0时，是属性值，1时，是属性名，2时，是子查询，3时，是list，4时，是聚集函数，5时，是算术表达式
-  Value                 right_value;      ///< right-hand side value
-  RelAttrSqlNode        right_attr;       ///< right-hand side attribute  
-  std::string           right_subquery;   ///< right-hand side subquery
-  std::vector<Value>    right_list;       ///< right-hand side list (only for subquery)
+  int left_is_attr;              ///< TRUE if left-hand side is an attribute
+                                 ///< 1时，操作符左边是属性名，0时，是属性值
+  Value          left_value;     ///< left-hand side value if left_is_attr = FALSE
+  RelAttrSqlNode left_attr;      ///< left-hand side attribute
+  std::string    left_subquery;
+  std::vector<Value>  left_list;
+   Expression            *left_expr;       ///< expression,includes arithmetic,aggregate
+  CompOp         comp;           ///< comparison operator
+  int            right_is_attr;  ///< TRUE if right-hand side is an attribute
+                                 ///< 1时，操作符右边是属性名，0时，是属性值
+  std::string    right_subquery;
+  RelAttrSqlNode right_attr;     ///< right-hand side attribute if right_is_attr = TRUE 右边的属性
+  Value          right_value;    ///< right-hand side value if right_is_attr = FALSE
+  std::vector<Value>  right_list;
   Expression            *right_expr;      ///< expression,includes arithmetic,aggregate
-  
+  string         conjunction="AND";
 };
 
 /**

@@ -27,7 +27,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record.h"
 
 class Table;
-
+class Expression;
+class FieldExpr;
 /**
  * @defgroup Tuple
  * @brief Tuple 元组，表示一行数据，当前返回客户端时使用
@@ -209,11 +210,28 @@ public:
 
     FieldExpr       *field_expr = speces_[index];
     const FieldMeta *field_meta = field_expr->field().meta();
-    if(bitmap[index] == NULL_FLAG)
-      cell.set_type(AttrType::NULLS);
-    else
-      cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+
+    if ((field_meta->type() == AttrType::TEXTS) || 
+        (field_meta->type() == AttrType::VECTORS && field_meta->len() == 16)) {
+      cell.set_type(AttrType::CHARS);
+      int64_t offset = *(int64_t*)(record_->data() + field_meta->offset());
+      int64_t length = *(int64_t*)(record_->data() + field_meta->offset() + sizeof(int64_t));
+      char *text = (char*)malloc(length);
+      // RC rc = RC::SUCCESS;
+      RC rc = table_->read_text(offset, length, text);
+      if (RC::SUCCESS != rc) {
+        LOG_WARN("Failed to read text from table, rc=%s", strrc(rc));
+        return rc;
+      }
+      cell.set_data(text, length);
+      free(text);
+    } else {
+      if(bitmap[index] == NULL_FLAG)
+        cell.set_type(AttrType::NULLS);
+      else
+        cell.set_type(field_meta->type());
+      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    }
     return RC::SUCCESS;
   }
 
@@ -235,6 +253,8 @@ public:
     for (size_t i = 0; i < speces_.size(); ++i) {
       const FieldExpr *field_expr = speces_[i];
       const Field     &field      = field_expr->field();
+      // std::cout<<field.field_name()<<std::endl;
+      // std::cout<<field_name<<std::endl;
       if (0 == strcmp(field_name, field.field_name())) {
         return cell_at(i, cell);
       }
@@ -410,6 +430,7 @@ class JoinedTuple : public Tuple
 {
 public:
   JoinedTuple()          = default;
+  JoinedTuple(Tuple* left, Tuple* right) : left_(left), right_(right) {}
   virtual ~JoinedTuple() = default;
 
   void set_left(Tuple *left) { left_ = left; }

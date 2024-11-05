@@ -31,7 +31,7 @@ class UpdateStmt : public Stmt
 {
 public:
   UpdateStmt() = default;
-  UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> values, FilterStmt *filter_stmt);
+  UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> values, FilterStmt *filter_stmt,bool flag);
 
   StmtType type() const override{
     return StmtType::UPDATE;
@@ -56,11 +56,13 @@ public:
   FilterStmt *filter_stmt() const{
     return filter_stmt_;
   }
-
+  bool flag(){
+    return flag_;
+  }
 private:
   Table *table_ = nullptr;
   std::vector<Field> fields_; 
   std::vector<Value> values_;             // 列的新值
   FilterStmt *filter_stmt_ = nullptr;
-  
+  bool flag_;
 };

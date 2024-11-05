@@ -93,6 +93,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         INT_T
         STRING_T
         DATE_T
+        TEXT_T
         FLOAT_T
         VECTOR_T
         HELP
@@ -104,6 +105,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         WHERE
         HAVING
         AND
+        OR
         SET
         ON
         LOAD
@@ -495,6 +497,7 @@ type:
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
     | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
     | DATE_T   { $$ = static_cast<int>(AttrType::DATES); }
+    | TEXT_T   { $$ = static_cast<int>(AttrType::TEXTS); }
     ;
 insert_stmt:        /*insert   语句的语法解析树*/
     INSERT INTO ID VALUES LBRACE value value_list RBRACE 
@@ -964,46 +967,31 @@ join_list:
     
 order_by:
   {
-    $$ = nullptr;  // 没有 ORDER BY 的情况，返回空指针
+    $$ = nullptr;
   }
   | ORDER BY rel_attr order_op order_by_list
   {
-    // 创建一个新的 vector 来存储排序规则
     $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
-    
-    // 将第一个排序条件添加到 vector
     $$->emplace_back(std::make_pair(*$3, $4));
-    
-    // 删除 rel_attr 的动态内存
     delete $3;
-
-    // 如果后续还有排序条件，将其添加到当前 vector 中
     if ($5 != nullptr) {
       $$->insert($$->end(), $5->begin(), $5->end());
-      delete $5;  // 释放 order_by_list 的内存
     }
   }
   ;
 
 order_by_list:
   {
-    $$ = nullptr;  // 没有更多排序条件时，返回空指针
+    $$ = nullptr;
   }
   | COMMA rel_attr order_op order_by_list
   {
-    // 创建一个新的 vector 来存储排序规则
     $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
-    
-    // 将当前排序条件添加到 vector
     $$->emplace_back(std::make_pair(*$2, $3));
-
-    // 删除 rel_attr 的动态内存
     delete $2;
 
-    // 如果还有更多排序条件，将其添加到当前 vector 中
     if ($4 != nullptr) {
       $$->insert($$->end(), $4->begin(), $4->end());
-      delete $4;  // 释放 order_by_list 的内存
     }
   }
   ;
@@ -1040,7 +1028,13 @@ condition_list:
       $$->emplace_back(*$1);
       delete $1;
     }
-    
+    | condition OR condition_list {
+      $1->conjunction="OR";
+      $3[0][0].conjunction="OR";
+      $$ = $3;
+      $$->emplace_back(*$1);
+      delete $1;
+    }
     ;
 condition:
      arith_expr comp_op value {

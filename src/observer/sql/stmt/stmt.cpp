@@ -31,7 +31,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/show_tables_stmt.h"
 #include "sql/stmt/trx_begin_stmt.h"
 #include "sql/stmt/trx_end_stmt.h"
-
+#include "event/sql_event.h"
 bool stmt_type_ddl(StmtType type)
 {
   switch (type) {
@@ -46,7 +46,7 @@ bool stmt_type_ddl(StmtType type)
     }
   }
 }
-RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt)
+RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt,SQLStageEvent *sql_event)
 {
   stmt = nullptr;
 
@@ -61,7 +61,7 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt)
       return DeleteStmt::create(db, sql_node.deletion, stmt);
     }
     case SCF_SELECT: {
-      return SelectStmt::create(db, sql_node.selection, stmt);
+      return SelectStmt::create(db, sql_node.selection, stmt,sql_event->table_map);
     }
 
     case SCF_EXPLAIN: {

@@ -30,6 +30,13 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
   if (storage_format == StorageFormat::UNKNOWN_FORMAT) {
     return RC::INVALID_ARGUMENT;
   }
+
+  for (int i = 0; i < create_table.attr_infos.size(); i++){
+    if (create_table.attr_infos[i].type == AttrType::VECTORS && create_table.attr_infos[i].length > 16000) {
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+  
     RC rc = RC::SUCCESS;
   // create table select
   if (0 != select_sql.expressions.size()) {

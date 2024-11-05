@@ -31,7 +31,7 @@ SelectStmt::~SelectStmt()
   }
 }
 
-RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
+RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unordered_map<string, Table *> &table_map1)
 {
   if (nullptr == db) {
     LOG_WARN("invalid argument. db is null");
@@ -42,7 +42,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt)
 
   // collect tables in `from` statement
   vector<Table *>                tables;
-  unordered_map<string, Table *> table_map;
+  unordered_map<string, Table *> table_map=table_map1;
   for (size_t i = 0; i < select_sql.relations.size(); i++) {
     const char *table_name = select_sql.relations[i].c_str();
     if (nullptr == table_name) {

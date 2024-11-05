@@ -53,9 +53,13 @@ RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int at
   attr_len_    = attr_len;
   attr_offset_ = attr_offset;
   visible_     = visible;
-  field_id_ = field_id;
-  isnull_ = isnull;
+  field_id_    = field_id;
+  isnull_      = isnull;
 
+  if ((attr_type == AttrType::TEXTS) || 
+      (attr_type == AttrType::VECTORS && attr_len > 1000)) { 
+    attr_len_ = 16; // offset and length
+  }
   LOG_INFO("Init a field with name=%s", name);
   return RC::SUCCESS;
 }
@@ -67,7 +71,7 @@ AttrType FieldMeta::type() const { return attr_type_; }
 int FieldMeta::offset() const { return attr_offset_; }
 
 int FieldMeta::len() const {
-  if (attr_type_ == AttrType::VECTORS) {
+  if (attr_type_ == AttrType::VECTORS && attr_len_ != 16) {
     return 20 * attr_len_ + 2; //[x.xx,y.yy] 长度为n+2 1位 \0
   } 
   return attr_len_; 

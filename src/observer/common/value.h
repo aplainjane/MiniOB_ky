@@ -20,8 +20,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/type/data_type.h"
 #include "common/type/vector_type.h"
 
-// static constexpr int MAX_TEXT_LENGTH = 65535;
-
+static constexpr int MAX_TEXT_LENGTH = 65535; // 64K
 // static int ATTR_TYPE_LENGTH[] = { -1, 4, 4, 4, 8, 4, 8, MAX_TEXT_LENGTH, 4, -1 };
 /**
  * @brief 属性的值
@@ -53,6 +52,7 @@ public:
   explicit Value(float val);
   explicit Value(int val, int flag);  
   explicit Value(bool val);
+  explicit Value(int64_t val);
   explicit Value(const char *s, int len = 0);
 
   Value(const Value &other);
@@ -137,6 +137,7 @@ public:
   void                set_int(int val); 
 
 private:
+  
   void set_string(const char *s, int len = 0);
   void parse_vector(const char *s);
   void set_string_from_other(const Value &other);
@@ -150,8 +151,8 @@ private:
   {
     int32_t int_value_;
     float   float_value_;
-    bool    bool_value_;
-    int   null_value_;
+    int     null_value_;
+    bool    bool_value_=false;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

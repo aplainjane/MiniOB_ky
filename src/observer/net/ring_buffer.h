@@ -70,6 +70,8 @@ public:
    */
   RC write(const char *buf, int32_t size, int32_t &write_size);
 
+  void clear();
+
   /**
    * @brief 缓存的总容量
    */

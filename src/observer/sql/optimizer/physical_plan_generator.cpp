@@ -45,6 +45,8 @@ See the Mulan PSL v2 for more details. */
 #include "sql/operator/scalar_group_by_physical_operator.h"
 #include "sql/operator/table_scan_vec_physical_operator.h"
 #include "sql/optimizer/physical_plan_generator.h"
+#include "sql/operator/create_table_logical_operator.h"
+#include "sql/operator/create_table_physical_operator.h"
 
 using namespace std;
 
@@ -56,7 +58,9 @@ RC PhysicalPlanGenerator::create(LogicalOperator &logical_operator, unique_ptr<P
     case LogicalOperatorType::CALC: {
       return create_plan(static_cast<CalcLogicalOperator &>(logical_operator), oper);
     } break;
-
+    case LogicalOperatorType::CREATE_TABLE: {
+      return create_plan(static_cast<CreateTableLogicalOperator &>(logical_operator), oper);
+    } break;
     case LogicalOperatorType::TABLE_GET: {
       return create_plan(static_cast<TableGetLogicalOperator &>(logical_operator), oper);
     } break;
@@ -337,7 +341,28 @@ RC PhysicalPlanGenerator::create_plan(ExplainLogicalOperator &explain_oper, uniq
   oper = std::move(explain_physical_oper);
   return rc;
 }
-
+RC PhysicalPlanGenerator::create_plan(CreateTableLogicalOperator &logical_oper, std::unique_ptr<PhysicalOperator> &oper)
+{
+  RC rc = RC::SUCCESS;
+  oper = unique_ptr<PhysicalOperator>(new CreateTablePhysicalOperator(
+                                              logical_oper.get_db(),
+                                              std::move(logical_oper.table_name()), 
+                                              std::move(logical_oper.attr_infos()),
+                                              std::move(logical_oper.storage_format())));
+  // create_table_select
+  unique_ptr<PhysicalOperator> select_oper;
+  vector<unique_ptr<LogicalOperator>> &child_opers = logical_oper.children();
+  if (!child_opers.empty()) {
+    LogicalOperator *child_oper = child_opers[0].get();
+    rc = create(*child_oper, select_oper);
+    if (RC::SUCCESS != rc) {
+      LOG_WARN("failed to create child operator for create_table_select, rc=%s", strrc(rc));
+      return rc;
+    }
+    oper->add_child(std::move(select_oper));
+  }
+  return rc;
+}
 RC PhysicalPlanGenerator::create_plan(JoinLogicalOperator &join_oper, unique_ptr<PhysicalOperator> &oper)
 {
   RC rc = RC::SUCCESS;

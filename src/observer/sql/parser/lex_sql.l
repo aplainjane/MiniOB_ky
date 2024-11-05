@@ -140,6 +140,7 @@ FORMAT                                  RETURN_TOKEN(FORMAT);
 L2_DISTANCE                             RETURN_TOKEN(I2_DISTANCE_T);
 COSINE_DISTANCE                         RETURN_TOKEN(COSINE_DISTANCE_T);
 INNER_PRODUCT                           RETURN_TOKEN(INNER_PRODUCT_T);
+AS                                      RETURN_TOKEN(AS);
 SUM                                     RETURN_TOKEN(SUM);
 AVG                                     RETURN_TOKEN(AVG);
 COUNT                                   RETURN_TOKEN(COUNT);

@@ -18,14 +18,19 @@ See the Mulan PSL v2 for more details. */
 #include "storage/table/table.h"
 #include "sql/stmt/filter_stmt.h"
 #include "sql/parser/parse_defs.h"
+#include "event/session_event.h"
+#include "event/sql_event.h"
+#include "net/sql_task_handler.h"
+#include "net/cli_communicator.h"
+#include "net/plain_communicator.h"
 
-
-UpdateStmt::UpdateStmt(Table *table, Field field, Value value, FilterStmt *filter_stmt)
-    : table_(table), field_(field), value_(value), filter_stmt_(filter_stmt)
+UpdateStmt::UpdateStmt(Table *table, std::vector<Field> field, std::vector<Value> value, FilterStmt *filter_stmt,bool flag)
+    : table_(table), fields_(field), values_(value), filter_stmt_(filter_stmt),flag_(flag)
 {}
 
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
 {
+  bool flag=true;
   // check dbb
   if (nullptr == db) {
     LOG_WARN("invalid argument. db is null");
@@ -52,12 +57,92 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
   
-  const FieldMeta *field_meta = table->table_meta().field(update_sql.attribute_name.c_str());
+  // need add a compare
+  std::vector<Value> new_values = update_sql.values;
+  for(int i = 0;i<(int)update_sql.subquery_values.size();i++)
+  {
+    vector<Value> tuple_list;
+    CliCommunicator communicator;
+    RC rc = communicator.init(STDIN_FILENO, make_unique<Session>(Session::default_session()), "stdin");
+    SessionEvent *event = new SessionEvent(&communicator);
+    event->set_query(update_sql.subquery_values[i]);
+    SQLStageEvent sql_event(event, event->query());
+    SqlTaskHandler temp;
+    rc = temp.handle_sql(&sql_event);
+    if (OB_FAIL(rc)) {
+      LOG_TRACE("failed to handle sql. rc=%s", strrc(rc));
+      event->sql_result()->set_return_code(rc);
+      return RC::INVALID_ARGUMENT;
+    }
+    SqlResult *sql_result=event->sql_result();
+  
+    rc=sql_result->open();
+    
+    Tuple* tuple=nullptr;
+    
+    while(RC::SUCCESS==(rc=sql_result->next_tuple(tuple))){
+      Value value;
+      if(tuple->cell_num()!=1){
+        return RC::INTERNAL;
+      }
+      tuple->cell_at(0,value);
+      tuple_list.emplace_back(value);
+    }
+    sql_result->close();
+    if(tuple_list.size()==0)
+    {
+      //等待null
+      Value *tempvalue=new Value();
+      tempvalue->set_null(0);
+      new_values.insert(new_values.begin()+update_sql.record[i],*tempvalue);
+    }
+    else{
+      if(tuple_list.size()>1)
+      {
+        string temp=tuple_list[0].to_string();
+        for(long unsigned int i = 1;i<tuple_list.size();i++)
+        {
+          if(tuple_list[i].to_string()!=temp){
+            flag=false;
+          }
+        }
+      }
+      if(flag){
+        new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);
+      }
+      }
+    }
+  std::vector<const FieldMeta *> fields;
+  //  // check whether the field exists
+  // if (update_sql.attribute_names.size() != new_values.size()) {
+  //   LOG_WARN("invalid argument. fields and values are not matched.");
+  //   return RC::INVALID_ARGUMENT;
+  // }
 
-  if (nullptr == field_meta) {
-      LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), update_sql.attribute_name.c_str());
+  for( auto &attribute_name : update_sql.attribute_names){
+    const FieldMeta *field_meta = table->table_meta().field(attribute_name.c_str());
+    
+    if (nullptr == field_meta) {
+      LOG_WARN("no such field. field=%s.%s.%s", db->name(), table->name(), attribute_name.c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
+    fields.emplace_back(field_meta);   
+  }
+
+  for(int i = 0;i<(int)fields.size();i++) {
+    const FieldMeta *field_meta = table->table_meta().field(update_sql.attribute_names[i].c_str());
+    if (field_meta->type() == AttrType::TEXTS && update_sql.values[i].attr_type() == AttrType::CHARS) {
+      if (update_sql.values[i].length() > MAX_TEXT_LENGTH) {
+        LOG_WARN("Text length:%d, over max_length 65535", update_sql.values[i].length());
+        return RC::INVALID_ARGUMENT;
+      }
+    }
+    if (field_meta->type() == AttrType::VECTORS && update_sql.values[i].get_vector().size() > 16000) {
+      LOG_WARN("Vector length:%d, over max_length 16000", update_sql.values[i].get_vector().size());
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+  
 
   // 过滤算子
   std::unordered_map<std::string, Table *> table_map;
@@ -77,10 +162,16 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     return rc;
   }
 
+  std::vector<Field> cons_fields;
+
+  for (int i=0;i<(int)fields.size();++i){
+    cons_fields.emplace_back(Field(table,fields[i]));
+  }
   UpdateStmt *update_stmt = new UpdateStmt(table,
-      Field(table, field_meta), 
-      update_sql.value, 
-      filter_stmt
+      cons_fields, 
+      new_values, 
+      filter_stmt,
+      flag
     );
   // std::cout<<"update!"<<std::endl;
   stmt = update_stmt;

@@ -30,6 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
 #include "storage/trx/trx.h"
+#include "cmath"
 
 Table::~Table()
 {
@@ -41,6 +42,11 @@ Table::~Table()
   if (data_buffer_pool_ != nullptr) {
     data_buffer_pool_->close_file();
     data_buffer_pool_ = nullptr;
+  }
+
+  if(text_buffer_pool_ != nullptr) {
+    text_buffer_pool_->close_file();
+    text_buffer_pool_ = nullptr;
   }
 
   for (vector<Index *>::iterator it = indexes_.begin(); it != indexes_.end(); ++it) {
@@ -123,6 +129,30 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
     return rc;
   }
 
+  // 创建文件存放text
+  bool have_text = false;
+  for (const FieldMeta &field : *table_meta_.field_metas()) {
+    if (field.type() == AttrType::TEXTS || field.type() == AttrType::VECTORS) {
+      have_text = true;
+      break;
+    }
+  }
+  if (have_text) {
+    std::string text_file = table_text_file(base_dir, name);
+    rc = bpm.create_file(text_file.c_str());
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to create disk buffer pool of text file. file name=%s", text_file.c_str());
+      return rc;
+    }
+    rc = init_text_handler(base_dir);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to create table %s due to init text handler failed.", text_file.c_str());
+      // don't need to remove the data_file
+      return rc;
+    }
+  }
+
+  base_dir_ = base_dir;
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
   return rc;
 }
@@ -139,6 +169,11 @@ RC Table::drop(const char *path)
   if(record_handler_!=nullptr){
     delete record_handler_;
     record_handler_=nullptr;
+  }
+
+  if (text_buffer_pool_ != nullptr) {
+    string text_file = table_text_file(base_dir_.c_str(), table_meta_.name());
+    bpm.remove_file(text_file.c_str());
   }
 
   for(auto &index : indexes_){
@@ -175,6 +210,12 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
     // don't need to remove the data_file
     return rc;
   }
+
+  // rc = init_text_handler(base_dir);
+  // if (rc != RC::SUCCESS) {
+  //   LOG_ERROR("Failed to open table %s due to init text handler failed.", base_dir);
+  //   return rc;
+  // }
 
   const int index_num = table_meta_.index_num();
   for (int i = 0; i < index_num; i++) {
@@ -226,12 +267,7 @@ RC Table::insert_record(Record &record)
 
   rc = insert_entry_of_indexes(record.data(), record.rid());
   if (rc != RC::SUCCESS) {  // 可能出现了键值重复
-    RC rc2 = delete_entry_of_indexes(record.data(), record.rid(), false /*error_on_not_exists*/);
-    if (rc2 != RC::SUCCESS) {
-      LOG_ERROR("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
-                name(), rc2, strrc(rc2));
-    }
-    rc2 = record_handler_->delete_record(&record.rid());
+    RC rc2 = record_handler_->delete_record(&record.rid());
     if (rc2 != RC::SUCCESS) {
       LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
                 name(), rc2, strrc(rc2));
@@ -339,39 +375,75 @@ const TableMeta &Table::table_meta() const { return table_meta_; }
 RC Table::make_record(int value_num, const Value *values, Record &record)
 {
   RC rc = RC::SUCCESS;
-  // 检查字段类型是否一致
-  if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
+
+  // 检查字段数量是否一致
+  // 同样，由于bitmap列的存在，value_num需要+1
+  if (1 + value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
     return RC::SCHEMA_FIELD_MISSING;
   }
 
+  // 检查字段类型是否一致
+  // 当不一致时，要判断该字段是否允许NULL值
+  std::vector<int> bit_map(value_num, !NULL_FLAG);
   const int normal_field_start_index = table_meta_.sys_field_num();
   // 复制所有字段的值
-  int   record_size = table_meta_.record_size();
+  int record_size = table_meta_.record_size() + 4;
   char *record_data = (char *)malloc(record_size);
-  memset(record_data, 0, record_size);
 
-  for (int i = 0; i < value_num && OB_SUCC(rc); i++) {
+  for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &    value = values[i];
+    const Value &value = values[i];
+
+    
+    // 类型不一致，字段nullable，且value为INTS && NULL_VALUE，表明该记录的该字段为null
+    if (field->nullable() && value.attr_type() == AttrType::NULLS) {
+      bit_map[i] = NULL_FLAG;
+      continue;
+    }
+    if (!field->nullable() && value.attr_type() == AttrType::NULLS) {
+      rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
+      LOG_WARN("field can not be null. table name:%s,field name:%s", table_meta_.name(), field->name());
+      return rc;
+    }
     if (field->type() != value.attr_type()) {
-      Value real_value;
-      rc = Value::cast_to(value, field->type(), real_value);
-      if (OB_FAIL(rc)) {
-        LOG_WARN("failed to cast value. table name:%s,field name:%s,value:%s ",
+      if (field->type() == AttrType::TEXTS && value.attr_type() == AttrType::CHARS) {
+        // 需要将value中的字符串插入到文件中，然后将offset、length写入record
+        int64_t position[2];
+        position[1] = value.length();
+        text_buffer_pool_->append_data(position[0], position[1], value.data());
+        memcpy(record_data + field->offset(), position, 2 * sizeof(int64_t));
+      } else {
+        Value real_value;
+        rc = Value::cast_to(value, field->type(), real_value);
+        if (OB_FAIL(rc)) {
+          LOG_WARN("failed to cast value. table name:%s,field name:%s,value:%s ",
             table_meta_.name(), field->name(), value.to_string().c_str());
-        break;
+          break;
+        }
+        rc = set_value_to_record(record_data, real_value, field);
       }
-      rc = set_value_to_record(record_data, real_value, field);
     } else {
-      rc = set_value_to_record(record_data, value, field);
+      if (field->type() == AttrType::VECTORS && value.get_vector().size() > 1000) {
+        int64_t position[2];
+        position[1] = value.length();
+        text_buffer_pool_->append_data(position[0], position[1], value.data());
+        memcpy(record_data + field->offset(), position, 2 * sizeof(int64_t));
+      } else rc = set_value_to_record(record_data, value, field);
     }
   }
+
   if (OB_FAIL(rc)) {
     LOG_WARN("failed to make record. table name:%s", table_meta_.name());
     free(record_data);
     return rc;
   }
+
+  // 写入bitmap字段的值
+  const FieldMeta *field = table_meta_.field(value_num + normal_field_start_index);
+  Value* value = new Value(bitmap2int(bit_map));
+  size_t copy_len = field->len();
+  memcpy(record_data + field->offset(), value->data(), copy_len);
 
   record.set_data_owner(record_data, record_size);
   return RC::SUCCESS;
@@ -380,14 +452,42 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
 RC Table::set_value_to_record(char *record_data, const Value &value, const FieldMeta *field)
 {
   size_t       copy_len = field->len();
-  const size_t data_len = value.length();
-  if (field->type() == AttrType::CHARS) {
+  const size_t data_len = strlen(value.data());
+  if (field->type() == AttrType::CHARS || field->type() == AttrType::VECTORS) {
     if (copy_len > data_len) {
       copy_len = data_len + 1;
     }
   }
+
   memcpy(record_data + field->offset(), value.data(), copy_len);
   return RC::SUCCESS;
+}
+
+
+RC Table::write_text(int64_t &offset, int64_t length, const char *data)
+{
+  RC rc = RC::SUCCESS;
+  rc = text_buffer_pool_->append_data(offset, length, data);
+  if (RC::SUCCESS != rc) {
+    LOG_WARN("Failed to append text into disk_buffer_pool, rc=%s", strrc(rc));
+    offset = -1;
+    length = -1;
+  }
+  LOG_INFO("write text to disk_buffer_pool, offset=%ld, length=%ld", offset, length);
+  return rc;
+}
+RC Table::read_text(int64_t offset, int64_t length, char *data) const
+{
+  RC rc = RC::SUCCESS;
+  if (offset < 0 || length < 0) {
+    LOG_ERROR("Invalid param: text offset %ld, length %ld", offset, length);
+    return RC::INVALID_ARGUMENT;
+  }
+  rc = text_buffer_pool_->get_data(offset, length, data);
+  if (RC::SUCCESS != rc) {
+    LOG_WARN("Failed to get text from disk_buffer_pool, rc=%s", strrc(rc));
+  }
+  return rc;
 }
 
 RC Table::init_record_handler(const char *base_dir)
@@ -413,6 +513,27 @@ RC Table::init_record_handler(const char *base_dir)
     return rc;
   }
 
+  return rc;
+}
+
+RC Table::init_text_handler(const char *base_dir)
+{
+  RC rc = RC::SUCCESS;
+  std::string text_file = table_text_file(base_dir, table_meta_.name());
+
+  bool exist = false;
+  int fd = ::open(text_file.c_str(), O_RDONLY, 0600);
+  if (fd > 0) exist = true;
+  close(fd);
+  
+  if (exist) {
+      BufferPoolManager &bpm = db_->buffer_pool_manager();
+      rc = bpm.open_file(db_->log_handler(),text_file.c_str(), text_buffer_pool_);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to open disk buffer pool for file:%s. rc=%d:%s", text_file.c_str(), rc, strrc(rc));
+      return rc;
+    }
+  }
   return rc;
 }
 
@@ -610,4 +731,26 @@ RC Table::sync()
   rc = data_buffer_pool_->flush_all_pages();
   LOG_INFO("Sync table over. table=%s", name());
   return rc;
+}
+
+
+int bitmap2int(std::vector<int>& bitmap) {
+  int ret = 0;
+  for(int i = 0; i < bitmap.size(); i++) {      
+    ret |= (bitmap[i] << i); 
+  }
+  return ret;
+}
+
+std::vector<int> int2bitmap(int num,int size) {
+  std::vector<int> bitmap;
+  while (num != 0)
+  {
+    bitmap.push_back(num & 1);
+    num = num >> 1;
+  }
+  while(bitmap.size() < size) {
+    bitmap.push_back(!NULL_FLAG);
+  }
+  return bitmap;
 }

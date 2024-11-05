@@ -33,8 +33,8 @@ RC MvccTrxKit::init()
   // 事务使用一些特殊的字段，放到每行记录中，表示行记录的可见性。
   fields_ = vector<FieldMeta>{
       // field_id in trx fields is invisible.
-      FieldMeta("__trx_xid_begin", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -1/*field_id*/),
-      FieldMeta("__trx_xid_end", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -2/*field_id*/)};
+      FieldMeta("__trx_xid_begin", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -1/*field_id*/,false),
+      FieldMeta("__trx_xid_end", AttrType::INTS, 0 /*attr_offset*/, 4 /*attr_len*/, false /*visible*/, -2/*field_id*/,false)};
 
   LOG_INFO("init mvcc trx kit done.");
   return RC::SUCCESS;
@@ -148,67 +148,67 @@ RC MvccTrx::insert_record(Table *table, Record &record)
   return rc;
 }
 
-RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
-{
+// RC MvccTrx::update_record(Table *table, Record &old_record, Record &new_record)
+// {
 
-  //std::cout<<"2"<<endl;
+//   //std::cout<<"2"<<endl;
   
-  Field begin_field;
-  Field end_field;
-  trx_fields(table, begin_field, end_field);
+//   Field begin_field;
+//   Field end_field;
+//   trx_fields(table, begin_field, end_field);
 
-  RC update_result = RC::SUCCESS;
+//   RC update_result = RC::SUCCESS;
 
-  // 1. 标记旧记录为不可见（相当于删除旧记录）
-  RC rc = table->visit_record(old_record.rid(), [this, table, &update_result, &end_field](Record &inplace_record) -> bool {
-    RC rc = this->visit_record(table, inplace_record, ReadWriteMode::READ_WRITE);
-    if (OB_FAIL(rc)) {
-      update_result = rc;
-      return false;
-    }
+//   // 1. 标记旧记录为不可见（相当于删除旧记录）
+//   RC rc = table->visit_record(old_record.rid(), [this, table, &update_result, &end_field](Record &inplace_record) -> bool {
+//     RC rc = this->visit_record(table, inplace_record, ReadWriteMode::READ_WRITE);
+//     if (OB_FAIL(rc)) {
+//       update_result = rc;
+//       return false;
+//     }
 
-    // 将旧记录的事务结束字段设置为当前事务ID，表示不可见
-    end_field.set_int(inplace_record, -trx_id_);
-    return true;
-  });
+//     // 将旧记录的事务结束字段设置为当前事务ID，表示不可见
+//     end_field.set_int(inplace_record, -trx_id_);
+//     return true;
+//   });
 
-  if (OB_FAIL(rc)) {
-    LOG_WARN("failed to visit old record. rc=%s", strrc(rc));
-    return rc;
-  }
+//   if (OB_FAIL(rc)) {
+//     LOG_WARN("failed to visit old record. rc=%s", strrc(rc));
+//     return rc;
+//   }
 
-  if (OB_FAIL(update_result)) {
-    LOG_TRACE("record is not visible. rid=%s, rc=%s", old_record.rid().to_string().c_str(), strrc(update_result));
-    return update_result;
-  }
+//   if (OB_FAIL(update_result)) {
+//     LOG_TRACE("record is not visible. rid=%s, rc=%s", old_record.rid().to_string().c_str(), strrc(update_result));
+//     return update_result;
+//   }
 
-  // 2. 插入新记录
-  Record updated_record = new_record;  // 拷贝新记录
-  begin_field.set_int(updated_record, -trx_id_);              // 设置事务开始字段
-  end_field.set_int(updated_record, trx_kit_.max_trx_id());   // 设置事务结束字段
+//   // 2. 插入新记录
+//   Record updated_record = new_record;  // 拷贝新记录
+//   begin_field.set_int(updated_record, -trx_id_);              // 设置事务开始字段
+//   end_field.set_int(updated_record, trx_kit_.max_trx_id());   // 设置事务结束字段
 
-  // 插入新的记录到表中
-  rc = table->insert_record(updated_record);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to insert updated record into table. rc=%s", strrc(rc));
-    return rc;
-  }
+//   // 插入新的记录到表中
+//   rc = table->insert_record(updated_record);
+//   if (rc != RC::SUCCESS) {
+//     LOG_WARN("failed to insert updated record into table. rc=%s", strrc(rc));
+//     return rc;
+//   }
 
-  // 3. 记录插入和删除的操作日志
-  rc = log_handler_.insert_record(trx_id_, table, updated_record.rid());
-  ASSERT(rc == RC::SUCCESS, "failed to append insert record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
-         trx_id_, table->table_id(), updated_record.rid().to_string().c_str(), updated_record.len(), strrc(rc));
+//   // 3. 记录插入和删除的操作日志
+//   rc = log_handler_.insert_record(trx_id_, table, updated_record.rid());
+//   ASSERT(rc == RC::SUCCESS, "failed to append insert record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
+//          trx_id_, table->table_id(), updated_record.rid().to_string().c_str(), updated_record.len(), strrc(rc));
 
-  rc = log_handler_.delete_record(trx_id_, table, old_record.rid());
-  ASSERT(rc == RC::SUCCESS, "failed to append delete record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
-         trx_id_, table->table_id(), old_record.rid().to_string().c_str(), old_record.len(), strrc(rc));
+//   rc = log_handler_.delete_record(trx_id_, table, old_record.rid());
+//   ASSERT(rc == RC::SUCCESS, "failed to append delete record log. trx id=%d, table id=%d, rid=%s, record len=%d, rc=%s",
+//          trx_id_, table->table_id(), old_record.rid().to_string().c_str(), old_record.len(), strrc(rc));
 
-  // 4. 记录事务中的操作，以便事务回滚或提交时使用
-  operations_.push_back(Operation(Operation::Type::DELETE, table, old_record.rid()));
-  operations_.push_back(Operation(Operation::Type::INSERT, table, updated_record.rid()));
+//   // 4. 记录事务中的操作，以便事务回滚或提交时使用
+//   operations_.push_back(Operation(Operation::Type::DELETE, table, old_record.rid()));
+//   operations_.push_back(Operation(Operation::Type::INSERT, table, updated_record.rid()));
 
-  return RC::SUCCESS;
-}
+//   return RC::SUCCESS;
+// }
 
 RC MvccTrx::delete_record(Table *table, Record &record)
 {

@@ -11,6 +11,7 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by WangYunlai on 2021/6/9.
 //
+#include <mutex>
 
 #include "sql/operator/update_physical_operator.h"
 #include "sql/stmt/insert_stmt.h"
@@ -19,13 +20,14 @@ See the Mulan PSL v2 for more details. */
 
 using namespace std;
 
-
-UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, Field field, Value value)
-    : table_(table), field_(field), value_(value)
+UpdatePhysicalOperator::UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values,bool flag)
+    : table_(table), fields_(fields), values_(values),flag_(flag)
 {}
 
 RC UpdatePhysicalOperator::open(Trx *trx)
 {
+  std::lock_guard<std::mutex> lock(mutex_); // 加锁
+
   if (children_.empty()) {
     return RC::SUCCESS;
   }
@@ -41,6 +43,9 @@ RC UpdatePhysicalOperator::open(Trx *trx)
   trx_ = trx;
 
   while(OB_SUCC(rc = child->next())) {
+    if(flag_==false){
+      return RC::INTERNAL;
+    }
     Tuple *tuple = child->current_tuple();
     if (nullptr == tuple) {
       LOG_WARN("failed to get current record: %s", strrc(rc));
@@ -51,54 +56,86 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
     // rc = trx_->update_record(table_, record);
     // 修改record
+    Record old_record = record;
     // rc = trx_->delete_record(table_, record);
-    
-    RC rc = RC::SUCCESS;
+    rc = table_->delete_record(record);
+    //delete_records.emplace_back(record);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
       return rc;
     } else {
       // 定位列名索引
       const std::vector<FieldMeta> *table_field_metas = table_->table_meta().field_metas();
-      const char                   *target_field_name = field_.field_name();
+      std::vector<int> field_idx;
+
+      for (auto field_:fields_){
+        
+        const char *target_field_name= field_.field_name();
+
+        int meta_num = table_field_metas->size();
+        int target_index = -1;
+        for (int i=0; i<meta_num; ++i){
+          FieldMeta fieldmeta = (*table_field_metas)[i];
+          // FieldMeta *fieldmeta = table_field_metas[i];
+          const char *field_name = fieldmeta.name();
+          if (0 == strcmp(field_name, target_field_name)){
+            target_index = i;
+            break;
+          }
+        }
+
+        if (target_index == -1){
+          LOG_WARN("failed to find index");
+          return RC::INTERNAL;
+        }
+
+        field_idx.emplace_back(target_index);
+      }
 
       //std::cout << "target field_name \t" << target_field_name << std::endl;
 
-      int meta_num     = table_field_metas->size();
-      int target_index = -1;
-      for (int i = 0; i < meta_num; ++i) {
-        FieldMeta fieldmeta = (*table_field_metas)[i];
-        // FieldMeta *fieldmeta = table_field_metas[i];
-        const char *field_name = fieldmeta.name();
-        if (0 == strcmp(field_name, target_field_name)) {
-          target_index = i;
-          break;
-        }
-      }
       // 重新构造record
       // 1. Values
       std::vector<Value> values;
-      int                cell_num = row_tuple->cell_num();
-      for (int i = 0; i < cell_num; ++i) {
+      int cell_num = row_tuple->cell_num() - 1;
+      for (int i = table_->table_meta().sys_field_num(); i < cell_num; ++i){
         Value cell;
-        if (target_index == i) {
-          cell.set_value(value_);
-
-        } else {
-          row_tuple->cell_at(i, cell);
+        // find field_index
+        int find_flag = -1;
+        for (long unsigned int k=0;k<field_idx.size();++k){
+          int target_index = field_idx[k];
+          if (target_index == i){
+            // cell.set_value(values_[k]);
+            find_flag = k;
+            break;
+          } 
         }
+
+        if (find_flag !=-1){
+          cell.set_value(values_[find_flag]);
+        }else{
+          row_tuple->cell_at(i,cell);
+        }
+
         values.emplace_back(cell);
       }
       // 2. Record
       Record new_record;
-      RC     rc = table_->make_record(cell_num, values.data(), new_record);
+      RC rc = table_->make_record(static_cast<int>(values.size()), values.data(), new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to make record. rc=%s", strrc(rc));
+        // trx_->insert_record(table_,old_record);
+        table_->insert_record(old_record);
         return rc;
       }
-      delete_records.emplace_back(std::move(record));
-      new_record.set_rid(delete_records[delete_records.size()-1].rid());
-      insert_records.emplace_back(new_record);
+      //new_record.set_rid(delete_records[delete_records.size()-1].rid());
+      // rc = trx_->insert_record(table_, new_record);
+      rc = table_->insert_record(new_record);
+      //insert_records.emplace_back(new_record);
+      if (rc != RC::SUCCESS) {      
+        LOG_WARN("failed to insert record: %s", strrc(rc));
+        return rc;
+      }
     }
     
     //std::cout << "insert_record:" << insert_records.size() << std::endl;
@@ -115,7 +152,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     }
   }*/
 
-  for (Record &record_d : delete_records) {    
+  /*for (Record &record_d : delete_records) {    
     rc = trx_->delete_record(table_, record_d);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
@@ -132,7 +169,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
   }
 
   insert_records.clear();
-  delete_records.clear();
+  delete_records.clear();*/
   
   return RC::SUCCESS;
 

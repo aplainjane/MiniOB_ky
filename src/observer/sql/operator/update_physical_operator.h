@@ -27,7 +27,7 @@ class UpdateStmt;
 class UpdatePhysicalOperator : public PhysicalOperator
 {
 public:
-  UpdatePhysicalOperator(Table *table, Field field, Value value);
+  UpdatePhysicalOperator(Table *table, std::vector<Field> fields, std::vector<Value> values,bool flag);
 
   virtual ~UpdatePhysicalOperator() = default;
 
@@ -44,9 +44,11 @@ public:
 
 private:
   Table *table_ = nullptr;
-  Field field_;
-  Value value_;
+  std::vector<Field> fields_;
+  std::vector<Value> values_;
+  //std::vector<Record> delete_records;
+  //std::vector<Record> insert_records;
   Trx *trx_ = nullptr;
-  std::vector<Record> insert_records;
-  std::vector<Record> delete_records;
+  bool flag_;
+  std::mutex mutex_; // 互斥锁
 };

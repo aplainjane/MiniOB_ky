@@ -81,3 +81,6 @@ protected:
 
   int record_size_ = 0;
 };
+
+std::vector<int> int2bitmap(int num, int size);
+int bitmap2int(std::vector<int>& bitmap);

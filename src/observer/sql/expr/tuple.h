@@ -23,6 +23,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/expr/tuple_cell.h"
 #include "sql/parser/parse.h"
 #include "common/value.h"
+#include "storage/table/table.h"
 #include "storage/record/record.h"
 
 class Table;
@@ -179,6 +180,9 @@ public:
     table_ = table;
     // fix:join当中会多次调用右表的open,open当中会调用set_scheme，从而导致tuple当中会存储
     // 很多无意义的field和value，因此需要先clear掉
+    for (FieldExpr *spec : speces_) {
+      delete spec;
+    }
     this->speces_.clear();
     this->speces_.reserve(fields->size());
     for (const FieldMeta &field : *fields) {
@@ -194,11 +198,40 @@ public:
       LOG_WARN("invalid argument. index=%d", index);
       return RC::INVALID_ARGUMENT;
     }
+        /**
+     * 在读取index对应的Value之前，需要读该行最后一个Value中的bitmap信息
+    */
+    Value _bitmap;
+    FieldExpr *field_bitmap = speces_[speces_.size() - 1];
+    const FieldMeta *filed_meta_bitmap = field_bitmap->field().meta();
+    _bitmap.set_type(filed_meta_bitmap->type());
+    _bitmap.set_data(this->record_->data() + filed_meta_bitmap->offset(), filed_meta_bitmap->len());
+    std::vector<int> bitmap = int2bitmap(_bitmap.get_int(),(cell_num()));
 
     FieldExpr       *field_expr = speces_[index];
     const FieldMeta *field_meta = field_expr->field().meta();
-    cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+
+    if ((field_meta->type() == AttrType::TEXTS) || 
+        (field_meta->type() == AttrType::VECTORS && field_meta->len() == 16)) {
+      cell.set_type(AttrType::CHARS);
+      int64_t offset = *(int64_t*)(record_->data() + field_meta->offset());
+      int64_t length = *(int64_t*)(record_->data() + field_meta->offset() + sizeof(int64_t));
+      char *text = (char*)malloc(length);
+      // RC rc = RC::SUCCESS;
+      RC rc = table_->read_text(offset, length, text);
+      if (RC::SUCCESS != rc) {
+        LOG_WARN("Failed to read text from table, rc=%s", strrc(rc));
+        return rc;
+      }
+      cell.set_data(text, length);
+      free(text);
+    } else {
+      if(bitmap[index] == NULL_FLAG)
+        cell.set_type(AttrType::NULLS);
+      else
+        cell.set_type(field_meta->type());
+      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    }
     return RC::SUCCESS;
   }
 

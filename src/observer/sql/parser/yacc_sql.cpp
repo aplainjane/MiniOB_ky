@@ -381,7 +381,7 @@ typedef int yytype_uint16;
 
 
 /* Stored state numbers (used for stacks). */
-typedef yytype_uint8 yy_state_t;
+typedef yytype_int16 yy_state_t;
 
 /* State numbers in computations.  */
 typedef int yy_state_fast_t;
@@ -593,14 +593,14 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  71
+#define YYFINAL  78
 /* YYLAST -- Last index in YYTABLE.  */
 #define YYLAST   298
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  74
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  41
+#define YYNNTS  53
 /* YYNRULES -- Number of rules.  */
 #define YYNRULES  123
 /* YYNSTATES -- Number of states.  */
@@ -716,12 +716,12 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
-#define YYPACT_NINF (-170)
+#define YYPACT_NINF (-205)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-1)
+#define YYTABLE_NINF (-84)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -760,7 +760,7 @@ static const yytype_int16 yypact[] =
 /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
    Performed when YYTABLE does not specify something else to do.  Zero
    means the default is an error.  */
-static const yytype_int8 yydefact[] =
+static const yytype_uint8 yydefact[] =
 {
        0,     0,     0,     0,     0,     0,     0,    25,     0,     0,
        0,    26,    27,    28,    24,    23,     0,     0,     0,     0,
@@ -800,7 +800,7 @@ static const yytype_int16 yypgoto[] =
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_uint8 yydefgoto[] =
+static const yytype_int16 yydefgoto[] =
 {
        0,    19,    20,    21,    22,    23,    24,    25,    26,    27,
       28,    29,    30,    31,    32,   153,   127,   209,   151,    33,
@@ -812,7 +812,7 @@ static const yytype_uint8 yydefgoto[] =
 /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule whose
    number is the opposite.  If YYTABLE_NINF, syntax error.  */
-static const yytype_uint8 yytable[] =
+static const yytype_int16 yytable[] =
 {
      124,   142,   185,   190,   184,    62,   204,   205,    63,   173,
      174,   187,   194,   162,   163,   164,   165,   102,    64,   166,
@@ -846,6 +846,7 @@ static const yytype_uint8 yytable[] =
      240,   241,   242,   243,   246,    70,   210,     0,   180
 };
 
+static const yytype_int16 yycheck[] =
 static const yytype_int16 yycheck[] =
 {
       96,   121,   157,   161,   156,     4,   175,   176,    66,   141,
@@ -882,7 +883,7 @@ static const yytype_int16 yycheck[] =
 
 /* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
    state STATE-NUM.  */
-static const yytype_int8 yystos[] =
+static const yytype_uint8 yystos[] =
 {
        0,     5,     6,    12,    13,    14,    15,    16,    17,    18,
       19,    23,    24,    25,    30,    31,    39,    41,    44,    75,
@@ -912,7 +913,7 @@ static const yytype_int8 yystos[] =
 };
 
 /* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
-static const yytype_int8 yyr1[] =
+static const yytype_uint8 yyr1[] =
 {
        0,    74,    75,    76,    76,    76,    76,    76,    76,    76,
       76,    76,    76,    76,    76,    76,    76,    76,    76,    76,
@@ -1966,6 +1967,14 @@ yyreduce:
       create_table.attr_infos.emplace_back(*(yyvsp[-3].attr_info));
       std::reverse(create_table.attr_infos.begin(), create_table.attr_infos.end());
       delete (yyvsp[-3].attr_info);
+
+      AttrInfoSqlNode null_field;
+      null_field.type = AttrType::INTS;
+      null_field.name = NULL_FIELD_NAME;
+      null_field.length = 4;
+      null_field.isnull = false;
+      create_table.attr_infos.push_back(null_field);
+
       if ((yyvsp[0].string) != nullptr) {
         create_table.storage_format = (yyvsp[0].string);
         free((yyvsp[0].string));
@@ -2000,10 +2009,11 @@ yyreduce:
 #line 385 "yacc_sql.y"
     {
       (yyval.attr_info) = new AttrInfoSqlNode;
-      (yyval.attr_info)->type = (AttrType)(yyvsp[-3].number);
-      (yyval.attr_info)->name = (yyvsp[-4].string);
-      (yyval.attr_info)->length = (yyvsp[-1].number);
-      free((yyvsp[-4].string));
+      (yyval.attr_info)->type = (AttrType)(yyvsp[-4].number);
+      (yyval.attr_info)->name = (yyvsp[-5].string);
+      (yyval.attr_info)->length = (yyvsp[-2].number);
+      (yyval.attr_info)->isnull = (yyvsp[0].boolean);
+      free((yyvsp[-5].string));
     }
 #line 2009 "yacc_sql.cpp"
     break;
@@ -2012,10 +2022,11 @@ yyreduce:
 #line 393 "yacc_sql.y"
     {
       (yyval.attr_info) = new AttrInfoSqlNode;
-      (yyval.attr_info)->type = (AttrType)(yyvsp[0].number);
-      (yyval.attr_info)->name = (yyvsp[-1].string);
+      (yyval.attr_info)->type = (AttrType)(yyvsp[-1].number);
+      (yyval.attr_info)->name = (yyvsp[-2].string);
       (yyval.attr_info)->length = 4;
-      free((yyvsp[-1].string));
+      (yyval.attr_info)->isnull = (yyvsp[0].boolean);
+      free((yyvsp[-2].string));
     }
 #line 2021 "yacc_sql.cpp"
     break;
@@ -2151,16 +2162,29 @@ yyreduce:
   case 54: /* update_stmt: UPDATE ID SET ID EQ value where  */
 #line 482 "yacc_sql.y"
     {
-      (yyval.sql_node) = new ParsedSqlNode(SCF_UPDATE);
-      (yyval.sql_node)->update.relation_name = (yyvsp[-5].string);
-      (yyval.sql_node)->update.attribute_name = (yyvsp[-3].string);
-      (yyval.sql_node)->update.value = *(yyvsp[-1].value);
-      if ((yyvsp[0].condition_list) != nullptr) {
-        (yyval.sql_node)->update.conditions.swap(*(yyvsp[0].condition_list));
-        delete (yyvsp[0].condition_list);
-      }
-      free((yyvsp[-5].string));
-      free((yyvsp[-3].string));
+        (yyval.sql_node) = new ParsedSqlNode(SCF_UPDATE);
+        (yyval.sql_node)->update.relation_name = (yyvsp[-3].string);
+        int temp = 0;
+        if (nullptr != (yyvsp[-1].set_clause_list)) {
+            for (UpdateKV kv : *(yyvsp[-1].set_clause_list)) {
+              (yyval.sql_node)->update.attribute_names.emplace_back(kv.attr_name);
+              if(kv.is_subquery){
+                (yyval.sql_node)->update.subquery_values.emplace_back(kv.subquery);
+                (yyval.sql_node)->update.record.emplace_back(temp);
+              }
+              else{
+                (yyval.sql_node)->update.values.emplace_back(kv.value);
+              }
+              temp++;
+            }
+            delete (yyvsp[-1].set_clause_list);  // $4 只需要在这里释放一次
+        }
+        if ((yyvsp[0].condition_list) != nullptr) {
+            (yyval.sql_node)->update.conditions.swap(*(yyvsp[0].condition_list));
+            delete (yyvsp[0].condition_list);  // $5 在此处释放
+        }
+        free((yyvsp[-3].string));  // 正确释放 $2
+        // delete $5;  // 这里不需要再释放 $5，避免 double-free
     }
 #line 2166 "yacc_sql.cpp"
     break;
@@ -2181,27 +2205,39 @@ yyreduce:
 #line 505 "yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SELECT);
-      if ((yyvsp[-6].expression_list) != nullptr) {
-        (yyval.sql_node)->selection.expressions.swap(*(yyvsp[-6].expression_list));
-        delete (yyvsp[-6].expression_list);
+      if ((yyvsp[-8].expression_list) != nullptr) {
+        (yyval.sql_node)->selection.expressions.swap(*(yyvsp[-8].expression_list));
+        delete (yyvsp[-8].expression_list);
       }
-      if ((yyvsp[-3].relation_list) != nullptr) {
-        (yyval.sql_node)->selection.relations.swap(*(yyvsp[-3].relation_list));
-        delete (yyvsp[-3].relation_list);
+      if ((yyvsp[-5].relation_list) != nullptr) {
+        (yyval.sql_node)->selection.relations.swap(*(yyvsp[-5].relation_list));
+        delete (yyvsp[-5].relation_list);
       }
-      (yyval.sql_node)->selection.relations.push_back((yyvsp[-4].string));
+      (yyval.sql_node)->selection.relations.push_back((yyvsp[-6].string));
       std::reverse((yyval.sql_node)->selection.relations.begin(), (yyval.sql_node)->selection.relations.end());
 
+      if ((yyvsp[-3].condition_list) != nullptr) {
+        (yyval.sql_node)->selection.conditions.swap(*(yyvsp[-3].condition_list));
+        delete (yyvsp[-3].condition_list);
+      }
+      free((yyvsp[-6].string));
+      
+      if ((yyvsp[-4].join_sql_node) != nullptr) {
+        (yyval.sql_node)->selection.relations.insert((yyval.sql_node)->selection.relations.end(), (yyvsp[-4].join_sql_node)->relations.begin(), (yyvsp[-4].join_sql_node)->relations.end());
+        (yyval.sql_node)->selection.conditions.insert((yyval.sql_node)->selection.conditions.end(), (yyvsp[-4].join_sql_node)->conditions.begin(), (yyvsp[-4].join_sql_node)->conditions.end());
+        delete (yyvsp[-4].join_sql_node);
+      }
+      if ((yyvsp[-2].expression_list) != nullptr) {
+        (yyval.sql_node)->selection.group_by.swap(*(yyvsp[-2].expression_list));
+        delete (yyvsp[-2].expression_list);
+      }
       if ((yyvsp[-1].condition_list) != nullptr) {
-        (yyval.sql_node)->selection.conditions.swap(*(yyvsp[-1].condition_list));
+        (yyval.sql_node)->selection.having_conditions.swap(*(yyvsp[-1].condition_list));
         delete (yyvsp[-1].condition_list);
       }
-      free((yyvsp[-4].string));
-
-      if ((yyvsp[-2].join_sql_node) != nullptr) {
-        (yyval.sql_node)->selection.relations.insert((yyval.sql_node)->selection.relations.end(), (yyvsp[-2].join_sql_node)->relations.begin(), (yyvsp[-2].join_sql_node)->relations.end());
-        (yyval.sql_node)->selection.conditions.insert((yyval.sql_node)->selection.conditions.end(), (yyvsp[-2].join_sql_node)->conditions.begin(), (yyvsp[-2].join_sql_node)->conditions.end());
-        delete (yyvsp[-2].join_sql_node);
+      if ((yyvsp[0].order_by_list) != nullptr) {
+        (yyval.sql_node)->selection.order_rules.swap(*(yyvsp[0].order_by_list));
+        delete (yyvsp[0].order_by_list);
       }
     }
 #line 2208 "yacc_sql.cpp"
@@ -2276,6 +2312,7 @@ yyreduce:
                                {
       (yyval.expression) = (yyvsp[-1].expression);
       (yyval.expression)->set_name(token_name(sql_string, &(yyloc)));
+      delete (yyvsp[0].value);
     }
 #line 2281 "yacc_sql.cpp"
     break;

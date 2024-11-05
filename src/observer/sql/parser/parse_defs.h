@@ -21,6 +21,8 @@ See the Mulan PSL v2 for more details. */
 #include "common/value.h"
 
 class Expression;
+class UnboundAggregateExpr;
+class ArithmeticExpr;
 
 /**
  * @defgroup SQLParser SQL Parser
@@ -53,11 +55,33 @@ enum CompOp
   GREAT_THAN,   ///< ">"
   CLIKE,
   CNLIKE,
+  OP_ISNULL,
+  OP_ISNOTNULL,
   IN_LIST,
   NOTIN_LIST,
   EXIST_LIST,
   NOTEXIST_LIST,
+  IS_NULL,      
+  IS_NOT_NULL,  
   NO_OP
+};
+
+enum OrderOp
+{
+  ORDER_ASC,
+  ORDER_DESC,
+  ORDER_DEFAULT,
+  ORDER_NO_OP,
+};
+
+/**
+ * @brief 描述函数类型
+ * @ingroup SQLParser
+ */
+enum FuncOp {
+  I2_DISTANCE,
+  COSINE_DISTANCE,
+  INNER_PRODUCT
 };
 
 /**
@@ -101,10 +125,12 @@ struct ConditionSqlNode
 
 struct SelectSqlNode
 {
-  std::vector<std::unique_ptr<Expression>> expressions;  ///< 查询的表达式
-  std::vector<std::string>                 relations;    ///< 查询的表
-  std::vector<ConditionSqlNode>            conditions;   ///< 查询条件，使用AND串联起来多个条件
-  std::vector<std::unique_ptr<Expression>> group_by;     ///< group by clause
+  std::vector<std::unique_ptr<Expression>> expressions;       ///< 查询的表达式
+  std::vector<std::string>                 relations;         ///< 查询的表
+  std::vector<ConditionSqlNode>            conditions;        ///< 查询条件，使用AND串联起来多个条件
+  std::vector<std::unique_ptr<Expression>> group_by;          ///< group by clause
+  std::vector<ConditionSqlNode>            having_conditions; ///< groupby having
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules; ///< order by clause
 };
 
 /**
@@ -151,12 +177,21 @@ struct DeleteSqlNode
  * @brief 描述一个update语句
  * @ingroup SQLParser
  */
+struct UpdateKV
+{
+  std::string attr_name;
+  Value value;
+  bool is_subquery=false;
+  string subquery="";
+};
 struct UpdateSqlNode
 {
   std::string                   relation_name;   ///< Relation to update
-  std::string                   attribute_name;  ///< 更新的字段，仅支持一个字段
-  Value                         value;           ///< 更新的值，仅支持一个字段
+  std::vector<std::string>      attribute_names;  ///< 更新的字段，仅支持一个字段
+  std::vector<Value>            values;           ///< 更新的值，仅支持一个字段
   std::vector<ConditionSqlNode> conditions;
+  std::vector<std::string>      subquery_values;
+  std::vector<int>              record;
 };
 
 /**
@@ -166,9 +201,10 @@ struct UpdateSqlNode
  */
 struct AttrInfoSqlNode
 {
-  AttrType    type;    ///< Type of attribute
-  std::string name;    ///< Attribute name
-  size_t      length;  ///< Length of attribute
+  AttrType    type;       ///< Type of attribute
+  std::string name;       ///< Attribute name
+  size_t      length;     ///< Length of attribute
+  bool        isnull;     ///< 是否允许为NULL
 };
 
 /**
@@ -345,3 +381,12 @@ public:
 private:
   std::vector<std::unique_ptr<ParsedSqlNode>> sql_nodes_;  ///< 这里记录SQL命令。虽然看起来支持多个，但是当前仅处理一个
 };
+
+
+// null bitmap的字段名
+// 语法分析匹配到null时，保存的值。（其实可以随意设置，因为bitmap的存在，确定了该位置的值为null
+const std::string NULL_FIELD_NAME = "______";
+const int         NULL_VALUE = -999;
+const AttrType    NULL_TYPE = AttrType::INTS;
+const int         NULL_FLAG = 1;
+

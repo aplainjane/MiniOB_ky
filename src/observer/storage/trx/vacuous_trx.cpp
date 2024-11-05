@@ -34,14 +34,14 @@ LogReplayer *VacuousTrxKit::create_log_replayer(Db &, LogHandler &) { return new
 
 RC VacuousTrx::insert_record(Table *table, Record &record) { return table->insert_record(record); }
 
-RC VacuousTrx::update_record(Table *table, Record &old_record, Record &new_record){
+// RC VacuousTrx::update_record(Table *table, Record &old_record, Record &new_record){
 
-  RC update_result = RC::SUCCESS;
-  table->update_record(new_record,old_record);
-  //table->insert_record(new_record);
+//   RC update_result = RC::SUCCESS;
+//   table->update_record(new_record,old_record);
+//   //table->insert_record(new_record);
 
-  return update_result;
-}
+//   return update_result;
+// }
 
 RC VacuousTrx::delete_record(Table *table, Record &record) { return table->delete_record(record); }
 

@@ -88,7 +88,7 @@ public:
 
     for (size_t i = 0; i < attr_lengths_.size(); ++i) {
         int res = -1;
-
+        
         // 检查偏移量，确保不会越界，假设attr_lengths_代表的类型是int长度（4字节）
         if (offset + attr_lengths_[i] > sizeof(v1) || offset + attr_lengths_[i] > sizeof(v2)) {
             std::cerr << "Offset exceeds buffer size, possible memory corruption" << std::endl;
@@ -100,7 +100,11 @@ public:
         left.set_data(v1 + offset, attr_lengths_[i]);
         right.set_type(attr_types_[i]);
         right.set_data(v2 + offset, attr_lengths_[i]);
-
+        //神秘代码，你有什么想说的吗
+        if(right.get_int() == -1094795586)
+        {
+          return -1;
+        }
         res = DataType::type_instance(attr_types_[i])->compare(left, right);
         if (res != 0) {
             return res; // 如果当前属性不相等，立即返回结果
@@ -142,48 +146,15 @@ public:
     //std::cout<<"Key-value COmparaing"<<std::endl;
 
     int result = attr_comparator_(v1, v2);
-    if (unique_ || result != 0) {
-      //std::cout<<*(int *)(v1)<<" "<<*(int *)(v2)<<std::endl;
-      //std::cout<<"in result:\t"<<result<<std::endl;
+    if (result != 0) {
       return result;
+    }else if (!unique_) {
+      /* 唯一索引不比较RID */
+      const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
+      const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+      result = RID::compare(rid1, rid2);
     }
-
-    //std::cout<<"result:"<<result<<std::endl;
-
-    //std::cout<<"operator_rid"<<std::endl;
-    std::vector<int> attr_lengths(attr_comparator_.attr_lengths());
-
-    int allocate_idx = 0;
-    for (long unsigned int i=0;i<attr_lengths.size();++i){
-      //std::cout<<*(int *)(v1+allocate_idx)<<" "<<*(int *)(v2+allocate_idx)<<" "<<attr_lengths[i]<<std::endl;
-      allocate_idx += attr_lengths[i];
-    }
-
-    //std::cout<<"finished"<<std::endl;
-
-    // const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    // const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
-
-    RID *rid1, *rid2;
-    allocate_idx = 0;
-    int same_flag = 1;
-    for (long unsigned int i=0;i<attr_lengths.size();++i){
-      rid1 = (RID *)(v1+allocate_idx);
-      rid2 = (RID *)(v2+allocate_idx);
-      allocate_idx += attr_lengths[i];
-      int page_diff = rid1->page_num - rid2->page_num;
-      if (page_diff != 0) {
-        same_flag = 0;
-        break;
-      } else if(rid1->slot_num - rid2->slot_num !=0){
-        same_flag = 0;
-        break;
-      }
-    }
-
-    // return RID::compare(rid1, rid2);
-
-    return same_flag;
+    return result;
   }
 
 private:

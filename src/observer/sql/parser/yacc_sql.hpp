@@ -136,10 +136,15 @@ union YYSTYPE
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum OrderOp                               orderOp;
+  enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
-  std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
+  std::vector<AttrInfoSqlNode> *             attr_infos;
   Expression *                               expression;
+  UpdateKV *                                 set_clause;
+  std::vector<UpdateKV> *                    set_clause_list;
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -148,6 +153,7 @@ union YYSTYPE
   char *                                     string;
   int                                        number;
   float                                      floats;
+  bool                                       boolean;
 
 #line 153 "yacc_sql.hpp"
 

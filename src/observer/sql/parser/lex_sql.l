@@ -5,6 +5,7 @@
 做比较，导致编译报警
 */
 #define YY_TYPEDEF_YY_SIZE_T
+#define YY_READ_BUF_SIZE 8192*16
 typedef int yy_size_t;
 
 /* 参考生成的lex_sql.cpp代码，这个宏定义会放在每次运行yylex()最开始的地方 */
@@ -62,6 +63,7 @@ extern double atof();
 WHITE_SAPCE      [\ \t\b\f]
 DIGIT            [0-9]+
 SUBQUERY         \(\s*SELECT(?:[^()]*|\((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*\))*\s*FROM(?:[^()]*|\((?:[^()]*|\((?:[^()]*|\([^()]*\))*\))*\))*\)
+VECTOR_LIST      \[[^\[\]]*\]
 ID               [A-Za-z_]+[A-Za-z0-9_]*
 DOT              \.
 QUOTE            [\'\"]
@@ -85,6 +87,7 @@ QUOTE            [\'\"]
 EXIT                                    RETURN_TOKEN(EXIT);
 HELP                                    RETURN_TOKEN(HELP);
 DESC                                    RETURN_TOKEN(DESC);
+ASC                                     RETURN_TOKEN(ASC);
 CREATE                                  RETURN_TOKEN(CREATE);
 DROP                                    RETURN_TOKEN(DROP);
 TABLE                                   RETURN_TOKEN(TABLE);
@@ -113,20 +116,30 @@ INT                                     RETURN_TOKEN(INT_T);
 CHAR                                    RETURN_TOKEN(STRING_T);
 DATE                                    RETURN_TOKEN(DATE_T);
 FLOAT                                   RETURN_TOKEN(FLOAT_T);
+VECTOR                                  RETURN_TOKEN(VECTOR_T);
+TEXT                                    RETURN_TOKEN(TEXT_T);
 LOAD                                    RETURN_TOKEN(LOAD);
 DATA                                    RETURN_TOKEN(DATA);
 INFILE                                  RETURN_TOKEN(INFILE);
 EXPLAIN                                 RETURN_TOKEN(EXPLAIN);
 NOT                                     RETURN_TOKEN(NOT);
+IS                                      RETURN_TOKEN(IS);
 LIKE                                    RETURN_TOKEN(LIKE);
 IN                                      RETURN_TOKEN(IN);
 EXIST                                   RETURN_TOKEN(EXIST);
+NULL                                    RETURN_TOKEN(NULL_KY);
+NULLABLE                                RETURN_TOKEN(NULL_KY);
 INNER                                   RETURN_TOKEN(INNER);
 JOIN                                    RETURN_TOKEN(JOIN);
 GROUP                                   RETURN_TOKEN(GROUP);
+ORDER                                   RETURN_TOKEN(ORDER);
 BY                                      RETURN_TOKEN(BY);
+HAVING                                  RETURN_TOKEN(HAVING);
 STORAGE                                 RETURN_TOKEN(STORAGE);
 FORMAT                                  RETURN_TOKEN(FORMAT);
+L2_DISTANCE                             RETURN_TOKEN(I2_DISTANCE_T);
+COSINE_DISTANCE                         RETURN_TOKEN(COSINE_DISTANCE_T);
+INNER_PRODUCT                           RETURN_TOKEN(INNER_PRODUCT_T);
 SUM                                     RETURN_TOKEN(SUM);
 AVG                                     RETURN_TOKEN(AVG);
 COUNT                                   RETURN_TOKEN(COUNT);
@@ -142,7 +155,7 @@ MIN                                     RETURN_TOKEN(MIN);
                 yylval->string = subquery;
                 RETURN_TOKEN(SUB_QUERY);
              }
-
+{VECTOR_LIST}                           yylval->string=strdup(yytext); RETURN_TOKEN(VECTOR_LIST);
 {ID}                                    yylval->string=strdup(yytext); RETURN_TOKEN(ID);
 "("                                     RETURN_TOKEN(LBRACE);
 ")"                                     RETURN_TOKEN(RBRACE);

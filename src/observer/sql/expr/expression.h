@@ -51,6 +51,7 @@ enum class ExprType
   CONJUNCTION,  ///< 多个表达式使用同一种关系(AND或OR)来联结
   ARITHMETIC,   ///< 算术运算
   AGGREGATION,  ///< 聚合运算
+  FUNCTION,     ///< 函数，这里只实现了vec的
 };
 
 /**
@@ -140,7 +141,7 @@ protected:
   int pos_ = -1;
 
 private:
-  std::string name_;
+  std::string   name_;
 };
 
 class StarExpr : public Expression
@@ -422,6 +423,9 @@ public:
   };
 
 public:
+
+  // 拷贝构造函数
+  ArithmeticExpr();
   ArithmeticExpr(Type type, Expression *left, Expression *right);
   ArithmeticExpr(Type type, std::unique_ptr<Expression> left, std::unique_ptr<Expression> right);
   virtual ~ArithmeticExpr() = default;
@@ -530,4 +534,37 @@ public:
 private:
   Type                        aggregate_type_;
   std::unique_ptr<Expression> child_;
+};
+
+class FunctionExpr : public Expression {
+public:
+  FunctionExpr() = default;
+  FunctionExpr(FuncOp func_type, std::vector<Expression*>& params) : func_type_(func_type)
+  {
+    for (auto expr: params) {
+      params_.emplace_back(expr);
+    }
+  }
+  FunctionExpr(FuncOp func_type, std::vector<std::unique_ptr<Expression>> params) : func_type_(func_type), params_(std::move(params)) {}
+  
+  virtual ~FunctionExpr() = default;
+  
+  AttrType value_type() const override;
+  ExprType type() const override { return ExprType::FUNCTION; }
+  
+  FuncOp func_type() const { return func_type_; }
+  std::vector<std::unique_ptr<Expression>> &children() { return params_; }
+
+  RC get_I2_value(const Tuple &tuple, Value &value) const;
+  RC get_COSINE_value(const Tuple &tuple, Value &value) const;
+  RC get_INNER_value(const Tuple &tuple, Value &value) const;
+  
+  RC get_value(const Tuple &tuple, Value &value) const override;
+  RC calc_value(const Value &left_value, const Value &right_value, Value &value) const;
+  RC check_param() const;
+  std::vector<std::unique_ptr<Expression>> get_params(){return std::move(this->params_);}
+    
+private:
+  FuncOp func_type_;
+  std::vector<std::unique_ptr<Expression>> params_; 
 };

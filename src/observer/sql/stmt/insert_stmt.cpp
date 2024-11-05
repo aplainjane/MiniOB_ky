@@ -42,9 +42,29 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
   const int        value_num  = static_cast<int>(inserts.values.size());
   const TableMeta &table_meta = table->table_meta();
   const int        field_num  = table_meta.field_num() - table_meta.sys_field_num();
-  if (field_num != value_num) {
+  if (field_num != value_num + 1) {
     LOG_WARN("schema mismatch. value num=%d, field num in schema=%d", value_num, field_num);
     return RC::SCHEMA_FIELD_MISSING;
+  }
+
+  for(int i=0; i<value_num; i++) {
+    const FieldMeta * fie = table_meta.field(i);
+    if (values[i].attr_type() == AttrType::VECTORS && values[i].get_vector().size() <= 1000) {
+      // need be checked 
+      if((values[i].get_vector().size() * 20 + 2)!= fie->len()){
+        return RC::SCHEMA_FIELD_MISSING;
+      }
+    }
+    if (values[i].attr_type() == AttrType::VECTORS && values[i].get_vector().size() > 16000) {
+      LOG_WARN("vector length is too long");
+      return RC::INVALID_ARGUMENT;
+    }
+    if (fie->type() == AttrType::TEXTS) {
+      if (values[i].length() > MAX_TEXT_LENGTH) {
+        LOG_WARN("Text length:%d, over max_length 65535", values[i].length());
+        return RC::INVALID_ARGUMENT;
+      }
+    }
   }
 
   // everything alright

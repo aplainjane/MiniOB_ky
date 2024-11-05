@@ -41,10 +41,24 @@ public:
   virtual ~Index() = default;
   virtual void destroy() = 0;
 
+
+  virtual RC create(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas, bool unique)
+  {
+    return RC::UNSUPPORTED;
+  }
+  virtual RC open(Table *table, const char *file_name, const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas)
+  {
+    return RC::UNSUPPORTED;
+  }
+
+  virtual bool is_vector_index() { return false; }
+
+
   const IndexMeta &index_meta() const
   {
     return index_meta_;
   }
+
 
   /**
    * @brief 插入一条数据

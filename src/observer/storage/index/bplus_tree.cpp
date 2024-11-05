@@ -1549,17 +1549,11 @@ MemPoolItem::item_unique_ptr BplusTreeHandler::make_key(const char *user_key, st
   }
 
   int allocate_idx = 0;
-
   for (long unsigned int i=0;i<field_metas.size();++i){
     memcpy(static_cast<char *>(key.get()) + allocate_idx, user_key+field_metas[i].offset(), field_metas[i].len());
     allocate_idx += field_metas[i].len();
   }
   memcpy(static_cast<char *>(key.get()) + allocate_idx, &rid, sizeof(rid));
-
-  allocate_idx = 0;
-  for (long unsigned int i=0;i<field_metas.size();++i){
-    allocate_idx += field_metas[i].len();
-  }
   return key;
 }
 
@@ -1641,7 +1635,6 @@ RC BplusTreeHandler::insert_entry(const char *user_key, std::vector<FieldMeta> &
     root_lock_.unlock();
   }
 
-  LatchMemo latch_memo(disk_buffer_pool_);
 
   Frame *frame = nullptr;
   rc = find_leaf(mtr, BplusTreeOperationType::INSERT, key, frame);

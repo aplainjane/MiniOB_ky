@@ -9,6 +9,7 @@
 做比较，导致编译报警
 */
 #define YY_TYPEDEF_YY_SIZE_T
+#define YY_READ_BUF_SIZE 8192*16
 typedef int yy_size_t;
 
 /* 参考生成的lex_sql.cpp代码，这个宏定义会放在每次运行yylex()最开始的地方 */
@@ -26,7 +27,7 @@ do {                                                         \
 }                                                            \
 while (0);
 
-#line 30 "lex_sql.h"
+#line 31 "lex_sql.h"
 
 #define  YY_INT_ALIGNED short int
 
@@ -544,6 +545,6 @@ extern int yylex \
 #line 167 "lex_sql.l"
 
 
-#line 548 "lex_sql.h"
+#line 549 "lex_sql.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

@@ -45,6 +45,14 @@ public:
   const TupleSchema &tuple_schema() const { return tuple_schema_; }
   RC                 return_code() const { return return_code_; }
   const std::string &state_string() const { return state_string_; }
+  const PhysicalOperatorType get_physicalOperator_type() const 
+  {
+    return operator_->type();
+  }
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>> &get_order_rules() { 
+    return order_rules_; 
+  }
+
 
   RC open();
   RC close();
@@ -58,4 +66,5 @@ private:
   TupleSchema                       tuple_schema_;       ///< 返回的表头信息。可能有也可能没有
   RC                                return_code_ = RC::SUCCESS;
   std::string                       state_string_;
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules_;
 };

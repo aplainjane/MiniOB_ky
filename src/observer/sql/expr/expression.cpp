@@ -11,6 +11,7 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by Wangyunlai on 2022/07/05.
 //
+#include <cmath>
 
 #include "sql/expr/expression.h"
 #include "sql/expr/tuple.h"
@@ -138,30 +139,19 @@ ComparisonExpr::~ComparisonExpr() {}
 RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &result) const
 {
   RC  rc         = RC::SUCCESS;
-  Value templeft=left;
-  Value tempright=right;
-  // if(left.attr_type()==AttrType::INTS)
-  // {
-  //   templeft.set_boolean(false);
-  //  templeft.set_int(left.get_int());
-  // }
-  // else if(left.attr_type()==AttrType::FLOATS)
-  // {
-  //   templeft.set_boolean(false);
-  //   templeft.set_float(left.get_float());
-  // }
-  // if(right.attr_type()==AttrType::INTS)
-  // {
-  //   tempright.set_boolean(false);
-  //   tempright.set_int(right.get_int());
-  // }
-  // else if(right.attr_type()==AttrType::FLOATS)
-  // {
-  //   tempright.set_boolean(false);
-  //   tempright.set_float(right.get_float());
-  // }
-  int cmp_result = left.compare(right);
-  result         = false;
+  result = false;
+  // NULL和数值的运算符，结果永远false
+  if(
+    (left.attr_type() == AttrType::NULLS || right.attr_type() == AttrType::NULLS) &&
+    (comp_ == EQUAL_TO || comp_ == LESS_EQUAL || comp_ == NOT_EQUAL || comp_ == LESS_THAN || comp_ == GREAT_EQUAL || comp_ == GREAT_THAN)
+  ) {
+    result = false;
+    return rc;
+  }
+  int cmp_result = 0;
+  if(left.attr_type() != AttrType::NULLS && right.attr_type() != AttrType::NULLS){
+    cmp_result = left.compare(right);
+  } 
   switch (comp_) {
     case EQUAL_TO: {
       result = (0 == cmp_result);
@@ -184,6 +174,12 @@ RC ComparisonExpr::compare_value(const Value &left, const Value &right, bool &re
     case CLIKE:{
       result = left.like(right);
     } break;
+    case OP_ISNULL: {
+      result = left.attr_type() == AttrType::NULLS;
+    }break;
+    case OP_ISNOTNULL: {
+      result = !(left.attr_type() == AttrType::NULLS);
+    }break;
     case CNLIKE:{
       result = !left.like(right);
     } break;
@@ -402,12 +398,20 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   }
   else{
   RC rc = left_->get_value(tuple, left_value);
+  if(rc == RC::SQL_SYNTAX){
+    value.set_boolean(false);
+    return RC::SUCCESS;
+  }
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
   }
   
   rc = right_->get_value(tuple, right_value);
+  if(rc == RC::SQL_SYNTAX){
+    value.set_boolean(false);
+    return RC::SUCCESS;
+  }
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of right expression. rc=%s", strrc(rc));
     return rc;
@@ -533,9 +537,17 @@ AttrType ArithmeticExpr::value_type() const
     return left_->value_type();
   }
 
+  if(left_->value_type() == AttrType::NULLS || right_->value_type() == AttrType::NULLS){
+    return AttrType::NULLS;
+  }
+
   if (left_->value_type() == AttrType::INTS && right_->value_type() == AttrType::INTS &&
       arithmetic_type_ != Type::DIV) {
     return AttrType::INTS;
+  }
+
+  if (left_->value_type() ==AttrType::VECTORS || right_->value_type() == AttrType::VECTORS){
+    return AttrType::VECTORS;
   }
 
   return AttrType::FLOATS;
@@ -547,6 +559,11 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
 
   const AttrType target_type = value_type();
   value.set_type(target_type);
+  if(target_type == AttrType::NULLS || left_value.attr_type() == AttrType::NULLS || right_value.attr_type() == AttrType::NULLS)
+  {
+    value.set_null(0);
+    return rc;
+  }
 
   switch (arithmetic_type_) {
     case Type::ADD: {
@@ -562,6 +579,9 @@ RC ArithmeticExpr::calc_value(const Value &left_value, const Value &right_value,
     } break;
 
     case Type::DIV: {
+      if(right_value.get_int() == 0){
+        return RC::SQL_SYNTAX;
+      }
       Value::divide(left_value, right_value, value);
     } break;
 
@@ -651,8 +671,8 @@ RC ArithmeticExpr::get_value(const Tuple &tuple, Value &value) const
 
   Value left_value;
   Value right_value;
-
   rc = left_->get_value(tuple, left_value);
+  
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to get value of left expression. rc=%s", strrc(rc));
     return rc;
@@ -830,6 +850,208 @@ RC AggregateExpr::type_from_string(const char *type_str, AggregateExpr::Type &ty
     type = Type::MIN;
   } else {
     rc = RC::INVALID_ARGUMENT;
+  }
+  return rc;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+
+AttrType FunctionExpr::value_type() const
+{
+  switch (func_type_) {
+    case I2_DISTANCE:
+      return AttrType::FLOATS;
+      break;
+    case COSINE_DISTANCE:
+      return AttrType::FLOATS;
+      break;
+    case INNER_PRODUCT:
+      return AttrType::FLOATS;
+      break;
+    default:
+      break;
+  }
+  return AttrType::UNDEFINED;
+}
+
+RC FunctionExpr::get_I2_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float result = 0.0f;
+  for (int i = 0; i < left_vec.size(); i++) {
+    std::visit([&result, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+        return static_cast<float>(right_val);
+      }, right_vec[i]));
+    
+      result += pow(left_float - right_float, 2);
+    }, left_vec[i]);
+  }
+  result = sqrt(result);
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS); 
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::get_COSINE_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float sumA2 = 0.0f;
+  float sumB2 = 0.0f;
+  float sumAB = 0.0f;
+  float result = 0.0f;
+
+  for (size_t i = 0; i < left_vec.size(); i++) {
+    std::visit([&sumA2, &sumB2, &sumAB, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+        return static_cast<float>(right_val);
+      }, right_vec[i]));
+    
+      sumA2 += left_float * left_float;
+      sumB2 += right_float * right_float;
+      sumAB += left_float * right_float;
+    }, left_vec[i]);
+  }
+
+  result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS);
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::get_INNER_value(const Tuple &tuple, Value &value) const
+{
+  auto & param_left = params_[0];
+  auto & param_right = params_[1];
+
+  Value param_left_cell;
+  Value param_right_cell;
+  param_left->get_value(tuple, param_left_cell);
+  param_right->get_value(tuple, param_right_cell);
+
+  if (param_left_cell.attr_type() != AttrType::VECTORS || param_right_cell.attr_type() != AttrType::VECTORS) {
+    return RC::INTERNAL;
+  }
+
+  vector<std::variant<int, float>> left_vec = param_left_cell.get_vector();
+  vector<std::variant<int, float>> right_vec = param_right_cell.get_vector();
+
+  if (left_vec.size() != right_vec.size()) {
+    LOG_WARN("left_vec.size() != right_vec.size()");
+    return RC::INTERNAL;
+  }
+
+  float result = 0.0f;
+  for (int i = 0; i < left_vec.size(); i++) {
+    std::visit([&result, &right_vec, i](auto&& left_val) {
+      float left_float = static_cast<float>(left_val);
+      std::visit([&result, left_float](auto&& right_val) {
+        float right_float = static_cast<float>(right_val);
+        result += (left_float * right_float);
+      }, right_vec[i]);
+    }, left_vec[i]);
+  }
+
+  // 处理结果，判断是否为整数
+  if (std::floor(result) == result) {
+    value.set_type(AttrType::INTS); 
+    value.set_int(static_cast<int>(result));
+  } else {
+    value.set_type(AttrType::FLOATS);
+    // 保留两位小数，去除不必要的0
+    float rounded_result = std::round(result * 100) / 100;
+    value.set_float(rounded_result);
+  }
+
+  return RC::SUCCESS;
+}
+
+RC FunctionExpr::check_param() const
+{
+  RC rc = RC::SUCCESS;
+  if (params_.size() != 2) rc = RC::INVALID_ARGUMENT;
+  if (params_[0]->value_type() != AttrType::VECTORS || params_[1]->value_type() != AttrType::VECTORS) rc = RC::INVALID_ARGUMENT;
+  return rc;
+}
+
+RC FunctionExpr::get_value(const Tuple &tuple, Value &value) const
+{
+  RC rc = RC::SUCCESS;
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  switch (func_type_) {
+    case I2_DISTANCE: {
+      rc = get_I2_value(tuple, value);
+    } break;
+    case COSINE_DISTANCE: {
+      rc = get_COSINE_value(tuple, value);
+    } break;
+    case INNER_PRODUCT: {
+      rc = get_INNER_value(tuple, value);
+    } break;
+    default:
+      break;
   }
   return rc;
 }

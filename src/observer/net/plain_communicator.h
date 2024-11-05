@@ -37,8 +37,8 @@ private:
   RC write_state(SessionEvent *event, bool &need_disconnect);
   RC write_debug(SessionEvent *event, bool &need_disconnect);
   RC write_result_internal(SessionEvent *event, bool &need_disconnect);
-  RC write_tuple_result(SqlResult *sql_result);
-  RC write_chunk_result(SqlResult *sql_result);
+  RC write_tuple_result(SqlResult *sql_result,std::vector<int> ignored_index);
+  RC write_chunk_result(SqlResult *sql_result,std::vector<int> ignored_index);
 
 protected:
   vector<char> send_message_delimiter_;  ///< 发送消息分隔符

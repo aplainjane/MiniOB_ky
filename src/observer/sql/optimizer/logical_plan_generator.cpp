@@ -145,6 +145,21 @@ RC LogicalPlanGenerator::create_plan(SelectStmt *select_stmt, unique_ptr<Logical
 
     last_oper = &group_by_oper;
   }
+  
+  if (select_stmt->having_filter_stmt() != nullptr) {
+    unique_ptr<LogicalOperator> having_oper;
+    rc = create_plan(select_stmt->having_filter_stmt(), having_oper);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("failed to create having logical plan. rc=%s", strrc(rc));
+      return rc;
+    }
+    if (having_oper) {
+      if (*last_oper) {
+        having_oper->add_child(std::move(*last_oper));
+      }
+      last_oper = &having_oper;
+    }
+  }
 
   auto project_oper = make_unique<ProjectLogicalOperator>(std::move(select_stmt->query_expressions()));
   if (*last_oper) {
@@ -159,9 +174,9 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
   RC                                  rc = RC::SUCCESS;
   std::vector<unique_ptr<Expression>> cmp_exprs;
   const std::vector<FilterUnit *>    &filter_units = filter_stmt->filter_units();
-  for (const FilterUnit *filter_unit : filter_units) {
-    const FilterObj &filter_obj_left  = filter_unit->left();
-    const FilterObj &filter_obj_right = filter_unit->right();
+  for (FilterUnit *filter_unit : filter_units) {
+    FilterObj &filter_obj_left  = filter_unit->left();
+    FilterObj &filter_obj_right = filter_unit->right();
     
     std::unique_ptr<Expression> left;
       if(filter_obj_left.is_subquery){
@@ -171,7 +186,10 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       left = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_left.tuple_list));
     } else if (filter_obj_left.is_attr) {
       left = std::unique_ptr<Expression>(new FieldExpr(filter_obj_left.field));
-    } else {
+    } else if (filter_obj_left.is_aggr || filter_obj_left.is_arthi) {
+      left = std::move(filter_obj_left.expr);
+    } 
+    else {
       left = std::unique_ptr<Expression>(new ValueExpr(filter_obj_left.value));
     }
 
@@ -184,11 +202,14 @@ RC LogicalPlanGenerator::create_plan(FilterStmt *filter_stmt, unique_ptr<Logical
       right = std::unique_ptr<Expression>(new SubqueryExpr(filter_obj_right.tuple_list));
     } else if (filter_obj_right.is_attr) {
       right = std::unique_ptr<Expression>(new FieldExpr(filter_obj_right.field));
-    } else {
+    } else if (filter_obj_right.is_aggr || filter_obj_right.is_arthi) {
+      right = std::move(filter_obj_right.expr);
+    }
+     else {
       right = std::unique_ptr<Expression>(new ValueExpr(filter_obj_right.value));
     }
 
-    if (left->value_type() != right->value_type()) {
+    if (left->value_type() != right->value_type() && left->value_type() != AttrType::NULLS && right->value_type() != AttrType::NULLS) {
       auto left_to_right_cost = implicit_cast_cost(left->value_type(), right->value_type());
       auto right_to_left_cost = implicit_cast_cost(right->value_type(), left->value_type());
       if (left_to_right_cost <= right_to_left_cost && left_to_right_cost != INT32_MAX) {
@@ -268,21 +289,21 @@ RC LogicalPlanGenerator::create_plan(InsertStmt *insert_stmt, unique_ptr<Logical
 RC LogicalPlanGenerator::create_plan(UpdateStmt *update_stmt, unique_ptr<LogicalOperator> &logical_operator)
 {
   Table                  *table           = update_stmt->table();
-  Value                  values           = update_stmt->value();
-  Field                   field           = update_stmt->field();
-  FilterStmt                 *filter_stmt = update_stmt->filter_stmt();
-  
+  //Value                  values           = update_stmt->value();
+  // 首先创建select和filter算子
+  std::vector<Field> fields(update_stmt->fields());
+  // fields.emplace_back(update_stmt->field());
+  //unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, fields, false));
   unique_ptr<LogicalOperator> table_get_oper(new TableGetLogicalOperator(table, ReadWriteMode::READ_WRITE));
 
   unique_ptr<LogicalOperator> predicate_oper;
-
+  FilterStmt *filter_stmt = update_stmt->filter_stmt();
   RC rc = create_plan(filter_stmt, predicate_oper);
   if (rc != RC::SUCCESS) {
     return rc;
   }
 
-  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table,field,values));
-
+  unique_ptr<LogicalOperator> update_oper(new UpdateLogicalOperator(table, update_stmt->fields(), update_stmt->values(),update_stmt->flag()));
   if (predicate_oper) {
     predicate_oper->add_child(std::move(table_get_oper));
     update_oper->add_child(std::move(predicate_oper));
@@ -377,7 +398,7 @@ RC LogicalPlanGenerator::create_group_by_plan(SelectStmt *select_stmt, unique_pt
     } else if (expr->pos() != -1) {
       // do nothing
     } else if (expr->type() == ExprType::FIELD) {
-      found_unbound_column = true;
+      // found_unbound_column = true;
     }else {
       rc = ExpressionIterator::iterate_child_expr(*expr, find_unbound_column);
     }

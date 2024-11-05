@@ -70,12 +70,14 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         CREATE
         DROP
         GROUP
+        ORDER
         TABLE
         TABLES
         UNIQUE
         INDEX
         CALC
         SELECT
+        ASC
         DESC
         SHOW
         SYNC
@@ -91,7 +93,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         INT_T
         STRING_T
         DATE_T
+        TEXT_T
         FLOAT_T
+        VECTOR_T
         HELP
         EXIT
         DOT //QUOTE
@@ -99,6 +103,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         VALUES
         FROM
         WHERE
+        HAVING
         AND
         OR
         SET
@@ -112,7 +117,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         NOT
         LIKE
         IN
+        IS
         EXIST
+        NULL_KY
         INNER
         JOIN
         EQ
@@ -121,6 +128,9 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         LE
         GE
         NE
+        I2_DISTANCE_T
+        COSINE_DISTANCE_T
+        INNER_PRODUCT_T
         SUM
         AVG
         COUNT
@@ -135,10 +145,15 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   JoinSqlNode *                              join_sql_node;
   Value *                                    value;  
   enum CompOp                                comp;
+  enum OrderOp                               orderOp;
+  enum FuncOp                                func;
   RelAttrSqlNode *                           rel_attr;
-  std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
+  std::vector<AttrInfoSqlNode> *             attr_infos;
   Expression *                               expression;
+  UpdateKV *                                 set_clause;
+  std::vector<UpdateKV> *                    set_clause_list;
+  std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -147,6 +162,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   char *                                     string;
   int                                        number;
   float                                      floats;
+  bool                                       boolean;
 }
 
 %token <number> NUMBER
@@ -154,6 +170,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %token <string> ID
 %token <string> SSS
 %token <string>  SUB_QUERY
+%token <string>  VECTOR_LIST
 //非终结符
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
@@ -162,18 +179,30 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <value>               value
 %type <number>              number
 %type <comp>                comp_op
+%type <boolean>             isnull
+%type <func>                func_op
+%type <comp>                is_null_choice
 %type <rel_attr>            rel_attr
 %type <attr_infos>          attr_def_list
 %type <attr_info>           attr_def
 %type <value_list>          value_list
 %type <condition_list>      where
+%type <condition_list>      having
 %type <join_sql_node>       join_list
 %type <condition_list>      condition_list
 %type <string>              storage_format
 %type <relation_list>       rel_list
 %type <expression>          expression
+%type <expression>          simple_expression
+%type <expression>          arith_expr
+%type <expression>          aggr_expr
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
+%type <set_clause_list>     set_clause_list
+%type <set_clause>          set_clause
+%type <orderOp>             order_op
+%type <order_by_list>       order_by_list
+%type <order_by_list>       order_by
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -357,6 +386,14 @@ create_table_stmt:    /*create table 语句的语法解析树*/
       create_table.attr_infos.emplace_back(*$5);
       std::reverse(create_table.attr_infos.begin(), create_table.attr_infos.end());
       delete $5;
+
+      AttrInfoSqlNode null_field;
+      null_field.type = AttrType::INTS;
+      null_field.name = NULL_FIELD_NAME;
+      null_field.length = 4;
+      null_field.isnull = false;
+      create_table.attr_infos.push_back(null_field);
+
       if ($8 != nullptr) {
         create_table.storage_format = $8;
         free($8);
@@ -381,23 +418,41 @@ attr_def_list:
     ;
     
 attr_def:
-    ID type LBRACE number RBRACE 
+    ID type LBRACE number RBRACE isnull
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = $4;
+      $$->isnull = $6;
       free($1);
     }
-    | ID type
+    | ID type isnull
     {
       $$ = new AttrInfoSqlNode;
       $$->type = (AttrType)$2;
       $$->name = $1;
       $$->length = 4;
+      $$->isnull = $3;
       free($1);
     }
     ;
+
+isnull:
+    /* empty */
+    {
+      $$ = true;
+    }
+    | NULL_KY
+    {
+      $$ = true;
+    }
+    | NOT NULL_KY
+    {
+      $$ = false;
+    }
+    ;
+    
 number:
     NUMBER {$$ = $1;}
     ;
@@ -405,7 +460,9 @@ type:
     INT_T      { $$ = static_cast<int>(AttrType::INTS); }
     | STRING_T { $$ = static_cast<int>(AttrType::CHARS); }
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
+    | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
     | DATE_T   { $$ = static_cast<int>(AttrType::DATES); }
+    | TEXT_T   { $$ = static_cast<int>(AttrType::TEXTS); }
     ;
 insert_stmt:        /*insert   语句的语法解析树*/
     INSERT INTO ID VALUES LBRACE value value_list RBRACE 
@@ -453,6 +510,15 @@ value:
       free(tmp);
       free($1);
     }
+    |VECTOR_LIST {
+      char *tmp = common::substr($1,0,strlen($1)-1);
+      $$ = new Value(tmp);
+      free(tmp);
+      free($1);
+    }
+    | NULL_KY {
+      $$ = new Value(NULL_VALUE, 1);
+    }
     ;
 storage_format:
     /* empty */
@@ -477,21 +543,72 @@ delete_stmt:    /*  delete 语句的语法解析树*/
       free($3);
     }
     ;
-update_stmt:      /*  update 语句的语法解析树*/
-    UPDATE ID SET ID EQ value where 
+update_stmt:
+    UPDATE ID SET set_clause_list where
     {
-      $$ = new ParsedSqlNode(SCF_UPDATE);
-      $$->update.relation_name = $2;
-      $$->update.attribute_name = $4;
-      $$->update.value = *$6;
-      if ($7 != nullptr) {
-        $$->update.conditions.swap(*$7);
-        delete $7;
-      }
-      free($2);
-      free($4);
+        $$ = new ParsedSqlNode(SCF_UPDATE);
+        $$->update.relation_name = $2;
+        int temp = 0;
+        if (nullptr != $4) {
+            for (UpdateKV kv : *$4) {
+              $$->update.attribute_names.emplace_back(kv.attr_name);
+              if(kv.is_subquery){
+                $$->update.subquery_values.emplace_back(kv.subquery);
+                $$->update.record.emplace_back(temp);
+              }
+              else{
+                $$->update.values.emplace_back(kv.value);
+              }
+              temp++;
+            }
+            delete $4;  // $4 只需要在这里释放一次
+        }
+        if ($5 != nullptr) {
+            $$->update.conditions.swap(*$5);
+            delete $5;  // $5 在此处释放
+        }
+        free($2);  // 正确释放 $2
+        // delete $5;  // 这里不需要再释放 $5，避免 double-free
     }
     ;
+
+
+set_clause_list:
+    set_clause
+    {
+        $$ = new std::vector<UpdateKV>();
+        $$->push_back(*$1);
+        delete $1;  // 确保 $1 是 new 出来的对象
+    }
+    | set_clause_list COMMA set_clause
+    {
+        $1->push_back(*$3);
+        $$ = $1;
+        delete $3;  // 确保 $3 是 new 出来的对象
+    }
+    ;
+
+
+set_clause:
+    ID EQ value
+    {
+        $$ = new UpdateKV();
+        $$->attr_name = strdup($1);  // 使用 strdup 复制字符串，避免释放后使用问题
+        $$->value = *$3;
+        free($1);  // 确保在拷贝完成后再释放
+    }
+    | ID EQ SUB_QUERY
+    {
+      $$ = new UpdateKV();
+      $$->is_subquery = true;
+      $$->attr_name = strdup($1);
+      $$->subquery = strdup($3);
+      free($1);
+      free($3);
+    }
+    ;
+
+
 select_stmt:        /*  select 语句的语法解析树*/
     SELECT expression_list
     {
@@ -501,7 +618,7 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $2;
       }
     }
-    | SELECT expression_list FROM ID rel_list join_list where group_by
+    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -520,11 +637,23 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $7;
       }
       free($4);
-
+      
       if ($6 != nullptr) {
         $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
         $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
         delete $6;
+      }
+      if ($8 != nullptr) {
+        $$->selection.group_by.swap(*$8);
+        delete $8;
+      }
+      if ($9 != nullptr) {
+        $$->selection.having_conditions.swap(*$9);
+        delete $9;
+      }
+      if ($10 != nullptr) {
+        $$->selection.order_rules.swap(*$10);
+        delete $10;
       }
     }
     ;
@@ -536,7 +665,6 @@ calc_stmt:
       delete $2;
     }
     ;
-
 expression_list:
     expression
     {
@@ -554,7 +682,11 @@ expression_list:
     }
     ;
 expression:
-    expression '+' expression {
+    LBRACE expression RBRACE {
+      $$ = $2;
+      $$->set_name(token_name(sql_string, &@$));
+    }
+    | expression '+' expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
     }
     | expression '-' expression {
@@ -565,13 +697,6 @@ expression:
     }
     | expression '/' expression {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
-    }
-    | LBRACE expression RBRACE {
-      $$ = $2;
-      $$->set_name(token_name(sql_string, &@$));
-    }
-    | '-' expression %prec UMINUS {
-      $$ = create_arithmetic_expression(ArithmeticExpr::Type::NEGATIVE, $2, nullptr, sql_string, &@$);
     }
     | value {
       $$ = new ValueExpr(*$1);
@@ -587,7 +712,120 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
-    | SUM LBRACE expression_list RBRACE {
+    | '-' expression %prec UMINUS {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
+    }
+    | aggr_expr {
+      $$ = $1;
+    }
+    | func_op LBRACE expression_list RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::move(*$3));
+      $$->set_name(token_name(sql_string, &@$));
+      delete $3;
+    }
+    | func_op LBRACE RBRACE {
+      $$ = new FunctionExpr((FuncOp)$1,std::vector<std::unique_ptr<Expression>>());
+      $$->set_name(token_name(sql_string, &@$));
+    }
+    ;
+simple_expression:
+    value {
+      $$ = new ValueExpr(*$1);
+      $$->set_name(token_name(sql_string, &@$));
+      delete $1;
+    }
+    | rel_attr {
+      RelAttrSqlNode *node = $1;
+      $$ = new UnboundFieldExpr(node->relation_name, node->attribute_name);
+      $$->set_name(token_name(sql_string, &@$));
+      delete $1;
+    }
+
+arith_expr:
+    LBRACE arith_expr RBRACE {
+      $$ = $2;
+    }
+    | arith_expr '+' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '-' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '*' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $4, sql_string, &@$);
+    }
+    | arith_expr '/' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '+' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '-' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '*' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $4, sql_string, &@$);
+    }
+    | simple_expression '/' LBRACE simple_expression RBRACE {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $4, sql_string, &@$);
+    }
+    | '-' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
+    }
+    | '-' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
+    }
+    | arith_expr '+' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '-' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '*' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '/' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '+' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '-' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '*' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '/' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '+' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '-' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '*' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | arith_expr '/' arith_expr {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '+' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::ADD, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '-' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '*' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::MUL, $1, $3, sql_string, &@$);
+    }
+    | simple_expression '/' simple_expression {
+      $$ = create_arithmetic_expression(ArithmeticExpr::Type::DIV, $1, $3, sql_string, &@$);
+    }
+    ;
+aggr_expr:
+    SUM LBRACE expression_list RBRACE {
       $$ = create_aggregate_expression("SUM", $3, sql_string, &@$);
     }
     | AVG LBRACE expression_list RBRACE {
@@ -632,7 +870,7 @@ expression:
       empty->push_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("COUNT", empty, sql_string, &@$);
     }
-    
+    ;
 
 rel_attr:
     ID {
@@ -692,6 +930,43 @@ join_list:
       }
     }
     
+order_by:
+  {
+    $$ = nullptr;
+  }
+  | ORDER BY rel_attr order_op order_by_list
+  {
+    $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
+    $$->emplace_back(std::make_pair(*$3, $4));
+    delete $3;
+    if ($5 != nullptr) {
+      $$->insert($$->end(), $5->begin(), $5->end());
+    }
+  }
+  ;
+
+order_by_list:
+  {
+    $$ = nullptr;
+  }
+  | COMMA rel_attr order_op order_by_list
+  {
+    $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
+    $$->emplace_back(std::make_pair(*$2, $3));
+    delete $2;
+
+    if ($4 != nullptr) {
+      $$->insert($$->end(), $4->begin(), $4->end());
+    }
+  }
+  ;
+
+order_op:
+  DESC { $$ = ORDER_DESC; }
+| ASC  { $$ = ORDER_ASC;  }
+|      { $$ = ORDER_DEFAULT; }
+;
+
 
 where:
     /* empty */
@@ -727,7 +1002,51 @@ condition_list:
     }
     ;
 condition:
-    rel_attr comp_op value    {
+     arith_expr comp_op value {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 0;
+        $$->right_value = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | arith_expr comp_op rel_attr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | value comp_op arith_expr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 0;
+        $$->left_value = *$1;
+        $$->right_is_attr = 5;
+        $$->right_expr = $3;
+        $$->comp = $2;
+        delete $1;
+    }
+    | rel_attr comp_op arith_expr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 1;
+        $$->left_attr = *$1;
+        $$->right_is_attr = 5;
+        $$->right_expr = $3;
+        $$->comp = $2;
+        delete $1;
+    }
+    | arith_expr comp_op arith_expr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 5;
+        $$->left_expr = $1;
+        $$->right_is_attr = 5;
+        $$->right_expr = $3;
+        $$->comp = $2;
+    }
+    | rel_attr comp_op value    {
         $$ = new ConditionSqlNode;
         $$->left_is_attr = 1;
         $$->left_attr = *$1;
@@ -907,9 +1226,63 @@ condition:
         delete $2;
         delete $7;
     }
+    | aggr_expr comp_op value {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 4;     
+        $$->left_expr = $1;
+        $$->right_is_attr = 0;
+        $$->right_value = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | aggr_expr comp_op rel_attr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 4;     
+        $$->left_expr = $1;
+        $$->right_is_attr = 1;
+        $$->right_attr = *$3;
+        $$->comp = $2;
+        delete $3;
+    }
+    | aggr_expr comp_op aggr_expr {
+        $$ = new ConditionSqlNode;
+        $$->left_is_attr = 4;
+        $$->left_expr = $1;
+        $$->right_is_attr = 4;
+        $$->right_expr = $3;
+        $$->comp = $2;  
+    }
+    | value is_null_choice {
+      $$ = new ConditionSqlNode;
+      Value val;
+      val.set_null(0);
+        
+      $$->left_is_attr = 0;
+      $$->left_value = *$1;  
+      $$->right_is_attr = 0;
+      $$->right_value = val;
+      $$->comp = $2;
+      delete $1;
+    }
+    | rel_attr is_null_choice {
+      $$ = new ConditionSqlNode;
+      Value val;
+      val.set_null(0);
+
+      $$->left_is_attr = 1;
+      $$->left_attr = *$1;
+      $$->right_is_attr = 0;
+      $$->right_value = val;
+      $$->comp = $2;
+      delete $1;
+    }
     ;
 
-
+is_null_choice:
+      IS NULL_KY { $$ =  OP_ISNULL; }
+    | IS NOT NULL_KY { $$ = OP_ISNOTNULL; }
+    ;
+      
 comp_op:
       EQ { $$ = EQUAL_TO; }
     | LT { $$ = LESS_THAN; }
@@ -925,13 +1298,32 @@ comp_op:
     | NOT EXIST { $$ = NOTEXIST_LIST; }
     ;
 
+func_op:
+      I2_DISTANCE_T { $$ = I2_DISTANCE; }
+    | COSINE_DISTANCE_T { $$ = COSINE_DISTANCE; }
+    | INNER_PRODUCT_T { $$ = INNER_PRODUCT; }
+
 // your code here
 group_by:
-    /* empty */
     {
       $$ = nullptr;
     }
+    | GROUP BY expression_list
+	  {
+        $$ = $3;
+	  }
     ;
+
+having:
+    {
+      $$ = nullptr;
+    }
+    | HAVING condition_list
+    {
+      $$ = $2;
+    }
+    ;
+    
 load_data_stmt:
     LOAD DATA INFILE SSS INTO TABLE ID 
     {

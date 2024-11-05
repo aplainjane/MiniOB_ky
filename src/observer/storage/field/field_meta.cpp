@@ -25,16 +25,17 @@ const static Json::StaticString FIELD_OFFSET("offset");
 const static Json::StaticString FIELD_LEN("len");
 const static Json::StaticString FIELD_VISIBLE("visible");
 const static Json::StaticString FIELD_FIELD_ID("FIELD_id");
+const static Json::StaticString FIELD_ISNULL("isnull");
 
 FieldMeta::FieldMeta() : attr_type_(AttrType::UNDEFINED), attr_offset_(-1), attr_len_(0), visible_(false), field_id_(0) {}
 
-FieldMeta::FieldMeta(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible, int field_id)
+FieldMeta::FieldMeta(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible, int field_id, bool isnull)
 {
-  [[maybe_unused]] RC rc = this->init(name, attr_type, attr_offset, attr_len, visible, field_id);
+  [[maybe_unused]] RC rc = this->init(name, attr_type, attr_offset, attr_len, visible, field_id, isnull);
   ASSERT(rc == RC::SUCCESS, "failed to init field meta. rc=%s", strrc(rc));
 }
 
-RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible, int field_id)
+RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible, int field_id, bool isnull)
 {
   if (common::is_blank(name)) {
     LOG_WARN("Name cannot be empty");
@@ -52,8 +53,13 @@ RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int at
   attr_len_    = attr_len;
   attr_offset_ = attr_offset;
   visible_     = visible;
-  field_id_ = field_id;
+  field_id_    = field_id;
+  isnull_      = isnull;
 
+  if ((attr_type == AttrType::TEXTS) || 
+      (attr_type == AttrType::VECTORS && attr_len > 1000)) { 
+    attr_len_ = 16; // offset and length
+  }
   LOG_INFO("Init a field with name=%s", name);
   return RC::SUCCESS;
 }
@@ -64,7 +70,12 @@ AttrType FieldMeta::type() const { return attr_type_; }
 
 int FieldMeta::offset() const { return attr_offset_; }
 
-int FieldMeta::len() const { return attr_len_; }
+int FieldMeta::len() const {
+  if (attr_type_ == AttrType::VECTORS && attr_len_ != 16) {
+    return 20 * attr_len_ + 2; //[x.xx,y.yy] 长度为n+2 1位 \0
+  } 
+  return attr_len_; 
+}
 
 bool FieldMeta::visible() const { return visible_; }
 
@@ -84,6 +95,7 @@ void FieldMeta::to_json(Json::Value &json_value) const
   json_value[FIELD_LEN]     = attr_len_;
   json_value[FIELD_VISIBLE] = visible_;
   json_value[FIELD_FIELD_ID] = field_id_;
+  json_value[FIELD_ISNULL] = isnull_;
 }
 
 RC FieldMeta::from_json(const Json::Value &json_value, FieldMeta &field)
@@ -99,6 +111,7 @@ RC FieldMeta::from_json(const Json::Value &json_value, FieldMeta &field)
   const Json::Value &len_value     = json_value[FIELD_LEN];
   const Json::Value &visible_value = json_value[FIELD_VISIBLE];
   const Json::Value &field_id_value = json_value[FIELD_FIELD_ID];
+  const Json::Value &isnull_value = json_value[FIELD_ISNULL];
 
   if (!name_value.isString()) {
     LOG_ERROR("Field name is not a string. json value=%s", name_value.toStyledString().c_str());
@@ -125,6 +138,9 @@ RC FieldMeta::from_json(const Json::Value &json_value, FieldMeta &field)
     LOG_ERROR("Field id is not an integer. json value=%s", field_id_value.toStyledString().c_str());
     return RC::INTERNAL;
   }
+  if (!isnull_value.isBool()) {
+    LOG_ERROR("Isnull ifield is not an bool value. json value=%s", isnull_value.toStyledString().c_str());
+  }
 
   AttrType type = attr_type_from_string(type_value.asCString());
   if (AttrType::UNDEFINED == type) {
@@ -137,5 +153,11 @@ RC FieldMeta::from_json(const Json::Value &json_value, FieldMeta &field)
   int         len     = len_value.asInt();
   bool        visible = visible_value.asBool();
   int         field_id  = field_id_value.asInt();
-  return field.init(name, type, offset, len, visible, field_id);
+  bool        isnull = isnull_value.asBool();
+  return field.init(name, type, offset, len, visible, field_id, isnull);
+}
+
+bool FieldMeta::nullable() const 
+{
+  return isnull_;
 }

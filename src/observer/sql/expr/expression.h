@@ -127,7 +127,7 @@ public:
   virtual RC eval(Chunk &chunk, std::vector<uint8_t> &select) { return RC::UNIMPLEMENTED; }
   virtual RC get(vector<Value>& temp){return RC::UNIMPLEMENTED;}
   virtual RC get_tuple_list(){return RC::UNIMPLEMENTED;};
-  virtual bool is_tuple_list() const { return false;}
+  virtual bool is_tuple_list() { return true;}
   virtual  string getsqlresult(){return nullptr;}
   virtual  std::unordered_map<std::string, Table *> gettable( ){return {};}
 protected:

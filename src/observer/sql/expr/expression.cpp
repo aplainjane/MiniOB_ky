@@ -223,7 +223,7 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
   Value right_value;
   bool bool_value = false;
   vector<Value> left_tuple;
-  RC rc;
+  RC rc=RC::SUCCESS;
   if(left_->type()==ExprType::SUBQUERY&&left_->is_tuple_list()){
     rc = left_->get(left_tuple);
   }

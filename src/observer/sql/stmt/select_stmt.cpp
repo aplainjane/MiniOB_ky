@@ -72,6 +72,18 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       return rc;
     }
   }
+  for (ConditionSqlNode &condition : select_sql.having_conditions)
+  {
+    if(condition.left_is_attr != 4)
+      continue;
+    unique_ptr<Expression> tmp_expr = std::unique_ptr<Expression>(condition.left_expr->deep_copy());
+    RC rc = expression_binder.bind_expression(tmp_expr, bound_expressions);
+    if (OB_FAIL(rc)) {
+      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      return rc;
+    }
+  }
+
 
   vector<unique_ptr<Expression>> group_by_expressions;
   for (unique_ptr<Expression> &expression : select_sql.group_by) {
@@ -81,6 +93,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       return rc;
     }
   }
+  
 
   Table *default_table = nullptr;
   if (tables.size() == 1) {

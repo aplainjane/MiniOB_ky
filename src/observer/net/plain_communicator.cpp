@@ -200,6 +200,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   // 增加bitmap列后，如果是联表查询，那么结果会出现多个bitmap列
   // 存储每个bitmap的索引，后续投影时忽略
   std::vector<int> ignored_index;
+  int bit_map_null = 0;
 
   for (int i = 0; i < cell_num; i++) {
     const TupleCellSpec &spec = schema.cell_at(i);
@@ -208,9 +209,17 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
     if (strcmp(alias, NULL_FIELD_NAME.c_str()) == 0 || strcmp(spec.field_name(), NULL_FIELD_NAME.c_str()) == 0){
       ignored_index.push_back(i);
+      bit_map_null +=1;
     }
 
-
+    if(sql_result->get_having_stmt().size()!=0)
+    {
+      if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null )
+      {
+        ignored_index.push_back(i);
+      }
+    }
+    
     bool ffflag = false;
     if(ignored_index.size() != 0 && ignored_index[ignored_index.size() - 1] == i){
       ffflag = true;

@@ -52,6 +52,9 @@ public:
   std::vector<std::pair<RelAttrSqlNode, OrderOp>> &get_order_rules() { 
     return order_rules_; 
   }
+  std::vector<ConditionSqlNode> &get_having_stmt() { 
+    return having_stmts; 
+  }
 
 
   RC open();
@@ -67,4 +70,5 @@ private:
   RC                                return_code_ = RC::SUCCESS;
   std::string                       state_string_;
   std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules_;
+  std::vector<ConditionSqlNode>     having_stmts;
 };

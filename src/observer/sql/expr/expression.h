@@ -73,6 +73,8 @@ public:
   Expression()          = default;
   virtual ~Expression() = default;
 
+  virtual std::unique_ptr<Expression> deep_copy() const = 0; // 深拷贝
+
   /**
    * @brief 判断两个表达式是否相等
    */
@@ -160,6 +162,12 @@ public:
 
   const char *table_name() const { return table_name_.c_str(); }
 
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    // 使用当前对象的 table_name_ 创建一个新的 StarExpr 对象
+    return std::make_unique<StarExpr>(table_name_.c_str());
+  }
+
 private:
   std::string table_name_;
 };
@@ -180,6 +188,13 @@ public:
 
   const char *table_name() const { return table_name_.c_str(); }
   const char *field_name() const { return field_name_.c_str(); }
+
+  // 实现 deep_copy 函数
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    // 创建一个新的 UnboundFieldExpr 实例，并复制 table_name_ 和 field_name_
+    return std::make_unique<UnboundFieldExpr>(table_name_, field_name_);
+  }
 
 private:
   std::string table_name_;
@@ -217,6 +232,12 @@ public:
   RC get_value(const Tuple &tuple, Value &value) const override;
 
   FieldMeta get_field_meta() const { return *field_.meta(); }
+
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    // 创建一个新的 FieldExpr 实例，拷贝 field_ 成员
+    return std::make_unique<FieldExpr>(field_);
+  }
 private:
   Field field_;
 };
@@ -233,6 +254,11 @@ public:
     this->sql_result = sql_result;
     this->tables=tables;
   }
+
+  SubqueryExpr(const std::vector<Value> &tuple_list, const std::string &sql_result, 
+               const std::unordered_map<std::string, Table *> &tables)
+      : tuple_list(tuple_list), sql_result(sql_result), tables(tables), is_tuple(!tuple_list.empty())
+  {}
 
   virtual ~SubqueryExpr() = default;
   bool is_tuple_list(){return is_tuple;}
@@ -265,11 +291,17 @@ public:
   }
   string getsqlresult(){return sql_result;}
   std::unordered_map<std::string, Table *> gettable(){return tables;}
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    // 拷贝 tuple_list 和 sql_result，tables 直接复制指针
+    return std::make_unique<SubqueryExpr>(tuple_list, sql_result, tables);
+  }
 private:
-  bool is_tuple=false;
+
   vector<Value> tuple_list;
   string sql_result="";
   std::unordered_map<std::string, Table *> tables;
+  bool is_tuple=false;
 };
 /**
  * @brief 常量值表达式
@@ -299,6 +331,10 @@ public:
 
   void         get_value(Value &value) const { value = value_; }
   const Value &get_value() const { return value_; }
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    return std::unique_ptr<ValueExpr>(new ValueExpr(*this));
+  }
 
 private:
   Value value_;
@@ -323,6 +359,13 @@ public:
   AttrType value_type() const override { return cast_type_; }
 
   std::unique_ptr<Expression> &child() { return child_; }
+
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    auto new_expr = std::make_unique<CastExpr>(child_->deep_copy(), cast_type_);
+    new_expr->set_name(name());
+    return new_expr;
+  }
 
 private:
   RC cast(const Value &value, Value &cast_value) const;
@@ -355,6 +398,17 @@ public:
 
   std::unique_ptr<Expression> &left() { return left_; }
   std::unique_ptr<Expression> &right() { return right_; }
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    std::unique_ptr<Expression> new_left = left_ ->deep_copy();
+    std::unique_ptr<Expression> new_right;
+    if (right_) { // NOTE: not has_rhs
+      new_right = right_->deep_copy();
+    }
+    auto new_expr = std::make_unique<ComparisonExpr>(comp_, std::move(new_left), std::move(new_right));
+    new_expr->set_name(name());
+    return new_expr;
+  }
 
   /**
    * 尝试在没有tuple的情况下获取当前表达式的值
@@ -404,6 +458,16 @@ public:
 
   std::vector<std::unique_ptr<Expression>> &children() { return children_; }
 
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    std::vector<std::unique_ptr<Expression>> new_children;
+    for (auto& child : children_) {
+      new_children.emplace_back(child->deep_copy());
+    }
+    auto new_expr = std::make_unique<ConjunctionExpr>(conjunction_type_, new_children);
+    new_expr->set_name(name());
+    return new_expr;
+  }
 private:
   Type                                     conjunction_type_;
   std::vector<std::unique_ptr<Expression>> children_;
@@ -445,6 +509,18 @@ public:
     return 4;  // sizeof(float) or sizeof(int)
   };
 
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    std::unique_ptr<Expression> new_left = left_ ->deep_copy();
+    std::unique_ptr<Expression> new_right;
+    if (right_) { // NOTE: not has_rhs
+      new_right = right_->deep_copy();
+    }
+    auto new_expr = std::make_unique<ArithmeticExpr>(arithmetic_type_, std::move(new_left), std::move(new_right));
+    new_expr->set_name(name());
+    return new_expr;
+  }
+
   RC get_value(const Tuple &tuple, Value &value) const override;
 
   RC get_column(Chunk &chunk, Column &column) override;
@@ -479,6 +555,10 @@ public:
   ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
 
   const char *aggregate_name() const { return aggregate_name_.c_str(); }
+  void set_aggregate_name(const char *aggregate_name)
+  {
+      aggregate_name_ = aggregate_name;
+  }
 
   std::unique_ptr<Expression>  &child() { return child_; }
 
@@ -486,11 +566,41 @@ public:
   AttrType value_type() const override { return child_->value_type(); }
   
   bool is_error(){return error_;}
+  
+	std::unique_ptr<Expression> deep_copy() const override {
+	   // Deep copy the aggregate name
+	   std::string new_aggregate_name(aggregate_name_);
+	   // Deep copy the children
+	   std::vector<std::unique_ptr<Expression>> new_children;
+	   if (childs_ && !childs_->empty()) { // Ensure childs_ is not null and not empty
+	       for (const auto& child : *childs_) {
+            if(child)
+	            new_children.emplace_back(child->deep_copy());
+            else
+	            new_children.emplace_back(nullptr);
+	       }
+	   }
+	   // Create a new UnboundAggregateExpr with the deep copied data
+	   // Note: We pass the address of the new_children vector, but we need to ensure it remains valid
+	   auto new_expr = std::make_unique<UnboundAggregateExpr>(new_aggregate_name.c_str(), &new_children);
+	   // Manually set the child since the constructor moves the first child
+	   if (!new_children.empty()) {
+	       new_expr->child_ = std::move(child_->deep_copy());
+	   }
+	   // Copy the error state
+	   new_expr->error_ = error_;
+     new_expr->set_name(name());
+     new_expr->set_aggregate_name(aggregate_name());
+	   // Ensure the new_children vector is not used after this point
+	   // to avoid dangling references
+	   new_children.clear();
+	   return new_expr;
+	}
 
 private:
   std::string                 aggregate_name_;
   std::vector<std::unique_ptr<Expression> >* childs_;
-  std::unique_ptr<Expression> child_;
+  std::unique_ptr<Expression> child_ = nullptr;
   bool                   error_ = false;
 };
 
@@ -531,6 +641,13 @@ public:
 
   std::unique_ptr<Aggregator> create_aggregator() const;
 
+  std::unique_ptr<Expression> deep_copy() const override
+  {
+    auto new_expr = std::make_unique<AggregateExpr>(aggregate_type_,child_->deep_copy());
+    new_expr->set_name(name());
+    return new_expr;
+  }
+
 public:
   static RC type_from_string(const char *type_str, Type &type);
 
@@ -566,6 +683,30 @@ public:
   RC calc_value(const Value &left_value, const Value &right_value, Value &value) const;
   RC check_param() const;
   std::vector<std::unique_ptr<Expression>> get_params(){return std::move(this->params_);}
+
+  // Deep copy constructor
+	FunctionExpr(const FunctionExpr& other) : func_type_(other.func_type_) {
+	  for (const auto& expr : other.params_) {
+	    params_.emplace_back(expr->deep_copy()); // Assuming Expression has a virtual deep_copy method
+	  }
+	}
+	 
+	// Deep copy assignment operator
+	FunctionExpr& operator=(const FunctionExpr& other) {
+	  if (this != &other) {
+	    func_type_ = other.func_type_;
+	    params_.clear();
+	    for (const auto& expr : other.params_) {
+	      params_.emplace_back(expr->deep_copy()); // Assuming Expression has a virtual deep_copy method
+	    }
+	  }
+	  return *this;
+	}
+	 
+	// Method to create a deep copy of the current object
+	std::unique_ptr<Expression> deep_copy() const override {
+	  return std::make_unique<FunctionExpr>(*this);
+	}
     
 private:
   FuncOp func_type_;

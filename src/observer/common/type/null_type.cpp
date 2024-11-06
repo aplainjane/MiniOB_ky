@@ -8,6 +8,9 @@
 
 int NullType::compare(const Value &left, const Value &right) const
 {
+  if(left.attr_type()==AttrType::NULLS && right.attr_type()==AttrType::NULLS) {
+    return 0;
+  }
     return INT32_MAX;
 }
 

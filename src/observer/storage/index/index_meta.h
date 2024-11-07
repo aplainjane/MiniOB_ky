@@ -36,6 +36,7 @@ public:
   IndexMeta() = default;
 
   RC init(const char *name, std::vector<FieldMeta> &fields, bool unique);
+  RC init(const char *name, const FieldMeta *field_meta);
 
 public:
   const char *name() const;

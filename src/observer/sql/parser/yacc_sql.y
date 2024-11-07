@@ -132,6 +132,12 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
         I2_DISTANCE_T
         COSINE_DISTANCE_T
         INNER_PRODUCT_T
+        WITH                                    
+        DISTANCE                                
+        TYPE                                 
+        LISTS                                  
+        PROBES  
+        LIMIT
         SUM
         AVG
         COUNT
@@ -155,6 +161,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   UpdateKV *                                 set_clause;
   std::vector<UpdateKV> *                    set_clause_list;
   std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
+  VecOrderByNode *                           vec_order_by;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -205,6 +212,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <orderOp>             order_op
 %type <order_by_list>       order_by_list
 %type <order_by_list>       order_by
+%type <vec_order_by>        vec_order_by
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -215,6 +223,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <sql_node>            show_tables_stmt
 %type <sql_node>            desc_table_stmt
 %type <sql_node>            create_index_stmt
+%type <sql_node>            create_vec_index_stmt
 %type <sql_node>            drop_index_stmt
 %type <sql_node>            sync_stmt
 %type <sql_node>            begin_stmt
@@ -252,6 +261,7 @@ command_wrapper:
   | show_tables_stmt
   | desc_table_stmt
   | create_index_stmt
+  | create_vec_index_stmt
   | drop_index_stmt
   | sync_stmt
   | begin_stmt
@@ -358,6 +368,25 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       if ($9 != nullptr){
         delete($9);
       }
+    }
+    ;
+
+create_vec_index_stmt:
+    CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE DISTANCE EQ func_op COMMA TYPE EQ ID COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
+    {
+      $$ = new ParsedSqlNode(SCF_CREATE_VEC_INDEX);
+      CreateVecIndexSqlNode &create_vec_index = $$->create_vec_index;
+      create_vec_index.index_name = $4;
+      create_vec_index.relation_name = $6;
+      create_vec_index.attribute_name = $8;
+      create_vec_index.distance_name = $14;
+      create_vec_index.type_name = $18;
+      create_vec_index.nlist = $22;
+      create_vec_index.probes = $26;
+      free($4);
+      free($6);
+      free($8);
+      free($18);
     }
     ;
 
@@ -653,7 +682,7 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $2;
       }
     }
-    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by
+    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by 
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -688,6 +717,44 @@ select_stmt:        /*  select 语句的语法解析树*/
       }
       if ($10 != nullptr) {
         $$->selection.order_rules.swap(*$10);
+        delete $10;
+      }
+    }
+    | SELECT expression_list FROM ID rel_list join_list where group_by having vec_order_by
+    {
+      $$ = new ParsedSqlNode(SCF_SELECT);
+      if ($2 != nullptr) {
+        $$->selection.expressions.swap(*$2);
+        delete $2;
+      }
+      if ($5 != nullptr) {
+        $$->selection.relations.swap(*$5);
+        delete $5;
+      }
+      $$->selection.relations.push_back($4);
+      std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
+
+      if ($7 != nullptr) {
+        $$->selection.conditions.swap(*$7);
+        delete $7;
+      }
+      free($4);
+      
+      if ($6 != nullptr) {
+        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
+        delete $6;
+      }
+      if ($8 != nullptr) {
+        $$->selection.group_by.swap(*$8);
+        delete $8;
+      }
+      if ($9 != nullptr) {
+        $$->selection.having_conditions.swap(*$9);
+        delete $9;
+      }
+      if ($10 != nullptr) {
+        $$->selection.vec_order_rules = *$10;
         delete $10;
       }
     }
@@ -969,7 +1036,7 @@ order_by:
   {
     $$ = nullptr;
   }
-  | ORDER BY rel_attr order_op order_by_list
+  | ORDER BY rel_attr order_op order_by_list 
   {
     $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
     $$->emplace_back(std::make_pair(*$3, $4));
@@ -977,6 +1044,17 @@ order_by:
     if ($5 != nullptr) {
       $$->insert($$->end(), $5->begin(), $5->end());
     }
+  }
+  ;
+
+vec_order_by:
+  ORDER BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  {
+    $$ = new VecOrderByNode;
+    $$->type = $3;
+    $$->first_attr = *$5;
+    $$->value = *$7;
+    $$->limit = $10; 
   }
   ;
 

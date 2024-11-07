@@ -38,6 +38,18 @@ RC IndexMeta::init(const char *name, std::vector<FieldMeta> &fields, bool unique
   return RC::SUCCESS;
 }
 
+RC IndexMeta::init(const char *name, const FieldMeta *field_meta)
+{
+  if (common::is_blank(name)) {
+    LOG_ERROR("Failed to init index, name is empty.");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  name_ = name;
+  fields_.emplace_back(field_meta->name());
+  return RC::SUCCESS;
+}
+
 void IndexMeta::to_json(Json::Value &json_value) const
 {
   json_value[FIELD_NAME] = name_;

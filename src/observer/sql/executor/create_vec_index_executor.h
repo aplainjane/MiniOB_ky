@@ -9,21 +9,25 @@ MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 See the Mulan PSL v2 for more details. */
 
 //
-// Created by wangyunlai.wyl on 2021/5/19.
+// Created by Wangyunlai on 2023/4/25.
 //
 
-#include "storage/index/index.h"
+#pragma once
 
-RC Index::init(const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas)
-{
-  index_meta_ = index_meta;
-  field_metas_ = field_metas;
-  return RC::SUCCESS;
-}
+#include "common/rc.h"
 
-RC Index::init(const IndexMeta &index_meta, const FieldMeta &field_meta)
+class SQLStageEvent;
+
+/**
+ * @brief 创建索引的执行器
+ * @ingroup Executor
+ * @note 创建索引时不能做其它操作。MiniOB当前不完善，没有对一些并发做控制，包括schema的并发。
+ */
+class CreateVecIndexExecutor
 {
-  index_meta_ = index_meta;
-  field_metas_.push_back(field_meta);
-  return RC::SUCCESS;
-}
+public:
+  CreateVecIndexExecutor()          = default;
+  virtual ~CreateVecIndexExecutor() = default;
+
+  RC execute(SQLStageEvent *sql_event);
+};

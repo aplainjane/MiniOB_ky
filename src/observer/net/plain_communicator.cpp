@@ -19,6 +19,9 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "common/io/io.h"
 #include "common/log/log.h"
+#include "storage/db/db.h"
+#include "storage/index/ivfflat_index.h"
+#include <float.h>
 
 PlainCommunicator::PlainCommunicator()
 {
@@ -261,6 +264,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   Tuple *tuple = nullptr;
 
   auto order_rules = sql_result->get_order_rules();
+  auto vec_order_rules = sql_result->get_vec_order_rules();
   /* 为了实现order by， 不得已只能在这里修改了  */
 
   if (order_rules.size() > 0)
@@ -378,6 +382,155 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         sql_result->close();
         return rc;
       }
+    }
+  }
+  else if (vec_order_rules.type != NO_Func)
+  {
+    // 获得排序列的索引与标识
+    int order_index;
+    FuncOp order_op;
+
+    order_op = vec_order_rules.type;
+    bool have_index =false;
+    Index * idx =nullptr;
+
+    Table * table = nullptr;
+    Db *db = session_->get_current_db();
+
+    for(int i = 0; i < cell_num; i++){
+      const TupleCellSpec &spec = schema.cell_at(i);
+      if(  (strlen(spec.table_name()) == 0 && strcmp(spec.alias(), vec_order_rules.first_attr.attribute_name.c_str()) == 0 )
+        || ((strcmp(spec.table_name(), vec_order_rules.first_attr.relation_name.c_str()) == 0) && strcmp(spec.field_name(), vec_order_rules.first_attr.attribute_name.c_str()) == 0)
+        
+      )
+      {
+        order_index = i;
+        table = db->find_table(spec.table_name());
+        if (nullptr == table) {
+          LOG_WARN("no such table for vec search.");
+          return RC::SCHEMA_TABLE_NOT_EXIST;
+        }
+        idx = table->find_vec_index_by_fields(vec_order_rules.first_attr.attribute_name.c_str()); 
+        if (nullptr != idx) {
+          have_index = true;
+        }
+        break;
+      }
+    }
+
+    if (have_index) {
+      // use ann search
+      std::vector<RID> vec_result;
+      IvfflatIndex * ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
+      vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
+      std::vector<Record *> record_set;
+      for (int i = 0; i < vec_result.size(); i++) {
+        Record *record = nullptr;
+        rc = table->get_record(vec_result[i], *record);
+        if (rc != RC::SUCCESS) {
+          LOG_ERROR("Failed to get record from table. (vec index)",);
+          return RC::INTERNAL;
+        }
+        record_set.push_back(record);
+      }
+
+      // need be finished lky:output by record
+      // std::vector<std::vector<Value>> tuple_set;
+      // Record *record = record_set.back();
+      // while (record) {
+      //   RowTuple *new_tuple = new RowTuple();
+      //   new_tuple->set_record(record);
+      //   std::vector<Value> temp;
+      //   int num_cell = new_tuple->cell_num();
+      //   for(int i = 0; i < num_cell; i++){
+      //     Value cell;
+      //     new_tuple->cell_at(i, cell);
+      //     temp.push_back(cell);
+      //   }
+      //   tuple_set.push_back(temp);    
+      // }
+
+    } else {
+      // search with function result
+      // 取出全部Tuple
+      std::vector<std::vector<Value>> tuple_set;
+      while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+        std::vector<Value> temp;
+        int num_cell = tuple->cell_num();
+        for(int i = 0; i < num_cell; i++){
+          Value cell;
+          tuple->cell_at(i, cell);
+          temp.push_back(cell);
+        }
+        tuple_set.push_back(temp);    
+      }
+      if(rc == RC::INTERNAL)
+      {
+        sql_result->set_return_code(RC::INTERNAL);
+        sql_result->close();
+        rc = writer_->clear();
+        return write_state(event, need_disconnect);
+      }
+      // 排序
+      std::sort(tuple_set.begin(), tuple_set.end(), 
+        [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
+
+          int target_index = order_index;
+          const Value& v1 = t1[target_index];
+          const Value& v2 = t2[target_index];
+
+          Value v1_float;
+          v1_float.set_float(FLT_MAX);
+          Value v2_float;
+          v2_float.set_float(FLT_MAX);
+
+          int ret = 0;
+
+          switch (order_op)
+          {
+            case I2_DISTANCE:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              // need be finished gyf
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+
+            } break;
+            case COSINE_DISTANCE:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              // need be finished gyf
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+            } break;
+            case INNER_PRODUCT:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              // need be finished gyf
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+            } break;
+            default:
+              break;
+          }
+          if (v1_float.get_float() == FLT_MAX || v2_float.get_float() == FLT_MAX){
+            LOG_WARN("failed to cast to float");
+            return false;
+          }
+          int ret = v1_float.compare(v2_float);
+          if (ret != 0) {
+            // 根据排序方向决定顺序    
+            return ret > 0;
+          }
+      
+          // 如果所有字段都相等，返回false表示保持当前顺序
+          return false;
+        }
+      );
+      // show datas finished by lky
     }
   }
   else {

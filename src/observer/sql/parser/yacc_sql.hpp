@@ -121,18 +121,24 @@ extern int yydebug;
     I2_DISTANCE_T = 322,           /* I2_DISTANCE_T  */
     COSINE_DISTANCE_T = 323,       /* COSINE_DISTANCE_T  */
     INNER_PRODUCT_T = 324,         /* INNER_PRODUCT_T  */
-    SUM = 325,                     /* SUM  */
-    AVG = 326,                     /* AVG  */
-    COUNT = 327,                   /* COUNT  */
-    MAX = 328,                     /* MAX  */
-    MIN = 329,                     /* MIN  */
-    NUMBER = 330,                  /* NUMBER  */
-    FLOAT = 331,                   /* FLOAT  */
-    ID = 332,                      /* ID  */
-    SSS = 333,                     /* SSS  */
-    SUB_QUERY = 334,               /* SUB_QUERY  */
-    VECTOR_LIST = 335,             /* VECTOR_LIST  */
-    UMINUS = 336                   /* UMINUS  */
+    WITH = 325,                    /* WITH  */
+    DISTANCE = 326,                /* DISTANCE  */
+    TYPE = 327,                    /* TYPE  */
+    LISTS = 328,                   /* LISTS  */
+    PROBES = 329,                  /* PROBES  */
+    LIMIT = 330,                   /* LIMIT  */
+    SUM = 331,                     /* SUM  */
+    AVG = 332,                     /* AVG  */
+    COUNT = 333,                   /* COUNT  */
+    MAX = 334,                     /* MAX  */
+    MIN = 335,                     /* MIN  */
+    NUMBER = 336,                  /* NUMBER  */
+    FLOAT = 337,                   /* FLOAT  */
+    ID = 338,                      /* ID  */
+    SSS = 339,                     /* SSS  */
+    SUB_QUERY = 340,               /* SUB_QUERY  */
+    VECTOR_LIST = 341,             /* VECTOR_LIST  */
+    UMINUS = 342                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -141,7 +147,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 143 "yacc_sql.y"
+#line 149 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
@@ -157,6 +163,7 @@ union YYSTYPE
   UpdateKV *                                 set_clause;
   std::vector<UpdateKV> *                    set_clause_list;
   std::vector<std::pair<RelAttrSqlNode, OrderOp>>* order_by_list;
+  VecOrderByNode *                           vec_order_by;
   std::vector<std::unique_ptr<Expression>> * expression_list;
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
@@ -167,7 +174,7 @@ union YYSTYPE
   float                                      floats;
   bool                                       boolean;
 
-#line 171 "yacc_sql.hpp"
+#line 178 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

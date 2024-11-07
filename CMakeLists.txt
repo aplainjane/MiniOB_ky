@@ -24,6 +24,7 @@ OPTION(STATIC_STDLIB "Link std library static or dynamic, such as libgcc, libstd
 OPTION(USE_SIMD "Use SIMD" OFF)
 OPTION(USE_MUSL_LIBC "Use musl libc" OFF)
 
+
 MESSAGE(STATUS "HOME dir: $ENV{HOME}")
 #SET(ENV{变量名} 值)
 IF(WIN32)
@@ -153,6 +154,11 @@ IF (EXISTS /usr/local/lib64)
     LINK_DIRECTORIES (/usr/local/lib64)
 ENDIF ()
 
+# 包含 BLAS 库
+add_library(BLAS STATIC ${PROJECT_SOURCE_DIR}/deps/blas/blas.f)
+set_target_properties(BLAS PROPERTIES LINKER_LANGUAGE Fortran)
+target_include_directories(BLAS PUBLIC ${PROJECT_SOURCE_DIR}/deps/blas)
+
 INCLUDE_DIRECTORIES(. ${PROJECT_SOURCE_DIR}/deps /usr/local/include)
 
 IF(WITH_UNIT_TESTS)
@@ -166,18 +172,12 @@ SET(CMAKE_CXX_FLAGS ${CMAKE_COMMON_FLAGS})
 SET(CMAKE_C_FLAGS ${CMAKE_COMMON_FLAGS})
 MESSAGE(STATUS "CMAKE_CXX_FLAGS is " ${CMAKE_CXX_FLAGS})
 
-# ADD_SUBDIRECTORY(src bin)  bin 为目标目录， 可以省略
+# ADD_SUBDIRECTORY(src bin)  bin 为目标目录，可以省略
 ADD_SUBDIRECTORY(deps)
 ADD_SUBDIRECTORY(src/obclient)
 ADD_SUBDIRECTORY(src/observer)
 ADD_SUBDIRECTORY(test/perf)
 ADD_SUBDIRECTORY(tools)
 
-IF (WITH_BENCHMARK)
-    ADD_SUBDIRECTORY(benchmark)
-ENDIF(WITH_BENCHMARK)
-
-IF(WITH_UNIT_TESTS)
-    ADD_SUBDIRECTORY(unittest)
-ENDIF(WITH_UNIT_TESTS)
+# 链
 

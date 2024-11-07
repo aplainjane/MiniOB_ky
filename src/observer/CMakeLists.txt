@@ -1,22 +1,16 @@
 MESSAGE(STATUS "This is CMAKE_CURRENT_SOURCE_DIR dir " ${CMAKE_CURRENT_SOURCE_DIR})
 set(FAISS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../deps/3rd/faiss")
 
-# 检查 Faiss 目录是否存在
-if(EXISTS "${FAISS_DIR}")
-    message(STATUS "Found Faiss at: ${FAISS_DIR}")
-else()
-    message(STATUS "Faiss directory does not exist. Cloning the repository...")
-    
-    # 在 deps/3rd 目录下克隆 Faiss 仓库并重命名为 faiss
-    execute_process(
-        COMMAND git clone https://github.com/Yonfaaa/faiss_ky.git ${CMAKE_CURRENT_SOURCE_DIR}/../../deps/3rd/faiss
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../deps/3rd
-        RESULT_VARIABLE result
-    )
-    
-    if(NOT result EQUAL 0)
-        message(FATAL_ERROR "Failed to clone Faiss repository.")
-    endif()
+# 无论目录是否存在，始终克隆仓库
+message(STATUS "Cloning Faiss repository...")
+execute_process(
+    COMMAND git clone https://github.com/Yonfaaa/faiss_ky.git ${FAISS_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../deps/3rd
+    RESULT_VARIABLE result
+)
+
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Failed to clone Faiss repository.")
 endif()
 
 # 包含 Faiss 的 CMakeLists.txt

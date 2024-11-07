@@ -76,6 +76,18 @@ function do_init
 
   MAKE_COMMAND="make --silent"
 
+  # 添加环境变量设置 FAISS 安装路径
+  if [ ! -z "$FAISS_DIR" ]; then
+    echo "Using FAISS_DIR: $FAISS_DIR"
+    CMAKE_COMMAND="$CMAKE_COMMAND -DFAISS_DIR=$FAISS_DIR"
+  fi
+
+  # 添加 CMAKE_PREFIX_PATH 环境变量
+  if [ ! -z "$FAISS_PREFIX_PATH" ]; then
+    echo "Using CMAKE_PREFIX_PATH: $FAISS_PREFIX_PATH"
+    CMAKE_COMMAND="$CMAKE_COMMAND -DCMAKE_PREFIX_PATH=$FAISS_PREFIX_PATH"
+  fi
+
   # build libevent
   cd ${TOPDIR}/deps/3rd/libevent && \
     mkdir -p build && \
@@ -108,17 +120,17 @@ function do_init
     ${MAKE_COMMAND} && \
     ${MAKE_COMMAND} install
 
-   # build faiss
+  # build faiss
   cd ${TOPDIR}/deps/3rd/faiss && \
     mkdir -p build && \
     cd build && \
-    ${CMAKE_COMMAND} .. -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF && \  # 根据需要修改选项
+    ${CMAKE_COMMAND} .. -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF && \
     ${MAKE_COMMAND} -j4 && \
     ${MAKE_COMMAND} install
 
-
   cd $current_dir
 }
+
 
 function do_musl_init
 {
@@ -146,9 +158,22 @@ function do_build
 {
   TYPE=$1; shift
   prepare_build_dir $TYPE || return
+  
+  # 添加 FAISS 配置路径
+  if [ ! -z "$FAISS_DIR" ]; then
+    echo "Using FAISS_DIR: $FAISS_DIR"
+    CMAKE_COMMAND="$CMAKE_COMMAND -DFAISS_DIR=$FAISS_DIR"
+  fi
+  
+  if [ ! -z "$FAISS_PREFIX_PATH" ]; then
+    echo "Using CMAKE_PREFIX_PATH: $FAISS_PREFIX_PATH"
+    CMAKE_COMMAND="$CMAKE_COMMAND -DCMAKE_PREFIX_PATH=$FAISS_PREFIX_PATH"
+  fi
+
   echo "${CMAKE_COMMAND} ${TOPDIR} $@"
   ${CMAKE_COMMAND} -S ${TOPDIR} $@
 }
+
 
 function do_clean
 {

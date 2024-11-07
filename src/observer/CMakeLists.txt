@@ -1,4 +1,11 @@
 MESSAGE(STATUS "This is CMAKE_CURRENT_SOURCE_DIR dir " ${CMAKE_CURRENT_SOURCE_DIR})
+set(FAISS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../deps/3rd/faiss")
+
+# 包含 Faiss 的 CMakeLists.txt
+add_subdirectory(${FAISS_DIR} ${CMAKE_BINARY_DIR}/faiss_build)
+
+include_directories(${FAISS_DIR}/include)
+link_directories(${FAISS_DIR}/build)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -16,8 +23,6 @@ ENDFOREACH (F)
 
 SET(LIBEVENT_STATIC_LINK TRUE)
 FIND_PACKAGE(Libevent CONFIG REQUIRED)
-FIND_PACKAGE(FAISS REQUIRED)
-FIND_PACKAGE(OpenMP REQUIRED)
 
 # JsonCpp cannot work correctly with FIND_PACKAGE
 

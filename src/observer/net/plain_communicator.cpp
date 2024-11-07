@@ -405,7 +405,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       )
       {
         order_index = i;
-        table = db->find_table(spec.table_name());
+        table = db->find_table(0); //假定只有一个表进行操作（？）
         if (nullptr == table) {
           LOG_WARN("no such table for vec search.");
           return RC::SCHEMA_TABLE_NOT_EXIST;

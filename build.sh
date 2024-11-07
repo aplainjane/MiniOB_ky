@@ -108,14 +108,6 @@ function do_init
     ${MAKE_COMMAND} && \
     ${MAKE_COMMAND} install
 
-  # build FAISS
-  cd ${TOPDIR}/deps/3rd/faiss && \
-    mkdir -p build && \
-    cd build && \
-    ${CMAKE_COMMAND} .. -DFAISS_ENABLE_PYTHON=OFF && \
-    ${MAKE_COMMAND} -j4 && \
-    ${MAKE_COMMAND} install
-
   cd $current_dir
 }
 

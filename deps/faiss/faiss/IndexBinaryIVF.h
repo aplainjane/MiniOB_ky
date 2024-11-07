@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -32,36 +32,27 @@ struct BinaryInvertedListScanner;
  */
 struct IndexBinaryIVF : IndexBinary {
     /// Access to the actual data
-    InvertedLists* invlists = nullptr;
-    bool own_invlists = true;
+    InvertedLists* invlists;
+    bool own_invlists;
 
-    size_t nprobe = 1;    ///< number of probes at query time
-    size_t max_codes = 0; ///< max nb of codes to visit to do a query
+    size_t nprobe;    ///< number of probes at query time
+    size_t max_codes; ///< max nb of codes to visit to do a query
 
     /** Select between using a heap or counting to select the k smallest values
      * when scanning inverted lists.
      */
     bool use_heap = true;
 
-    /** collect computations per batch */
-    bool per_invlist_search = false;
-
     /// map for direct access to the elements. Enables reconstruct().
     DirectMap direct_map;
 
-    /// quantizer that maps vectors to inverted lists
-    IndexBinary* quantizer = nullptr;
+    IndexBinary* quantizer; ///< quantizer that maps vectors to inverted lists
+    size_t nlist;           ///< number of possible key values
 
-    /// number of possible key values
-    size_t nlist = 0;
-
-    /// whether object owns the quantizer
-    bool own_fields = false;
+    bool own_fields; ///< whether object owns the quantizer
 
     ClusteringParameters cp; ///< to override default clustering params
-
-    /// to override index used during clustering
-    Index* clustering_index = nullptr;
+    Index* clustering_index; ///< to override index used during clustering
 
     /** The Inverted file takes a quantizer (an IndexBinary) on input,
      * which implements the function mapping a vector to a list
@@ -205,7 +196,7 @@ struct IndexBinaryIVF : IndexBinary {
         return invlists->list_size(list_no);
     }
 
-    /** initialize a direct map
+    /** intialize a direct map
      *
      * @param new_maintain_direct_map    if true, create a direct map,
      *                                   else clear it
@@ -218,6 +209,8 @@ struct IndexBinaryIVF : IndexBinary {
 };
 
 struct BinaryInvertedListScanner {
+    using idx_t = Index::idx_t;
+
     /// from now on we handle this query.
     virtual void set_query(const uint8_t* query_vector) = 0;
 

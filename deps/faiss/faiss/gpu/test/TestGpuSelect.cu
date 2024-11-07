@@ -1,11 +1,10 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <faiss/Index.h>
 #include <faiss/gpu/StandardGpuResources.h>
 #include <faiss/gpu/test/TestUtils.h>
 #include <faiss/gpu/utils/DeviceUtils.h>
@@ -21,7 +20,6 @@
 #include <vector>
 
 void testForSize(int rows, int cols, int k, bool dir, bool warp) {
-    using namespace faiss;
     using namespace faiss::gpu;
 
     StandardGpuResources res;
@@ -67,7 +65,7 @@ void testForSize(int rows, int cols, int k, bool dir, bool warp) {
             res.getResources().get(),
             makeDevAlloc(AllocType::Other, 0),
             {rows, k});
-    DeviceTensor<idx_t, 2, true> gpuOutInd(
+    DeviceTensor<int, 2, true> gpuOutInd(
             res.getResources().get(),
             makeDevAlloc(AllocType::Other, 0),
             {rows, k});
@@ -80,10 +78,10 @@ void testForSize(int rows, int cols, int k, bool dir, bool warp) {
 
     // Copy back to CPU
     HostTensor<float, 2, true> outVal(gpuOutVal, 0);
-    HostTensor<idx_t, 2, true> outInd(gpuOutInd, 0);
+    HostTensor<int, 2, true> outInd(gpuOutInd, 0);
 
     for (int r = 0; r < rows; ++r) {
-        std::unordered_map<idx_t, idx_t> seenIndices;
+        std::unordered_map<int, int> seenIndices;
 
         for (int i = 0; i < k; ++i) {
             float gpuV = outVal[r][i];
@@ -99,8 +97,8 @@ void testForSize(int rows, int cols, int k, bool dir, bool warp) {
             // equivalent values is different than the CPU (and will remain
             // unspecified, since this is affected by the choice of
             // k-selection algorithm that we use)
-            idx_t gpuInd = outInd[r][i];
-            idx_t cpuInd = hostOutValAndInd[r][i].first;
+            int gpuInd = outInd[r][i];
+            int cpuInd = hostOutValAndInd[r][i].first;
 
             // We should never see duplicate indices, however
             auto itSeenIndex = seenIndices.find(gpuInd);

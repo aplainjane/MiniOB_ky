@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,16 +14,16 @@
     extern void runBlockSelect_##TYPE##_##DIR##_##WARP_Q##_(     \
             Tensor<TYPE, 2, true>& in,                           \
             Tensor<TYPE, 2, true>& outK,                         \
-            Tensor<idx_t, 2, true>& outV,                        \
+            Tensor<int, 2, true>& outV,                          \
             bool dir,                                            \
             int k,                                               \
             cudaStream_t stream);                                \
                                                                  \
     extern void runBlockSelectPair_##TYPE##_##DIR##_##WARP_Q##_( \
             Tensor<TYPE, 2, true>& inK,                          \
-            Tensor<idx_t, 2, true>& inV,                         \
+            Tensor<int, 2, true>& inV,                           \
             Tensor<TYPE, 2, true>& outK,                         \
-            Tensor<idx_t, 2, true>& outV,                        \
+            Tensor<int, 2, true>& outV,                          \
             bool dir,                                            \
             int k,                                               \
             cudaStream_t stream)
@@ -32,7 +32,7 @@
     void runBlockSelect_##TYPE##_##DIR##_##WARP_Q##_(                          \
             Tensor<TYPE, 2, true>& in,                                         \
             Tensor<TYPE, 2, true>& outK,                                       \
-            Tensor<idx_t, 2, true>& outV,                                      \
+            Tensor<int, 2, true>& outV,                                        \
             bool dir,                                                          \
             int k,                                                             \
             cudaStream_t stream) {                                             \
@@ -52,22 +52,16 @@
         auto kInit = dir ? Limits<TYPE>::getMin() : Limits<TYPE>::getMax();    \
         auto vInit = -1;                                                       \
                                                                                \
-        blockSelect<                                                           \
-                TYPE,                                                          \
-                idx_t,                                                         \
-                DIR,                                                           \
-                WARP_Q,                                                        \
-                THREAD_Q,                                                      \
-                kBlockSelectNumThreads>                                        \
+        blockSelect<TYPE, int, DIR, WARP_Q, THREAD_Q, kBlockSelectNumThreads>  \
                 <<<grid, block, 0, stream>>>(in, outK, outV, kInit, vInit, k); \
         CUDA_TEST_ERROR();                                                     \
     }                                                                          \
                                                                                \
     void runBlockSelectPair_##TYPE##_##DIR##_##WARP_Q##_(                      \
             Tensor<TYPE, 2, true>& inK,                                        \
-            Tensor<idx_t, 2, true>& inV,                                       \
+            Tensor<int, 2, true>& inV,                                         \
             Tensor<TYPE, 2, true>& outK,                                       \
-            Tensor<idx_t, 2, true>& outV,                                      \
+            Tensor<int, 2, true>& outV,                                        \
             bool dir,                                                          \
             int k,                                                             \
             cudaStream_t stream) {                                             \
@@ -87,7 +81,7 @@
                                                                                \
         blockSelectPair<                                                       \
                 TYPE,                                                          \
-                idx_t,                                                         \
+                int,                                                           \
                 DIR,                                                           \
                 WARP_Q,                                                        \
                 THREAD_Q,                                                      \

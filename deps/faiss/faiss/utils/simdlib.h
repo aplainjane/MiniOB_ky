@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,22 +14,13 @@
  * functions.
  */
 
-#if defined(__AVX512F__)
-
-#include <faiss/utils/simdlib_avx2.h>
-#include <faiss/utils/simdlib_avx512.h>
-
-#elif defined(__AVX2__)
+#ifdef __AVX2__
 
 #include <faiss/utils/simdlib_avx2.h>
 
 #elif defined(__aarch64__)
 
 #include <faiss/utils/simdlib_neon.h>
-
-#elif defined(__PPC64__)
-
-#include <faiss/utils/simdlib_ppc64.h>
 
 #else
 

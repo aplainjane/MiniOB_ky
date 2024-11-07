@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -45,21 +45,22 @@ struct IcmEncoderFactory;
 struct LocalSearchQuantizer : AdditiveQuantizer {
     size_t K; ///< number of codes per codebook
 
-    size_t train_iters = 25;      ///< number of iterations in training
-    size_t encode_ils_iters = 16; ///< iterations of local search in encoding
-    size_t train_ils_iters = 8;   ///< iterations of local search in training
-    size_t icm_iters = 4;         ///< number of iterations in icm
+    size_t train_iters; ///< number of iterations in training
 
-    float p = 0.5f;      ///< temperature factor
-    float lambd = 1e-2f; ///< regularization factor
+    size_t encode_ils_iters; ///< iterations of local search in encoding
+    size_t train_ils_iters;  ///< iterations of local search in training
+    size_t icm_iters;        ///< number of iterations in icm
 
-    size_t chunk_size = 10000; ///< nb of vectors to encode at a time
+    float p;     ///< temperature factor
+    float lambd; ///< regularization factor
 
-    int random_seed = 0x12345; ///< seed for random generator
-    size_t nperts = 4;         ///< number of perturbation in each code
+    size_t chunk_size; ///< nb of vectors to encode at a time
 
-    ///< if non-NULL, use this encoder to encode (owned by the object)
-    lsq::IcmEncoderFactory* icm_encoder_factory = nullptr;
+    int random_seed; ///< seed for random generator
+    size_t nperts;   ///< number of perturbation in each code
+
+    ///< if non-NULL, use this encoder to encode
+    lsq::IcmEncoderFactory* icm_encoder_factory;
 
     bool update_codebooks_with_double = true;
 

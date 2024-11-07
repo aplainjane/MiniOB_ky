@@ -1,32 +1,25 @@
 # Installing Faiss via conda
 
-The supported way to install Faiss is through [conda](https://docs.conda.io).
+The recommended way to install Faiss is through [conda](https://docs.conda.io).
 Stable releases are pushed regularly to the pytorch conda channel, as well as
 pre-release nightly builds.
 
-- The CPU-only faiss-cpu conda package is currently available on Linux (x86-64 and aarch64), OSX (arm64 only), and Windows (x86-64)
-- faiss-gpu, containing both CPU and GPU indices, is available on Linux (x86-64 only) for CUDA 11.4 and 12.1
-- faiss-gpu-raft containing both CPU and GPU indices provided by NVIDIA RAFT, is available on Linux (x86-64 only) for CUDA 11.8 and 12.1.
+The CPU-only `faiss-cpu` conda package is currently available on Linux, OSX, and
+Windows. The `faiss-gpu`, containing both CPU and GPU indices, is available on
+Linux systems, for various versions of CUDA.
 
 To install the latest stable release:
 
 ``` shell
 # CPU-only version
-$ conda install -c pytorch faiss-cpu=1.9.0
+$ conda install -c pytorch faiss-cpu
 
 # GPU(+CPU) version
-$ conda install -c pytorch -c nvidia faiss-gpu=1.9.0
+$ conda install -c pytorch faiss-gpu
 
-# GPU(+CPU) version with NVIDIA RAFT
-$ conda install -c pytorch -c nvidia -c rapidsai -c conda-forge faiss-gpu-raft=1.9.0
-
-# GPU(+CPU) version using AMD ROCm not yet available
+# or for a specific CUDA version
+$ conda install -c pytorch faiss-gpu cudatoolkit=10.2 # for CUDA 10.2
 ```
-
-For faiss-gpu, the nvidia channel is required for CUDA, which is not
-published in the main anaconda channel.
-
-For faiss-gpu-raft, the nvidia, rapidsai and conda-forge channels are required.
 
 Nightly pre-release packages can be installed as follows:
 
@@ -35,20 +28,7 @@ Nightly pre-release packages can be installed as follows:
 $ conda install -c pytorch/label/nightly faiss-cpu
 
 # GPU(+CPU) version
-$ conda install -c pytorch/label/nightly -c nvidia faiss-gpu=1.9.0
-
-# GPU(+CPU) version with NVIDIA RAFT
-conda install -c pytorch -c nvidia -c rapidsai -c conda-forge faiss-gpu-raft=1.9.0 pytorch pytorch-cuda numpy
-
-# GPU(+CPU) version using AMD ROCm not yet available
-```
-In the above commands, pytorch-cuda=11 or pytorch-cuda=12 would select a specific CUDA version, if it’s required.
-
-A combination of versions that installs GPU Faiss with CUDA and Pytorch (as of 2024-05-15):
-```
-conda create --name faiss_1.8.0
-conda activate faiss_1.8.0
-conda install -c pytorch -c nvidia faiss-gpu=1.8.0 pytorch=*=*cuda* pytorch-cuda=11 numpy
+$ conda install -c pytorch/label/nightly faiss-gpu
 ```
 
 ## Installing from conda-forge
@@ -67,8 +47,6 @@ $ conda install -c conda-forge faiss-cpu
 
 # GPU version
 $ conda install -c conda-forge faiss-gpu
-
-# AMD ROCm version not yet available
 ```
 
 You can tell which channel your conda packages come from by using `conda list`.
@@ -80,21 +58,19 @@ conda-forge package "feedstock".
 
 Faiss can be built from source using CMake.
 
-Faiss is supported on x86-64 machines on Linux, OSX, and Windows. It has been
+Faiss is supported on x86_64 machines on Linux, OSX, and Windows. It has been
 found to run on other platforms as well, see
 [other platforms](https://github.com/facebookresearch/faiss/wiki/Related-projects#bindings-to-other-languages-and-porting-to-other-platforms).
 
 The basic requirements are:
-- a C++17 compiler (with support for OpenMP support version 2 or higher),
-- a BLAS implementation (on Intel machines we strongly recommend using Intel MKL for best
+- a C++11 compiler (with support for OpenMP support version 2 or higher),
+- a BLAS implementation (we strongly recommend using Intel MKL for best
 performance).
 
 The optional requirements are:
 - for GPU indices:
   - nvcc,
   - the CUDA toolkit,
-- for AMD GPUs:
-  - AMD ROCm,
 - for the python bindings:
   - python 3,
   - numpy,
@@ -118,22 +94,15 @@ Several options can be passed to CMake, among which:
   values are `ON` and `OFF`),
   - `-DFAISS_ENABLE_PYTHON=OFF` in order to disable building python bindings
   (possible values are `ON` and `OFF`),
-  - `-DFAISS_ENABLE_RAFT=ON` in order to enable building the RAFT implementations
-    of the IVF-Flat and IVF-PQ GPU-accelerated indices (default is `OFF`, possible
-    values are `ON` and `OFF`)
   - `-DBUILD_TESTING=OFF` in order to disable building C++ tests,
   - `-DBUILD_SHARED_LIBS=ON` in order to build a shared library (possible values
   are `ON` and `OFF`),
-  - `-DFAISS_ENABLE_C_API=ON` in order to enable building [C API](c_api/INSTALL.md) (possible values
-    are `ON` and `OFF`),
 - optimization-related options:
   - `-DCMAKE_BUILD_TYPE=Release` in order to enable generic compiler
   optimization options (enables `-O3` on gcc for instance),
   - `-DFAISS_OPT_LEVEL=avx2` in order to enable the required compiler flags to
-  generate code using optimized SIMD/Vector instructions. Possible values are below:
-    - On x86-64, `generic`, `avx2` and `avx512`, by increasing order of optimization,
-    - On aarch64, `generic` and `sve`, by increasing order of optimization,
-  - `-DFAISS_USE_LTO=ON` in order to enable [Link-Time Optimization](https://en.wikipedia.org/wiki/Link-time_optimization) (default is `OFF`, possible values are `ON` and `OFF`).
+  generate code using optimized SIMD instructions (possible values are `generic`
+  and `avx2`, by increasing order of optimization),
 - BLAS-related options:
   - `-DBLA_VENDOR=Intel10_64_dyn -DMKL_LIBRARIES=/path/to/mkl/libs` to use the
   Intel MKL BLAS implementation, which is significantly faster than OpenBLAS
@@ -146,8 +115,6 @@ Several options can be passed to CMake, among which:
   - `-DCMAKE_CUDA_ARCHITECTURES="75;72"` for specifying which GPU architectures
   to build against (see [CUDA docs](https://developer.nvidia.com/cuda-gpus) to
   determine which architecture(s) you should pick),
-  - `-DFAISS_ENABLE_ROCM=ON` in order to enable building GPU indices for AMD GPUs.
- `-DFAISS_ENABLE_GPU` must be `ON` when using this option. (possible values are `ON` and `OFF`),
 - python-related options:
   - `-DPython_EXECUTABLE=/path/to/python3.7` in order to build a python
   interface for a different python than the default one (see
@@ -166,22 +133,6 @@ The `-j` option enables parallel compilation of multiple units, leading to a
 faster build, but increasing the chances of running out of memory, in which case
 it is recommended to set the `-j` option to a fixed value (such as `-j4`).
 
-If making use of optimization options, build the correct target before swigfaiss.
-
-For AVX2:
-
-``` shell
-$ make -C build -j faiss_avx2
-```
-
-For AVX512:
-
-``` shell
-$ make -C build -j faiss_avx512
-```
-
-This will ensure the creation of neccesary files when building and installing the python package.
-
 ## Step 3: Building the python bindings (optional)
 
 ``` shell
@@ -191,7 +142,6 @@ $ (cd build/faiss/python && python setup.py install)
 
 The first command builds the python bindings for Faiss, while the second one
 generates and installs the python package.
-
 
 ## Step 4: Installing the C++ library and headers (optional)
 

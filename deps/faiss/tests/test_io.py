@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -11,7 +11,7 @@ import os
 import io
 import sys
 import pickle
-from multiprocessing.pool import ThreadPool
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class TestIOVariants(unittest.TestCase):
@@ -80,7 +80,7 @@ class TestCallbacks(unittest.TestCase):
             faiss.vector_to_array(index2.codes)
         )
 
-        # This is not a callable function: should raise an exception
+        # This is not a callable function: shoudl raise an exception
         writer = faiss.PyCallbackIOWriter("blabla")
         self.assertRaises(
             Exception,
@@ -102,6 +102,7 @@ class TestCallbacks(unittest.TestCase):
                 reader = faiss.BufferedIOReader(reader, bsz)
 
                 y = np.zeros_like(x)
+                print('nbytes=', y.nbytes)
                 reader(faiss.swig_ptr(y), y.nbytes, 1)
 
             np.testing.assert_array_equal(x, y)

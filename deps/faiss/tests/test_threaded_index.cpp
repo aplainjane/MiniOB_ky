@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,8 +18,6 @@
 namespace {
 
 struct TestException : public std::exception {};
-
-using idx_t = faiss::idx_t;
 
 struct MockIndex : public faiss::Index {
     explicit MockIndex(idx_t d) : faiss::Index(d) {
@@ -68,7 +66,7 @@ struct MockIndex : public faiss::Index {
 
 template <typename IndexT>
 struct MockThreadedIndex : public faiss::ThreadedIndex<IndexT> {
-    using idx_t = faiss::idx_t;
+    using idx_t = faiss::Index::idx_t;
 
     explicit MockThreadedIndex(bool threaded)
             : faiss::ThreadedIndex<IndexT>(threaded) {}
@@ -169,7 +167,7 @@ TEST(ThreadedIndex, TestReplica) {
     int k = 6;
 
     // Try with threading and without
-    for ([[maybe_unused]] const bool threaded : {true, false}) {
+    for (bool threaded : {true, false}) {
         std::vector<std::unique_ptr<MockIndex>> idxs;
         faiss::IndexReplicas replica(d);
 
@@ -180,7 +178,7 @@ TEST(ThreadedIndex, TestReplica) {
 
         std::vector<float> x(n * d);
         std::vector<float> distances(n * k);
-        std::vector<faiss::idx_t> labels(n * k);
+        std::vector<faiss::Index::idx_t> labels(n * k);
 
         replica.add(n, x.data());
 
@@ -229,7 +227,7 @@ TEST(ThreadedIndex, TestShards) {
 
         std::vector<float> x(n * d);
         std::vector<float> distances(n * k);
-        std::vector<faiss::idx_t> labels(n * k);
+        std::vector<faiss::Index::idx_t> labels(n * k);
 
         shards.add(n, x.data());
 
@@ -247,6 +245,8 @@ TEST(ThreadedIndex, TestShards) {
         shards.search(n, x.data(), k, distances.data(), labels.data());
 
         for (int i = 0; i < idxs.size(); ++i) {
+            auto perShard = n / idxs.size();
+
             EXPECT_EQ(idxs[i]->nCalled, n);
             EXPECT_EQ(idxs[i]->xCalled, x.data());
             EXPECT_EQ(idxs[i]->kCalled, k);

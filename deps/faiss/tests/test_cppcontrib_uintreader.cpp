@@ -1,10 +1,3 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 // This test was designed to be run using valgrind or ASAN to test the
 // correctness of memory accesses.
 
@@ -97,18 +90,14 @@ void TestUintReaderBits() {
     TestUintReader<17, CODE_BITS>();
 }
 
-TEST(testCppcontribUintreader, Test8bit) {
+TEST(TEST_CPPCONTRIB_UINTREADER, Test8bit) {
     TestUintReaderBits<8>();
 }
 
-TEST(testCppcontribUintreader, Test10bit) {
+TEST(TEST_CPPCONTRIB_UINTREADER, Test10bit) {
     TestUintReaderBits<10>();
 }
 
-TEST(testCppcontribUintreader, Test12bit) {
-    TestUintReaderBits<12>();
-}
-
-TEST(testCppcontribUintreader, Test16bit) {
+TEST(TEST_CPPCONTRIB_UINTREADER, Test16bit) {
     TestUintReaderBits<16>();
 }

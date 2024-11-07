@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -92,7 +92,7 @@ IDSelectorBatch::IDSelectorBatch(size_t n, const idx_t* indices) {
     mask = ((idx_t)1 << nbits) - 1;
     bloom.resize((idx_t)1 << (nbits - 3), 0);
     for (idx_t i = 0; i < n; i++) {
-        idx_t id = indices[i];
+        Index::idx_t id = indices[i];
         set.insert(id);
         id &= mask;
         bloom[id >> 3] |= 1 << (id & 7);

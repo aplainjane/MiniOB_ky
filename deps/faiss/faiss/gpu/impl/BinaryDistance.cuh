@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,7 +16,7 @@ void runBinaryDistance(
         Tensor<unsigned char, 2, true>& vecs,
         Tensor<unsigned char, 2, true>& query,
         Tensor<int, 2, true>& outK,
-        Tensor<idx_t, 2, true>& outV,
+        Tensor<int, 2, true>& outV,
         int k,
         cudaStream_t stream);
 

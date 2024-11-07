@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,6 +26,7 @@ namespace faiss {
 struct IndexIVFAdditiveQuantizer : IndexIVF {
     // the quantizer
     AdditiveQuantizer* aq;
+    bool by_residual = true;
     int use_precomputed_table = 0; // for future use
 
     using Search_type_t = AdditiveQuantizer::Search_type_t;
@@ -39,9 +40,7 @@ struct IndexIVFAdditiveQuantizer : IndexIVF {
 
     explicit IndexIVFAdditiveQuantizer(AdditiveQuantizer* aq);
 
-    void train_encoder(idx_t n, const float* x, const idx_t* assign) override;
-
-    idx_t train_encoder_num_vectors() const override;
+    void train_residual(idx_t n, const float* x) override;
 
     void encode_vectors(
             idx_t n,
@@ -55,9 +54,6 @@ struct IndexIVFAdditiveQuantizer : IndexIVF {
             const IDSelector* sel) const override;
 
     void sa_decode(idx_t n, const uint8_t* codes, float* x) const override;
-
-    void reconstruct_from_offset(int64_t list_no, int64_t offset, float* recons)
-            const override;
 
     ~IndexIVFAdditiveQuantizer() override;
 };

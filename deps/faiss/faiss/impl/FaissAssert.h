@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -94,14 +94,12 @@
         }                                              \
     } while (false)
 
-#define FAISS_THROW_IF_MSG(X, MSG)                           \
+#define FAISS_THROW_IF_NOT_MSG(X, MSG)                       \
     do {                                                     \
-        if (X) {                                             \
+        if (!(X)) {                                          \
             FAISS_THROW_FMT("Error: '%s' failed: " MSG, #X); \
         }                                                    \
     } while (false)
-
-#define FAISS_THROW_IF_NOT_MSG(X, MSG) FAISS_THROW_IF_MSG(!(X), MSG)
 
 #define FAISS_THROW_IF_NOT_FMT(X, FMT, ...)                               \
     do {                                                                  \

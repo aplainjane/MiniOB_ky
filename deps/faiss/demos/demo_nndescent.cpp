@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,8 +58,8 @@ int main(void) {
         }
 
         int k = 5;
-        std::vector<faiss::idx_t> nns(k * nq);
-        std::vector<faiss::idx_t> gt_nns(k * nq);
+        std::vector<faiss::IndexNNDescent::idx_t> nns(k * nq);
+        std::vector<faiss::IndexFlat::idx_t> gt_nns(k * nq);
         std::vector<float> dis(k * nq);
 
         auto start = high_resolution_clock::now();

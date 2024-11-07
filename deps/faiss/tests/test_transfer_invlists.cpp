@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -33,7 +33,7 @@ int nlist = 40;
 
 using namespace faiss;
 
-typedef faiss::idx_t idx_t;
+typedef faiss::Index::idx_t idx_t;
 
 std::vector<float> get_data(size_t nb, int seed) {
     std::vector<float> x(nb * d);

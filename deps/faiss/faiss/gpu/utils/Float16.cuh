@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@
 #include <faiss/gpu/utils/DeviceUtils.h>
 
 // Some compute capabilities have full float16 ALUs.
-#if __CUDA_ARCH__ >= 530 || defined(USE_AMD_ROCM)
+#if __CUDA_ARCH__ >= 530
 #define FAISS_USE_FULL_FLOAT16 1
 #endif // __CUDA_ARCH__ types
 

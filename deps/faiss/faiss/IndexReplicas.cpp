@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,34 +12,17 @@
 
 namespace faiss {
 
-namespace {
-
-// IndexBinary needs to update the code_size when d is set...
-
-void sync_d(Index* index) {}
-
-void sync_d(IndexBinary* index) {
-    FAISS_THROW_IF_NOT(index->d % 8 == 0);
-    index->code_size = index->d / 8;
-}
-
-} // anonymous namespace
-
 template <typename IndexT>
 IndexReplicasTemplate<IndexT>::IndexReplicasTemplate(bool threaded)
         : ThreadedIndex<IndexT>(threaded) {}
 
 template <typename IndexT>
 IndexReplicasTemplate<IndexT>::IndexReplicasTemplate(idx_t d, bool threaded)
-        : ThreadedIndex<IndexT>(d, threaded) {
-    sync_d(this);
-}
+        : ThreadedIndex<IndexT>(d, threaded) {}
 
 template <typename IndexT>
 IndexReplicasTemplate<IndexT>::IndexReplicasTemplate(int d, bool threaded)
-        : ThreadedIndex<IndexT>(d, threaded) {
-    sync_d(this);
-}
+        : ThreadedIndex<IndexT>(d, threaded) {}
 
 template <typename IndexT>
 void IndexReplicasTemplate<IndexT>::onAfterAddIndex(IndexT* index) {
@@ -140,13 +123,14 @@ void IndexReplicasTemplate<IndexT>::search(
     size_t componentsPerVec = sizeof(component_t) == 1 ? (dim + 7) / 8 : dim;
 
     // Partition the query by the number of indices we have
-    faiss::idx_t queriesPerIndex =
-            (faiss::idx_t)(n + this->count() - 1) / (faiss::idx_t)this->count();
+    faiss::Index::idx_t queriesPerIndex =
+            (faiss::Index::idx_t)(n + this->count() - 1) /
+            (faiss::Index::idx_t)this->count();
     FAISS_ASSERT(n / queriesPerIndex <= this->count());
 
     auto fn = [queriesPerIndex, componentsPerVec, n, x, k, distances, labels](
                       int i, const IndexT* index) {
-        faiss::idx_t base = (faiss::idx_t)i * queriesPerIndex;
+        faiss::Index::idx_t base = (faiss::Index::idx_t)i * queriesPerIndex;
 
         if (base < n) {
             auto numForIndex = std::min(queriesPerIndex, n - base);
@@ -185,8 +169,6 @@ void IndexReplicasTemplate<IndexT>::syncWithSubIndexes() {
     }
 
     auto firstIndex = this->at(0);
-    this->d = firstIndex->d;
-    sync_d(this);
     this->metric_type = firstIndex->metric_type;
     this->is_trained = firstIndex->is_trained;
     this->ntotal = firstIndex->ntotal;
@@ -200,8 +182,30 @@ void IndexReplicasTemplate<IndexT>::syncWithSubIndexes() {
     }
 }
 
+// No metric_type for IndexBinary
+template <>
+void IndexReplicasTemplate<IndexBinary>::syncWithSubIndexes() {
+    if (!this->count()) {
+        this->is_trained = false;
+        this->ntotal = 0;
+
+        return;
+    }
+
+    auto firstIndex = this->at(0);
+    this->is_trained = firstIndex->is_trained;
+    this->ntotal = firstIndex->ntotal;
+
+    for (int i = 1; i < this->count(); ++i) {
+        auto index = this->at(i);
+        FAISS_THROW_IF_NOT(this->d == index->d);
+        FAISS_THROW_IF_NOT(this->is_trained == index->is_trained);
+        FAISS_THROW_IF_NOT(this->ntotal == index->ntotal);
+    }
+}
+
 // explicit instantiations
-template class IndexReplicasTemplate<Index>;
-template class IndexReplicasTemplate<IndexBinary>;
+template struct IndexReplicasTemplate<Index>;
+template struct IndexReplicasTemplate<IndexBinary>;
 
 } // namespace faiss

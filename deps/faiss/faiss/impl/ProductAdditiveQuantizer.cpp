@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -65,6 +65,13 @@ void ProductAdditiveQuantizer::init(
         M += q->M;
         nbits.insert(nbits.end(), q->nbits.begin(), q->nbits.end());
     }
+    verbose = false;
+    is_trained = false;
+    norm_max = norm_min = NAN;
+    code_size = 0;
+    tot_bits = 0;
+    total_codebook_size = 0;
+    only_8bit = false;
     set_derived_values();
 
     // ProductAdditiveQuantizer

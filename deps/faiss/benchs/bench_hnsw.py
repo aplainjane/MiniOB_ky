@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -17,7 +17,7 @@ except ImportError:
 
 
 k = int(sys.argv[1])
-todo = sys.argv[2:]
+todo = sys.argv[1:]
 
 print("load data")
 

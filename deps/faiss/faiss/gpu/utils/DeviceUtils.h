@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -47,12 +47,6 @@ int getMaxThreads(int device);
 /// Equivalent to getMaxThreads(getCurrentDevice())
 int getMaxThreadsCurrentDevice();
 
-/// Returns the maximum grid size for the given GPU device
-dim3 getMaxGrid(int device);
-
-/// Equivalent to getMaxGrid(getCurrentDevice())
-dim3 getMaxGridCurrentDevice();
-
 /// Returns the maximum smem available for the given GPU device
 size_t getMaxSharedMemPerBlock(int device);
 
@@ -75,12 +69,6 @@ bool getTensorCoreSupport(int device);
 
 /// Equivalent to getTensorCoreSupport(getCurrentDevice())
 bool getTensorCoreSupportCurrentDevice();
-
-/// Returns the warp size of the given GPU device
-int getWarpSize(int device);
-
-/// Equivalent to getWarpSize(getCurrentDevice())
-int getWarpSizeCurrentDevice();
 
 /// Returns the amount of currently available memory on the given device
 size_t getFreeMemory(int device);

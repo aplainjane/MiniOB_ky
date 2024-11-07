@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -37,7 +37,7 @@ namespace gpu {
 IVFPQ::IVFPQ(
         GpuResources* resources,
         int dim,
-        idx_t nlist,
+        int nlist,
         faiss::MetricType metric,
         float metricArg,
         int numSubQuantizers,
@@ -129,13 +129,13 @@ Tensor<float, 3, true> IVFPQ::getPQCentroids() {
 void IVFPQ::appendVectors_(
         Tensor<float, 2, true>& vecs,
         Tensor<float, 2, true>& ivfCentroidResiduals,
-        Tensor<idx_t, 1, true>& indices,
-        Tensor<idx_t, 1, true>& uniqueLists,
-        Tensor<idx_t, 1, true>& vectorsByUniqueList,
-        Tensor<idx_t, 1, true>& uniqueListVectorStart,
-        Tensor<idx_t, 1, true>& uniqueListStartOffset,
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& indices,
+        Tensor<Index::idx_t, 1, true>& uniqueLists,
+        Tensor<int, 1, true>& vectorsByUniqueList,
+        Tensor<int, 1, true>& uniqueListVectorStart,
+        Tensor<int, 1, true>& uniqueListStartOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
         cudaStream_t stream) {
     //
     // Determine the encodings of the vectors
@@ -182,7 +182,7 @@ void IVFPQ::appendVectors_(
                 resources_,
                 makeTempAlloc(AllocType::Other, stream),
                 {numSubQuantizers_, ivfCentroidResiduals.getSize(0), 1});
-        DeviceTensor<idx_t, 3, true> closestSubQIndex(
+        DeviceTensor<int, 3, true> closestSubQIndex(
                 resources_,
                 makeTempAlloc(AllocType::Other, stream),
                 {numSubQuantizers_, ivfCentroidResiduals.getSize(0), 1});
@@ -210,9 +210,9 @@ void IVFPQ::appendVectors_(
                     true);
         }
 
-        // The L2 distance function only returns idx_t indices. As we are
+        // The L2 distance function only returns int32 indices. As we are
         // restricted to <= 8 bits per code, convert to uint8
-        auto closestSubQIndex8 = convertTensorTemporary<idx_t, uint8_t, 3>(
+        auto closestSubQIndex8 = convertTensorTemporary<int, uint8_t, 3>(
                 resources_, stream, closestSubQIndex);
 
         // Now, we have the nearest sub-q centroid for each slice of the
@@ -256,21 +256,19 @@ void IVFPQ::appendVectors_(
     }
 }
 
-size_t IVFPQ::getGpuVectorsEncodingSize_(idx_t numVecs) const {
+size_t IVFPQ::getGpuVectorsEncodingSize_(int numVecs) const {
     if (interleavedLayout_) {
         // bits per PQ code
-        idx_t bits = bitsPerSubQuantizer_;
+        int bits = bitsPerSubQuantizer_;
 
-        int warpSize = getWarpSizeCurrentDevice();
+        // bytes to encode a block of 32 vectors (single PQ code)
+        int bytesPerDimBlock = bits * 32 / 8;
 
-        // bytes to encode a block of warpSize vectors (single PQ code)
-        idx_t bytesPerDimBlock = bits * warpSize / 8;
+        // bytes to fully encode 32 vectors
+        int bytesPerBlock = bytesPerDimBlock * numSubQuantizers_;
 
-        // bytes to fully encode warpSize vectors
-        idx_t bytesPerBlock = bytesPerDimBlock * numSubQuantizers_;
-
-        // number of blocks of warpSize vectors we have
-        idx_t numBlocks = utils::divUp(numVecs, idx_t(warpSize));
+        // number of blocks of 32 vectors we have
+        int numBlocks = utils::divUp(numVecs, 32);
 
         // total size to encode numVecs
         return bytesPerBlock * numBlocks;
@@ -279,17 +277,17 @@ size_t IVFPQ::getGpuVectorsEncodingSize_(idx_t numVecs) const {
     }
 }
 
-size_t IVFPQ::getCpuVectorsEncodingSize_(idx_t numVecs) const {
+size_t IVFPQ::getCpuVectorsEncodingSize_(int numVecs) const {
     size_t sizePerVector =
             utils::divUp(numSubQuantizers_ * bitsPerSubQuantizer_, 8);
 
-    return numVecs * sizePerVector;
+    return (size_t)numVecs * sizePerVector;
 }
 
 // Convert the CPU layout to the GPU layout
 std::vector<uint8_t> IVFPQ::translateCodesToGpu_(
         std::vector<uint8_t> codes,
-        idx_t numVecs) const {
+        size_t numVecs) const {
     if (!interleavedLayout_) {
         return codes;
     }
@@ -303,7 +301,7 @@ std::vector<uint8_t> IVFPQ::translateCodesToGpu_(
 // Conver the GPU layout to the CPU layout
 std::vector<uint8_t> IVFPQ::translateCodesFromGpu_(
         std::vector<uint8_t> codes,
-        idx_t numVecs) const {
+        size_t numVecs) const {
     if (!interleavedLayout_) {
         return codes;
     }
@@ -494,13 +492,13 @@ void IVFPQ::search(
         int nprobe,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices) {
+        Tensor<Index::idx_t, 2, true>& outIndices) {
     // These are caught at a higher level
     FAISS_ASSERT(nprobe <= GPU_MAX_SELECTION_K);
     FAISS_ASSERT(k <= GPU_MAX_SELECTION_K);
 
     auto stream = resources_->getDefaultStreamCurrentDevice();
-    nprobe = int(std::min(idx_t(nprobe), getNumLists()));
+    nprobe = std::min(nprobe, (int)getNumLists());
 
     FAISS_ASSERT(queries.getSize(1) == dim_);
     FAISS_ASSERT(outDistances.getSize(0) == queries.getSize(0));
@@ -511,7 +509,7 @@ void IVFPQ::search(
             resources_,
             makeTempAlloc(AllocType::Other, stream),
             {queries.getSize(0), nprobe});
-    DeviceTensor<idx_t, 2, true> coarseIndices(
+    DeviceTensor<Index::idx_t, 2, true> coarseIndices(
             resources_,
             makeTempAlloc(AllocType::Other, stream),
             {queries.getSize(0), nprobe});
@@ -539,10 +537,10 @@ void IVFPQ::searchPreassigned(
         Index* coarseQuantizer,
         Tensor<float, 2, true>& vecs,
         Tensor<float, 2, true>& ivfDistances,
-        Tensor<idx_t, 2, true>& ivfAssignments,
+        Tensor<Index::idx_t, 2, true>& ivfAssignments,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         bool storePairs) {
     FAISS_ASSERT(ivfDistances.getSize(0) == vecs.getSize(0));
     FAISS_ASSERT(ivfAssignments.getSize(0) == vecs.getSize(0));
@@ -567,10 +565,10 @@ void IVFPQ::searchPreassigned(
 void IVFPQ::searchImpl_(
         Tensor<float, 2, true>& queries,
         Tensor<float, 2, true>& coarseDistances,
-        Tensor<idx_t, 2, true>& coarseIndices,
+        Tensor<Index::idx_t, 2, true>& coarseIndices,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         bool storePairs) {
     FAISS_ASSERT(storePairs == false);
 
@@ -601,7 +599,7 @@ void IVFPQ::searchImpl_(
     // FIXME: we might ultimately be calling this function with inputs
     // from the CPU, these are unnecessary copies
     if (indicesOptions_ == INDICES_CPU) {
-        HostTensor<idx_t, 2, true> hostOutIndices(outIndices, stream);
+        HostTensor<Index::idx_t, 2, true> hostOutIndices(outIndices, stream);
 
         ivfOffsetToUserIndex(
                 hostOutIndices.data(),
@@ -619,10 +617,10 @@ void IVFPQ::searchImpl_(
 void IVFPQ::runPQPrecomputedCodes_(
         Tensor<float, 2, true>& queries,
         Tensor<float, 2, true>& coarseDistances,
-        Tensor<idx_t, 2, true>& coarseIndices,
+        Tensor<Index::idx_t, 2, true>& coarseIndices,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices) {
+        Tensor<Index::idx_t, 2, true>& outIndices) {
     FAISS_ASSERT(metric_ == MetricType::METRIC_L2);
 
     auto stream = resources_->getDefaultStreamCurrentDevice();
@@ -707,10 +705,10 @@ void IVFPQ::runPQPrecomputedCodes_(
 void IVFPQ::runPQNoPrecomputedCodes_(
         Tensor<float, 2, true>& queries,
         Tensor<float, 2, true>& coarseDistances,
-        Tensor<idx_t, 2, true>& coarseIndices,
+        Tensor<Index::idx_t, 2, true>& coarseIndices,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices) {
+        Tensor<Index::idx_t, 2, true>& outIndices) {
     runPQScanMultiPassNoPrecomputed(
             queries,
             ivfCentroids_,

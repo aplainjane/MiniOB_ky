@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+// Copyright 2004-present Facebook. All Rights Reserved.
 // -*- c++ -*-
 
 /// Utility macros for the C wrapper implementation.
@@ -96,12 +97,6 @@
     Faiss##clazz* faiss_##clazz##_cast(FaissIndex* index) {                 \
         return reinterpret_cast<Faiss##clazz*>(dynamic_cast<faiss::clazz*>( \
                 reinterpret_cast<faiss::Index*>(index)));                   \
-    }
-
-#define DEFINE_SEARCH_PARAMETERS_DOWNCAST(clazz)                            \
-    Faiss##clazz* faiss_##clazz##_cast(FaissSearchParameters* sp) {         \
-        return reinterpret_cast<Faiss##clazz*>(dynamic_cast<faiss::clazz*>( \
-                reinterpret_cast<faiss::SearchParameters*>(sp)));           \
     }
 
 #endif

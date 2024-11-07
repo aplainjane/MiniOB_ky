@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,8 +10,6 @@
 #include <assert.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <faiss/Index.h> // idx_t
-#include <stdint.h>
 #include <initializer_list>
 #include <vector>
 
@@ -78,7 +76,7 @@ template <
         typename T,
         int Dim,
         bool InnerContig = false,
-        typename IndexT = idx_t,
+        typename IndexT = int,
         template <typename U> class PtrTraits = traits::DefaultPtrTraits>
 class Tensor {
    public:
@@ -232,12 +230,13 @@ class Tensor {
     }
 
     /// Returns a read/write view of a portion of our tensor.
-    __host__ __device__ inline detail::
-            SubTensor<TensorType, Dim - 1, PtrTraits> operator[](IndexT);
+    __host__ __device__ inline detail::SubTensor<TensorType, Dim - 1, PtrTraits>
+    operator[](IndexT);
 
     /// Returns a read/write view of a portion of our tensor (const).
     __host__ __device__ inline const detail::
-            SubTensor<TensorType, Dim - 1, PtrTraits> operator[](IndexT) const;
+            SubTensor<TensorType, Dim - 1, PtrTraits>
+            operator[](IndexT) const;
 
     /// Returns the size of a given dimension, `[0, Dim - 1]`. No bounds
     /// checking.
@@ -253,7 +252,7 @@ class Tensor {
 
     /// Returns the total number of elements contained within our data
     /// (product of `getSize(i)`)
-    __host__ __device__ IndexT numElements() const;
+    __host__ __device__ size_t numElements() const;
 
     /// If we are contiguous, returns the total size in bytes of our
     /// data
@@ -469,7 +468,7 @@ class SubTensor<TensorType, 0, PtrTraits> {
 
     /// Use the texture cache for reads
     __device__ inline typename TensorType::DataType ldg() const {
-#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
+#if __CUDA_ARCH__ >= 350
         return __ldg(data_);
 #else
         return *data_;
@@ -479,7 +478,7 @@ class SubTensor<TensorType, 0, PtrTraits> {
     /// Use the texture cache for reads; cast as a particular type
     template <typename T>
     __device__ inline T ldgAs() const {
-#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
+#if __CUDA_ARCH__ >= 350
         return __ldg(dataAs<T>());
 #else
         return as<T>();
@@ -605,7 +604,7 @@ class SubTensor {
 
     /// Use the texture cache for reads
     __device__ inline typename TensorType::DataType ldg() const {
-#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
+#if __CUDA_ARCH__ >= 350
         return __ldg(data_);
 #else
         return *data_;
@@ -615,7 +614,7 @@ class SubTensor {
     /// Use the texture cache for reads; cast as a particular type
     template <typename T>
     __device__ inline T ldgAs() const {
-#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
+#if __CUDA_ARCH__ >= 350
         return __ldg(dataAs<T>());
 #else
         return as<T>();

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,12 +28,6 @@
     }
 
 #define READ1(x) READANDCHECK(&(x), 1)
-
-#define READ1_DUMMY(x_type) \
-    {                       \
-        x_type x = {};      \
-        READ1(x);           \
-    }
 
 // will fail if we write 256G of data at once...
 #define READVECTOR(vec)                                              \

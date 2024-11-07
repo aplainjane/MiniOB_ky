@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <faiss/Index.h> // idx_t
 #include <faiss/gpu/GpuResources.h>
 #include <faiss/gpu/utils/Tensor.cuh>
 
@@ -18,7 +17,7 @@ template <
         typename T,
         int Dim,
         bool InnerContig = false,
-        typename IndexT = idx_t,
+        typename IndexT = int,
         template <typename U> class PtrTraits = traits::DefaultPtrTraits>
 class DeviceTensor : public Tensor<T, Dim, InnerContig, IndexT, PtrTraits> {
    public:

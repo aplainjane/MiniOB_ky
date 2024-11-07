@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,6 @@
 #include <vector>
 
 #include <cuda_profiler_api.h>
-#include <faiss/impl/AuxIndexStructures.h>
 
 DEFINE_int32(num, 10000, "# of vecs");
 DEFINE_int32(k, 100, "# of clusters");
@@ -35,7 +34,6 @@ DEFINE_int64(
         "minimum size to use CPU -> GPU paged copies");
 DEFINE_int64(pinned_mem, -1, "pinned memory allocation to use");
 DEFINE_int32(max_points, -1, "max points per centroid");
-DEFINE_double(timeout, 0, "timeout in seconds");
 
 using namespace faiss::gpu;
 
@@ -44,7 +42,7 @@ int main(int argc, char** argv) {
 
     cudaProfilerStop();
 
-    auto seed = FLAGS_seed != -1 ? FLAGS_seed : time(nullptr);
+    auto seed = FLAGS_seed != -1L ? FLAGS_seed : time(nullptr);
     printf("using seed %ld\n", seed);
 
     std::vector<float> vecs((size_t)FLAGS_num * FLAGS_dim);
@@ -101,14 +99,10 @@ int main(int argc, char** argv) {
         cp.max_points_per_centroid = FLAGS_max_points;
     }
 
-    auto tc = new faiss::TimeoutCallback();
-    faiss::InterruptCallback::instance.reset(tc);
-
     faiss::Clustering kmeans(FLAGS_dim, FLAGS_k, cp);
 
     // Time k-means
     {
-        tc->set_timeout(FLAGS_timeout);
         CpuTimer timer;
 
         kmeans.train(FLAGS_num, vecs.data(), *(gpuIndex.getIndex()));

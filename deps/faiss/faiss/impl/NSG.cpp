@@ -1,9 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+// -*- c++ -*-
 
 #include <faiss/impl/NSG.h>
 
@@ -16,27 +18,62 @@
 
 namespace faiss {
 
-namespace {
+namespace nsg {
 
-using LockGuard = std::lock_guard<std::mutex>;
+namespace {
 
 // It needs to be smaller than 0
 constexpr int EMPTY_ID = -1;
 
-} // anonymous namespace
+/* Wrap the distance computer into one that negates the
+   distances. This makes supporting INNER_PRODUCE search easier */
 
-namespace nsg {
+struct NegativeDistanceComputer : DistanceComputer {
+    using idx_t = Index::idx_t;
+
+    /// owned by this
+    DistanceComputer* basedis;
+
+    explicit NegativeDistanceComputer(DistanceComputer* basedis)
+            : basedis(basedis) {}
+
+    void set_query(const float* x) override {
+        basedis->set_query(x);
+    }
+
+    /// compute distance of vector i to current query
+    float operator()(idx_t i) override {
+        return -(*basedis)(i);
+    }
+
+    /// compute distance between two stored vectors
+    float symmetric_dis(idx_t i, idx_t j) override {
+        return -basedis->symmetric_dis(i, j);
+    }
+
+    ~NegativeDistanceComputer() override {
+        delete basedis;
+    }
+};
+
+} // namespace
 
 DistanceComputer* storage_distance_computer(const Index* storage) {
-    if (is_similarity_metric(storage->metric_type)) {
+    if (storage->metric_type == METRIC_INNER_PRODUCT) {
         return new NegativeDistanceComputer(storage->get_distance_computer());
     } else {
         return storage->get_distance_computer();
     }
 }
 
+} // namespace nsg
+
+using namespace nsg;
+
+using LockGuard = std::lock_guard<std::mutex>;
+
 struct Neighbor {
-    int32_t id;
+    int id;
     float distance;
     bool flag;
 
@@ -50,7 +87,7 @@ struct Neighbor {
 };
 
 struct Node {
-    int32_t id;
+    int id;
     float distance;
 
     Node() = default;
@@ -58,11 +95,6 @@ struct Node {
 
     inline bool operator<(const Node& other) const {
         return distance < other.distance;
-    }
-
-    // to keep the compiler happy
-    inline bool operator<(int other) const {
-        return id < other;
     }
 };
 
@@ -105,13 +137,12 @@ inline int insert_into_pool(Neighbor* addr, int K, Neighbor nn) {
     return right;
 }
 
-} // namespace nsg
-
-using namespace nsg;
-
 NSG::NSG(int R) : R(R), rng(0x0903) {
     L = R + 32;
     C = R + 100;
+    search_L = 16;
+    ntotal = 0;
+    is_built = false;
     srand(0x1998);
 }
 
@@ -256,11 +287,9 @@ void NSG::search_on_graph(
     std::vector<int> init_ids(pool_size);
 
     int num_ids = 0;
-    std::vector<index_t> neighbors(graph.K);
-    size_t nneigh = graph.get_neighbors(ep, neighbors.data());
-    for (int i = 0; i < init_ids.size() && i < nneigh; i++) {
-        int id = (int)neighbors[i];
-        if (id >= ntotal) {
+    for (int i = 0; i < init_ids.size() && i < graph.K; i++) {
+        int id = (int)graph.at(ep, i);
+        if (id < 0 || id >= ntotal) {
             continue;
         }
 
@@ -301,10 +330,9 @@ void NSG::search_on_graph(
             retset[k].flag = false;
             int n = retset[k].id;
 
-            size_t nneigh_2 = graph.get_neighbors(n, neighbors.data());
-            for (int m = 0; m < nneigh_2; m++) {
-                int id = neighbors[m];
-                if (id > ntotal || vt.get(id)) {
+            for (int m = 0; m < graph.K; m++) {
+                int id = (int)graph.at(n, m);
+                if (id < 0 || id > ntotal || vt.get(id)) {
                     continue;
                 }
                 vt.set(id);

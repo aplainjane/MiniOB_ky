@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -79,7 +79,7 @@ void runCopyToTest(faiss::ScalarQuantizer::QuantizerType qtype) {
             &res, opt.dim, opt.numCentroids, qtype, METRIC_L2, true, config);
     gpuIndex.train(opt.numTrain, trainVecs.data());
     gpuIndex.add(opt.numAdd, addVecs.data());
-    gpuIndex.nprobe = opt.nprobe;
+    gpuIndex.setNumProbes(opt.nprobe);
 
     // use garbage values to see if we overwrite then
     IndexFlatL2 cpuQuantizer(1);
@@ -100,7 +100,7 @@ void runCopyToTest(faiss::ScalarQuantizer::QuantizerType qtype) {
     EXPECT_EQ(cpuIndex.quantizer->d, gpuIndex.quantizer->d);
     EXPECT_EQ(cpuIndex.d, opt.dim);
     EXPECT_EQ(cpuIndex.nlist, gpuIndex.getNumLists());
-    EXPECT_EQ(cpuIndex.nprobe, gpuIndex.nprobe);
+    EXPECT_EQ(cpuIndex.nprobe, gpuIndex.getNumProbes());
 
     testIVFEquality(cpuIndex, gpuIndex);
 
@@ -172,7 +172,7 @@ void runCopyFromTest(faiss::ScalarQuantizer::QuantizerType qtype) {
             METRIC_L2,
             false,
             config);
-    gpuIndex.nprobe = 1;
+    gpuIndex.setNumProbes(1);
 
     gpuIndex.copyFrom(&cpuIndex);
 
@@ -182,7 +182,7 @@ void runCopyFromTest(faiss::ScalarQuantizer::QuantizerType qtype) {
     EXPECT_EQ(cpuIndex.d, gpuIndex.d);
     EXPECT_EQ(cpuIndex.d, opt.dim);
     EXPECT_EQ(cpuIndex.nlist, gpuIndex.getNumLists());
-    EXPECT_EQ(cpuIndex.nprobe, gpuIndex.nprobe);
+    EXPECT_EQ(cpuIndex.nprobe, gpuIndex.getNumProbes());
 
     testIVFEquality(cpuIndex, gpuIndex);
 

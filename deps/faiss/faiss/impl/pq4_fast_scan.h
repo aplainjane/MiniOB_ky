@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,8 +10,6 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include <faiss/impl/CodePacker.h>
-
 /** PQ4 SIMD packing and accumulation functions
  *
  * The basic kernel accumulates nq query vectors with bbs = nb * 2 * 16 vectors
@@ -19,13 +17,10 @@
  * otherwise register spilling becomes too large.
  *
  * The implementation of these functions is spread over 3 cpp files to reduce
- * parallel compile times. Templates are instantiated explicitly.
+ * parallel compile times. Templates are instanciated explicitly.
  */
 
 namespace faiss {
-
-struct NormTableScaler;
-struct SIMDResultHandler;
 
 /** Pack codes for consumption by the SIMD kernels.
  *  The unused bytes are set to 0.
@@ -34,7 +29,7 @@ struct SIMDResultHandler;
  * @param ntotal  number of input codes
  * @param nb      output number of codes (ntotal rounded up to a multiple of
  *                bbs)
- * @param nsq      number of sub-quantizers (=M rounded up to a muliple of 2)
+ * @param M2      number of sub-quantizers (=M rounded up to a muliple of 2)
  * @param bbs     size of database blocks (multiple of 32)
  * @param blocks  output array, size nb * nsq / 2.
  */
@@ -44,7 +39,7 @@ void pq4_pack_codes(
         size_t M,
         size_t nb,
         size_t bbs,
-        size_t nsq,
+        size_t M2,
         uint8_t* blocks);
 
 /** Same as pack_codes but write in a given range of the output,
@@ -61,7 +56,7 @@ void pq4_pack_codes_range(
         size_t i0,
         size_t i1,
         size_t bbs,
-        size_t nsq,
+        size_t M2,
         uint8_t* blocks);
 
 /** get a single element from a packed codes table
@@ -89,18 +84,6 @@ void pq4_set_packed_element(
         size_t vector_id,
         size_t sq);
 
-/** CodePacker API for the PQ4 fast-scan */
-struct CodePackerPQ4 : CodePacker {
-    size_t nsq;
-
-    CodePackerPQ4(size_t nsq, size_t bbs);
-
-    void pack_1(const uint8_t* flat_code, size_t offset, uint8_t* block)
-            const final;
-    void unpack_1(const uint8_t* block, size_t offset, uint8_t* flat_code)
-            const final;
-};
-
 /** Pack Look-up table for consumption by the kernel.
  *
  * @param nq      number of queries
@@ -120,6 +103,7 @@ void pq4_pack_LUT(int nq, int nsq, const uint8_t* src, uint8_t* dest);
  * @param LUT     packed look-up table
  * @param scaler  scaler to scale the encoded norm
  */
+template <class ResultHandler, class Scaler>
 void pq4_accumulate_loop(
         int nq,
         size_t nb,
@@ -127,8 +111,8 @@ void pq4_accumulate_loop(
         int nsq,
         const uint8_t* codes,
         const uint8_t* LUT,
-        SIMDResultHandler& res,
-        const NormTableScaler* scaler);
+        ResultHandler& res,
+        const Scaler& scaler);
 
 /* qbs versions, supported only for bbs=32.
  *
@@ -180,13 +164,14 @@ int pq4_pack_LUT_qbs_q_map(
  * @param res     call-back for the resutls
  * @param scaler  scaler to scale the encoded norm
  */
+template <class ResultHandler, class Scaler>
 void pq4_accumulate_loop_qbs(
         int qbs,
         size_t nb,
         int nsq,
         const uint8_t* codes,
         const uint8_t* LUT,
-        SIMDResultHandler& res,
-        const NormTableScaler* scaler = nullptr);
+        ResultHandler& res,
+        const Scaler& scaler);
 
 } // namespace faiss

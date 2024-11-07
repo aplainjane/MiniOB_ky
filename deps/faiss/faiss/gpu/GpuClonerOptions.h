@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,55 +14,41 @@ namespace gpu {
 
 /// set some options on how to copy to GPU
 struct GpuClonerOptions {
+    GpuClonerOptions();
+
     /// how should indices be stored on index types that support indices
     /// (anything but GpuIndexFlat*)?
-    IndicesOptions indicesOptions = INDICES_64_BIT;
+    IndicesOptions indicesOptions;
 
     /// is the coarse quantizer in float16?
-    bool useFloat16CoarseQuantizer = false;
+    bool useFloat16CoarseQuantizer;
 
     /// for GpuIndexIVFFlat, is storage in float16?
     /// for GpuIndexIVFPQ, are intermediate calculations in float16?
-    bool useFloat16 = false;
+    bool useFloat16;
 
     /// use precomputed tables?
-    bool usePrecomputed = false;
+    bool usePrecomputed;
 
     /// reserve vectors in the invfiles?
-    long reserveVecs = 0;
+    long reserveVecs;
 
     /// For GpuIndexFlat, store data in transposed layout?
-    bool storeTransposed = false;
+    bool storeTransposed;
 
     /// Set verbose options on the index
-    bool verbose = false;
-
-    /// use the RAFT implementation
-#if defined USE_NVIDIA_RAFT
-    bool use_raft = true;
-#else
-    bool use_raft = false;
-#endif
-
-    /// This flag controls the CPU fallback logic for coarse quantizer
-    /// component of the index. When set to false (default), the cloner will
-    /// throw an exception for indices not implemented on GPU. When set to
-    /// true, it will fallback to a CPU implementation.
-    bool allowCpuCoarseQuantizer = false;
+    bool verbose;
 };
 
 struct GpuMultipleClonerOptions : public GpuClonerOptions {
+    GpuMultipleClonerOptions();
+
     /// Whether to shard the index across GPUs, versus replication
     /// across GPUs
-    bool shard = false;
+    bool shard;
 
     /// IndexIVF::copy_subset_to subset type
-    int shard_type = 1;
-
-    /// set to true if an IndexIVF is to be dispatched to multiple GPUs with a
-    /// single common IVF quantizer, ie. only the inverted lists are sharded on
-    /// the sub-indexes (uses an IndexShardsIVF)
-    bool common_ivf_quantizer = false;
+    int shard_type;
 };
 
 } // namespace gpu

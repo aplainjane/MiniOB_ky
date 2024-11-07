@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -71,7 +71,8 @@ int main(int argc, char** argv) {
 
     // Time faiss CPU
     HostTensor<int, 2, true> cpuDistances({numQueries, FLAGS_k});
-    HostTensor<faiss::idx_t, 2, true> cpuIndices({numQueries, FLAGS_k});
+    HostTensor<faiss::IndexBinary::idx_t, 2, true> cpuIndices(
+            {numQueries, FLAGS_k});
 
     if (FLAGS_cpu) {
         float cpuTime = 0.0f;
@@ -89,7 +90,7 @@ int main(int argc, char** argv) {
     }
 
     HostTensor<int, 2, true> gpuDistances({numQueries, FLAGS_k});
-    HostTensor<faiss::idx_t, 2, true> gpuIndices({numQueries, FLAGS_k});
+    HostTensor<faiss::Index::idx_t, 2, true> gpuIndices({numQueries, FLAGS_k});
 
     CUDA_VERIFY(cudaProfilerStart());
     faiss::gpu::synchronizeAllDevices();

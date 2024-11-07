@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,43 +9,31 @@
 
 #include <faiss/IndexIDMap.h>
 
+#include <stdint.h>
 #include <cinttypes>
-#include <cstdint>
 #include <cstdio>
 #include <limits>
 
 #include <faiss/impl/AuxIndexStructures.h>
 #include <faiss/impl/FaissAssert.h>
+#include <faiss/impl/IDSelector.h>
 #include <faiss/utils/Heap.h>
 #include <faiss/utils/WorkerThread.h>
 
 namespace faiss {
-
-namespace {
-
-// IndexBinary needs to update the code_size when d is set...
-
-void sync_d(Index* index) {}
-
-void sync_d(IndexBinary* index) {
-    FAISS_THROW_IF_NOT(index->d % 8 == 0);
-    index->code_size = index->d / 8;
-}
-
-} // anonymous namespace
 
 /*****************************************************
  * IndexIDMap implementation
  *******************************************************/
 
 template <typename IndexT>
-IndexIDMapTemplate<IndexT>::IndexIDMapTemplate(IndexT* index) : index(index) {
+IndexIDMapTemplate<IndexT>::IndexIDMapTemplate(IndexT* index)
+        : index(index), own_fields(false) {
     FAISS_THROW_IF_NOT_MSG(index->ntotal == 0, "index must be empty on input");
     this->is_trained = index->is_trained;
     this->metric_type = index->metric_type;
     this->verbose = index->verbose;
     this->d = index->d;
-    sync_d(this);
 }
 
 template <typename IndexT>
@@ -76,7 +64,7 @@ template <typename IndexT>
 void IndexIDMapTemplate<IndexT>::add_with_ids(
         idx_t n,
         const typename IndexT::component_t* x,
-        const idx_t* xids) {
+        const typename IndexT::idx_t* xids) {
     index->add(n, x);
     for (idx_t i = 0; i < n; i++)
         id_map.push_back(xids[i]);
@@ -84,71 +72,16 @@ void IndexIDMapTemplate<IndexT>::add_with_ids(
 }
 
 template <typename IndexT>
-size_t IndexIDMapTemplate<IndexT>::sa_code_size() const {
-    return index->sa_code_size();
-}
-
-template <typename IndexT>
-void IndexIDMapTemplate<IndexT>::add_sa_codes(
-        idx_t n,
-        const uint8_t* codes,
-        const idx_t* xids) {
-    index->add_sa_codes(n, codes, xids);
-    for (idx_t i = 0; i < n; i++) {
-        id_map.push_back(xids[i]);
-    }
-    this->ntotal = index->ntotal;
-}
-
-namespace {
-
-/// RAII object to reset the IDSelector in the params object
-struct ScopedSelChange {
-    SearchParameters* params = nullptr;
-    IDSelector* old_sel = nullptr;
-
-    void set(SearchParameters* params_2, IDSelector* new_sel) {
-        this->params = params_2;
-        old_sel = params_2->sel;
-        params_2->sel = new_sel;
-    }
-    ~ScopedSelChange() {
-        if (params) {
-            params->sel = old_sel;
-        }
-    }
-};
-
-} // namespace
-
-template <typename IndexT>
 void IndexIDMapTemplate<IndexT>::search(
         idx_t n,
         const typename IndexT::component_t* x,
         idx_t k,
         typename IndexT::distance_t* distances,
-        idx_t* labels,
+        typename IndexT::idx_t* labels,
         const SearchParameters* params) const {
-    IDSelectorTranslated this_idtrans(this->id_map, nullptr);
-    ScopedSelChange sel_change;
-
-    if (params && params->sel) {
-        auto idtrans = dynamic_cast<const IDSelectorTranslated*>(params->sel);
-
-        if (!idtrans) {
-            /*
-            FAISS_THROW_IF_NOT_MSG(
-                    idtrans,
-                    "IndexIDMap requires an IDSelectorTranslated on input");
-            */
-            // then make an idtrans and force it into the SearchParameters
-            // (hence the const_cast)
-            auto params_non_const = const_cast<SearchParameters*>(params);
-            this_idtrans.sel = params->sel;
-            sel_change.set(params_non_const, &this_idtrans);
-        }
-    }
-    index->search(n, x, k, distances, labels, params);
+    FAISS_THROW_IF_NOT_MSG(
+            !params, "search params not supported for this index");
+    index->search(n, x, k, distances, labels);
     idx_t* li = labels;
 #pragma omp parallel for
     for (idx_t i = 0; i < n * k; i++) {
@@ -158,21 +91,14 @@ void IndexIDMapTemplate<IndexT>::search(
 
 template <typename IndexT>
 void IndexIDMapTemplate<IndexT>::range_search(
-        idx_t n,
+        typename IndexT::idx_t n,
         const typename IndexT::component_t* x,
         typename IndexT::distance_t radius,
         RangeSearchResult* result,
         const SearchParameters* params) const {
-    if (params) {
-        SearchParameters internal_search_parameters;
-        IDSelectorTranslated id_selector_translated(id_map, params->sel);
-        internal_search_parameters.sel = &id_selector_translated;
-
-        index->range_search(n, x, radius, result, &internal_search_parameters);
-    } else {
-        index->range_search(n, x, radius, result);
-    }
-
+    FAISS_THROW_IF_NOT_MSG(
+            !params, "search params not supported for this index");
+    index->range_search(n, x, radius, result);
 #pragma omp parallel for
     for (idx_t i = 0; i < result->lims[result->nq]; i++) {
         result->labels[i] = result->labels[i] < 0 ? result->labels[i]
@@ -180,10 +106,26 @@ void IndexIDMapTemplate<IndexT>::range_search(
     }
 }
 
+namespace {
+
+struct IDTranslatedSelector : IDSelector {
+    const std::vector<int64_t>& id_map;
+    const IDSelector& sel;
+    IDTranslatedSelector(
+            const std::vector<int64_t>& id_map,
+            const IDSelector& sel)
+            : id_map(id_map), sel(sel) {}
+    bool is_member(idx_t id) const override {
+        return sel.is_member(id_map[id]);
+    }
+};
+
+} // namespace
+
 template <typename IndexT>
 size_t IndexIDMapTemplate<IndexT>::remove_ids(const IDSelector& sel) {
     // remove in sub-index first
-    IDSelectorTranslated sel2(id_map, &sel);
+    IDTranslatedSelector sel2(id_map, sel);
     size_t nremove = index->remove_ids(sel2);
 
     int64_t j = 0;
@@ -240,7 +182,7 @@ template <typename IndexT>
 void IndexIDMap2Template<IndexT>::add_with_ids(
         idx_t n,
         const typename IndexT::component_t* x,
-        const idx_t* xids) {
+        const typename IndexT::idx_t* xids) {
     size_t prev_ntotal = this->ntotal;
     IndexIDMapTemplate<IndexT>::add_with_ids(n, x, xids);
     for (size_t i = prev_ntotal; i < this->ntotal; i++) {
@@ -290,7 +232,7 @@ void IndexIDMap2Template<IndexT>::reconstruct(
         typename IndexT::component_t* recons) const {
     try {
         this->index->reconstruct(rev_map.at(key), recons);
-    } catch (const std::out_of_range&) {
+    } catch (const std::out_of_range& e) {
         FAISS_THROW_FMT("key %" PRId64 " not found", key);
     }
 }

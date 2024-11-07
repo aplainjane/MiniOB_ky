@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+//  Copyright 2004-present Facebook. All Rights Reserved
 // -*- c++ -*-
 // I/O code for indexes
 
@@ -14,7 +15,6 @@
 #include <stdio.h>
 #include "IndexBinary_c.h"
 #include "Index_c.h"
-#include "VectorTransform_c.h"
 #include "faiss_c.h"
 
 #ifdef __cplusplus
@@ -72,13 +72,6 @@ int faiss_read_index_binary_fname(
         const char* fname,
         int io_flags,
         FaissIndexBinary** p_out);
-
-/** Read vector transform from a file.
- * This is equivalent to `faiss:read_VectorTransform` when a file path is given.
- */
-int faiss_read_VectorTransform_fname(
-        const char* fname,
-        FaissVectorTransform** p_out);
 #ifdef __cplusplus
 }
 #endif

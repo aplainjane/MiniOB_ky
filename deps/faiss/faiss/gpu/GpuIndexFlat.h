@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,13 +24,15 @@ namespace gpu {
 class FlatIndex;
 
 struct GpuIndexFlatConfig : public GpuIndexConfig {
+    inline GpuIndexFlatConfig() : useFloat16(false) {}
+
     /// Whether or not data is stored as float16
-    bool ALIGNED(8) useFloat16 = false;
+    bool useFloat16;
 
     /// Deprecated: no longer used
     /// Previously used to indicate whether internal storage of vectors is
     /// transposed
-    bool storeTransposed = false;
+    bool storeTransposed;
 };
 
 /// Wrapper around the GPU implementation that looks like
@@ -80,32 +82,33 @@ class GpuIndexFlat : public GpuIndex {
     void reset() override;
 
     /// This index is not trained, so this does nothing
-    void train(idx_t n, const float* x) override;
+    void train(Index::idx_t n, const float* x) override;
 
     /// Overrides to avoid excessive copies
-    void add(idx_t, const float* x) override;
+    void add(Index::idx_t, const float* x) override;
 
     /// Reconstruction methods; prefer the batch reconstruct as it will
     /// be more efficient
-    void reconstruct(idx_t key, float* out) const override;
+    void reconstruct(Index::idx_t key, float* out) const override;
 
     /// Batch reconstruction method
-    void reconstruct_n(idx_t i0, idx_t num, float* out) const override;
+    void reconstruct_n(Index::idx_t i0, Index::idx_t num, float* out)
+            const override;
 
     /// Batch reconstruction method
-    void reconstruct_batch(idx_t n, const idx_t* keys, float* out)
+    void reconstruct_batch(Index::idx_t n, const Index::idx_t* keys, float* out)
             const override;
 
     /// Compute residual
-    void compute_residual(const float* x, float* residual, idx_t key)
+    void compute_residual(const float* x, float* residual, Index::idx_t key)
             const override;
 
     /// Compute residual (batch mode)
     void compute_residual_n(
-            idx_t n,
+            Index::idx_t n,
             const float* xs,
             float* residuals,
-            const idx_t* keys) const override;
+            const Index::idx_t* keys) const override;
 
     /// For internal access
     inline FlatIndex* getGpuData() {
@@ -113,22 +116,20 @@ class GpuIndexFlat : public GpuIndex {
     }
 
    protected:
-    void resetIndex_(int dims);
-
     /// Flat index does not require IDs as there is no storage available for
     /// them
     bool addImplRequiresIDs_() const override;
 
     /// Called from GpuIndex for add
-    void addImpl_(idx_t n, const float* x, const idx_t* ids) override;
+    void addImpl_(int n, const float* x, const Index::idx_t* ids) override;
 
     /// Called from GpuIndex for search
     void searchImpl_(
-            idx_t n,
+            int n,
             const float* x,
             int k,
             float* distances,
-            idx_t* labels,
+            Index::idx_t* labels,
             const SearchParameters* params) const override;
 
    protected:

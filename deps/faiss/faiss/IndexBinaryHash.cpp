@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -108,6 +108,8 @@ struct FlipEnumerator {
     }
 };
 
+using idx_t = Index::idx_t;
+
 struct RangeSearchResults {
     int radius;
     RangeQueryResult& qres;
@@ -176,14 +178,6 @@ void search_single_query_template(
     } while (fe.next());
 }
 
-struct Run_search_single_query {
-    using T = void;
-    template <class HammingComputer, class... Types>
-    T f(Types... args) {
-        search_single_query_template<HammingComputer>(args...);
-    }
-};
-
 template <class SearchResults>
 void search_single_query(
         const IndexBinaryHash& index,
@@ -192,9 +186,29 @@ void search_single_query(
         size_t& n0,
         size_t& nlist,
         size_t& ndis) {
-    Run_search_single_query r;
-    dispatch_HammingComputer(
-            index.code_size, r, index, q, res, n0, nlist, ndis);
+#define HC(name) \
+    search_single_query_template<name>(index, q, res, n0, nlist, ndis);
+    switch (index.code_size) {
+        case 4:
+            HC(HammingComputer4);
+            break;
+        case 8:
+            HC(HammingComputer8);
+            break;
+        case 16:
+            HC(HammingComputer16);
+            break;
+        case 20:
+            HC(HammingComputer20);
+            break;
+        case 32:
+            HC(HammingComputer32);
+            break;
+        default:
+            HC(HammingComputerDefault);
+            break;
+    }
+#undef HC
 }
 
 } // anonymous namespace
@@ -337,28 +351,21 @@ namespace {
 
 template <class HammingComputer, class SearchResults>
 static void verify_shortlist(
-        const IndexBinaryFlat* index,
+        const IndexBinaryFlat& index,
         const uint8_t* q,
-        const std::unordered_set<idx_t>& shortlist,
+        const std::unordered_set<Index::idx_t>& shortlist,
         SearchResults& res) {
-    size_t code_size = index->code_size;
+    size_t code_size = index.code_size;
+    size_t nlist = 0, ndis = 0, n0 = 0;
 
     HammingComputer hc(q, code_size);
-    const uint8_t* codes = index->xb.data();
+    const uint8_t* codes = index.xb.data();
 
     for (auto i : shortlist) {
         int dis = hc.hamming(codes + i * code_size);
         res.add(dis, i);
     }
 }
-
-struct Run_verify_shortlist {
-    using T = void;
-    template <class HammingComputer, class... Types>
-    void f(Types... args) {
-        verify_shortlist<HammingComputer>(args...);
-    }
-};
 
 template <class SearchResults>
 void search_1_query_multihash(
@@ -400,9 +407,29 @@ void search_1_query_multihash(
     ndis += shortlist.size();
 
     // verify shortlist
-    Run_verify_shortlist r;
-    dispatch_HammingComputer(
-            index.code_size, r, index.storage, xi, shortlist, res);
+
+#define HC(name) verify_shortlist<name>(*index.storage, xi, shortlist, res)
+    switch (index.code_size) {
+        case 4:
+            HC(HammingComputer4);
+            break;
+        case 8:
+            HC(HammingComputer8);
+            break;
+        case 16:
+            HC(HammingComputer16);
+            break;
+        case 20:
+            HC(HammingComputer20);
+            break;
+        case 32:
+            HC(HammingComputer32);
+            break;
+        default:
+            HC(HammingComputerDefault);
+            break;
+    }
+#undef HC
 }
 
 } // anonymous namespace

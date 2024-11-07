@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,6 +23,8 @@ namespace faiss {
 
 /** Any transformation applied on a set of vectors */
 struct VectorTransform {
+    typedef Index::idx_t idx_t;
+
     int d_in;  ///! input dimension
     int d_out; ///! output dimension
 
@@ -120,7 +122,7 @@ struct RandomRotationMatrix : LinearTransform {
     /// must be called before the transform is used
     void init(int seed);
 
-    // initializes with an arbitrary seed
+    // intializes with an arbitrary seed
     void train(idx_t n, const float* x) override;
 
     RandomRotationMatrix() {}
@@ -230,18 +232,18 @@ struct ProductQuantizer;
  *
  */
 struct OPQMatrix : LinearTransform {
-    int M;               ///< nb of subquantizers
-    int niter = 50;      ///< Number of outer training iterations
-    int niter_pq = 4;    ///< Number of training iterations for the PQ
-    int niter_pq_0 = 40; ///< same, for the first outer iteration
+    int M;          ///< nb of subquantizers
+    int niter;      ///< Number of outer training iterations
+    int niter_pq;   ///< Number of training iterations for the PQ
+    int niter_pq_0; ///< same, for the first outer iteration
 
     /// if there are too many training points, resample
-    size_t max_train_points = 256 * 256;
-    bool verbose = false;
+    size_t max_train_points;
+    bool verbose;
 
     /// if non-NULL, use this product quantizer for training
     /// should be constructed with (d_out, M, _)
-    ProductQuantizer* pq = nullptr;
+    ProductQuantizer* pq;
 
     /// if d2 != -1, output vectors of this dimension
     explicit OPQMatrix(int d = 0, int M = 1, int d2 = -1);

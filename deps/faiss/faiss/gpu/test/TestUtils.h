@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -93,9 +93,9 @@ void compareIndices(
 /// Display specific differences in the two (distance, index) lists
 void compareLists(
         const float* refDist,
-        const faiss::idx_t* refInd,
+        const faiss::Index::idx_t* refInd,
         const float* testDist,
-        const faiss::idx_t* testInd,
+        const faiss::Index::idx_t* testInd,
         int dim1,
         int dim2,
         const std::string& configMsg,
@@ -130,13 +130,13 @@ void testIVFEquality(A& cpuIndex, B& gpuIndex) {
         EXPECT_EQ(cpuCodes, gpuCodes);
 
         // Index equality
-        std::vector<idx_t> cpuIndices(cpuLists->list_size(i));
+        std::vector<Index::idx_t> cpuIndices(cpuLists->list_size(i));
 
         auto si = faiss::InvertedLists::ScopedIds(cpuLists, i);
         std::memcpy(
                 cpuIndices.data(),
                 si.get(),
-                cpuLists->list_size(i) * sizeof(faiss::idx_t));
+                cpuLists->list_size(i) * sizeof(faiss::Index::idx_t));
         EXPECT_EQ(cpuIndices, gpuIndex.getListIndices(i));
     }
 }

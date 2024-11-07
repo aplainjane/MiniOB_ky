@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,7 +15,7 @@
 /// Assertions
 ///
 
-#if defined(__CUDA_ARCH__) || defined(USE_AMD_ROCM)
+#ifdef __CUDA_ARCH__
 #define GPU_FAISS_ASSERT(X) assert(X)
 #define GPU_FAISS_ASSERT_MSG(X, MSG) assert(X)
 #define GPU_FAISS_ASSERT_FMT(X, FMT, ...) assert(X)

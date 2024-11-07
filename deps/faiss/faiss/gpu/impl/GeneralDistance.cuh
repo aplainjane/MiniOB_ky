@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,12 +30,6 @@
 namespace faiss {
 namespace gpu {
 
-// Initially kWarpSize was used for the x and y tile shape.
-// This works when kWarpSize is 32 but for kWarpSize 64,
-// this results in an invalid launch configuration of 64x64 block size.
-// 32 is a reasonable tile size for both kWarpSize options.
-constexpr int TILE_SIZE = 32;
-
 // Reduction tree operator
 template <typename DistanceOp, int N>
 struct ReduceDistanceOp {
@@ -62,8 +56,8 @@ struct ReduceDistanceOp<DistanceOp, 1> {
 template <typename T, int Unroll, int DimMultiple, typename DistanceOp>
 inline __device__ DistanceOp
 reduce(const DistanceOp& in,
-       const T queryTile[TILE_SIZE][DimMultiple * TILE_SIZE + 1],
-       const T vecTile[TILE_SIZE][DimMultiple * TILE_SIZE + 1]) {
+       const T queryTile[kWarpSize][DimMultiple * kWarpSize + 1],
+       const T vecTile[kWarpSize][DimMultiple * kWarpSize + 1]) {
     DistanceOp accs[Unroll];
 #pragma unroll
     for (int i = 0; i < Unroll; ++i) {
@@ -76,8 +70,8 @@ reduce(const DistanceOp& in,
 #pragma unroll
     for (int i = 0; i < Unroll; ++i) {
 #pragma unroll
-        for (int j = 0; j < (TILE_SIZE * DimMultiple / Unroll); ++j) {
-            int idx = i * (TILE_SIZE * DimMultiple / Unroll) + j;
+        for (int j = 0; j < (kWarpSize * DimMultiple / Unroll); ++j) {
+            int idx = i * (kWarpSize * DimMultiple / Unroll) + j;
             accs[i].handle(
                     ConvertTo<float>::to(queryTileBase[idx]),
                     ConvertTo<float>::to(vecTileBase[idx]));
@@ -89,25 +83,25 @@ reduce(const DistanceOp& in,
 
 // Our general distance matrix "multiplication" kernel
 template <typename T, typename DistanceOp, bool InnerContig>
-__launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
+__launch_bounds__(kWarpSize* kWarpSize) __global__ void generalDistance(
         Tensor<T, 2, InnerContig> query, // m x k
         Tensor<T, 2, InnerContig> vec,   // n x k
         DistanceOp op,
         Tensor<float, 2, true> out) { // m x n
     constexpr int kDimMultiple = 1;
 
-    __shared__ T queryTile[TILE_SIZE][TILE_SIZE * kDimMultiple + 1];
-    __shared__ T vecTile[TILE_SIZE][TILE_SIZE * kDimMultiple + 1];
+    __shared__ T queryTile[kWarpSize][kWarpSize * kDimMultiple + 1];
+    __shared__ T vecTile[kWarpSize][kWarpSize * kDimMultiple + 1];
 
     // block y -> query
     // block x -> vector
 
-    idx_t queryBlock = idx_t(blockIdx.y) * TILE_SIZE;
-    idx_t queryThread = queryBlock + threadIdx.y;
+    int queryBlock = blockIdx.y * kWarpSize;
+    int queryThread = queryBlock + threadIdx.y;
 
-    idx_t vecBlock = idx_t(blockIdx.x) * TILE_SIZE;
-    idx_t vecThreadLoad = vecBlock + threadIdx.y;
-    idx_t vecThreadSave = vecBlock + threadIdx.x;
+    int vecBlock = blockIdx.x * kWarpSize;
+    int vecThreadLoad = vecBlock + threadIdx.y;
+    int vecThreadSave = vecBlock + threadIdx.x;
 
     DistanceOp acc = op.zero();
 
@@ -121,17 +115,17 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
         //
         // Interior tile
         //
-        idx_t limit =
-                utils::roundDown(query.getSize(1), TILE_SIZE * kDimMultiple);
+        int limit =
+                utils::roundDown(query.getSize(1), kWarpSize * kDimMultiple);
 
-        for (idx_t k = threadIdx.x; k < limit; k += TILE_SIZE * kDimMultiple) {
+        for (int k = threadIdx.x; k < limit; k += kWarpSize * kDimMultiple) {
             // Load query tile
 #pragma unroll
             for (int i = 0; i < kDimMultiple; ++i) {
-                queryTileBase[threadIdx.x + i * TILE_SIZE] =
-                        queryBase[k + i * TILE_SIZE];
-                vecTileBase[threadIdx.x + i * TILE_SIZE] =
-                        vecBase[k + i * TILE_SIZE];
+                queryTileBase[threadIdx.x + i * kWarpSize] =
+                        queryBase[k + i * kWarpSize];
+                vecTileBase[threadIdx.x + i * kWarpSize] =
+                        vecBase[k + i * kWarpSize];
             }
 
             __syncthreads();
@@ -147,23 +141,23 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
         if (limit < query.getSize(1)) {
 #pragma unroll
             for (int i = 0; i < kDimMultiple; ++i) {
-                idx_t k = limit + threadIdx.x + i * TILE_SIZE;
+                int k = limit + threadIdx.x + i * kWarpSize;
                 bool kInBounds = k < query.getSize(1);
 
-                queryTileBase[threadIdx.x + i * TILE_SIZE] =
+                queryTileBase[threadIdx.x + i * kWarpSize] =
                         kInBounds ? queryBase[k] : ConvertTo<T>::to(0);
 
-                vecTileBase[threadIdx.x + i * TILE_SIZE] =
+                vecTileBase[threadIdx.x + i * kWarpSize] =
                         kInBounds ? vecBase[k] : ConvertTo<T>::to(0);
             }
 
             __syncthreads();
 
-            idx_t remainder = query.getSize(1) - limit;
+            int remainder = query.getSize(1) - limit;
 
             // thread (y, x) does (query y, vec x)
 #pragma unroll
-            for (idx_t i = 0; i < remainder; ++i) {
+            for (int i = 0; i < remainder; ++i) {
                 acc.handle(
                         ConvertTo<float>::to(queryTileBase[i]),
                         ConvertTo<float>::to(vecTile[threadIdx.x][i]));
@@ -180,9 +174,9 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
         bool queryThreadInBounds = queryThread < query.getSize(0);
         bool vecThreadInBoundsLoad = vecThreadLoad < vec.getSize(0);
         bool vecThreadInBoundsSave = vecThreadSave < vec.getSize(0);
-        idx_t limit = utils::roundDown(query.getSize(1), TILE_SIZE);
+        int limit = utils::roundDown(query.getSize(1), kWarpSize);
 
-        for (idx_t k = threadIdx.x; k < limit; k += TILE_SIZE) {
+        for (int k = threadIdx.x; k < limit; k += kWarpSize) {
             // Load query tile
             queryTileBase[threadIdx.x] =
                     queryThreadInBounds ? queryBase[k] : ConvertTo<T>::to(0);
@@ -194,7 +188,7 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
 
             // thread (y, x) does (query y, vec x)
 #pragma unroll
-            for (int i = 0; i < TILE_SIZE; ++i) {
+            for (int i = 0; i < kWarpSize; ++i) {
                 acc.handle(
                         ConvertTo<float>::to(queryTileBase[i]),
                         ConvertTo<float>::to(vecTile[threadIdx.x][i]));
@@ -205,7 +199,7 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
 
         // Handle remainder
         if (limit < query.getSize(1)) {
-            idx_t k = limit + threadIdx.x;
+            int k = limit + threadIdx.x;
             bool kInBounds = k < query.getSize(1);
 
             // Load query tile
@@ -219,7 +213,7 @@ __launch_bounds__(TILE_SIZE* TILE_SIZE) __global__ void generalDistance(
 
             __syncthreads();
 
-            idx_t remainder = query.getSize(1) - limit;
+            int remainder = query.getSize(1) - limit;
 
             // thread (y, x) does (query y, vec x)
             for (int i = 0; i < remainder; ++i) {
@@ -248,10 +242,9 @@ void runGeneralDistanceKernel(
     FAISS_ASSERT(out.getSize(1) == vecs.getSize(0));
 
     dim3 grid(
-            utils::divUp(vecs.getSize(0), TILE_SIZE),
-            utils::divUp(query.getSize(0), TILE_SIZE));
-    FAISS_ASSERT(grid.y <= getMaxGridCurrentDevice().y);
-    dim3 block(TILE_SIZE, TILE_SIZE);
+            utils::divUp(vecs.getSize(0), kWarpSize),
+            utils::divUp(query.getSize(0), kWarpSize));
+    dim3 block(kWarpSize, kWarpSize);
 
     generalDistance<<<grid, block, 0, stream>>>(query, vecs, op, out);
 }
@@ -265,7 +258,7 @@ void runGeneralDistance(
         int k,
         const DistanceOp& op,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices) {
+        Tensor<int, 2, true>& outIndices) {
     // The # of centroids in `centroids` based on memory layout
     auto numCentroids = centroids.getSize(0);
 
@@ -302,8 +295,8 @@ void runGeneralDistance(
 
     // By default, aim to use up to 512 MB of memory for the processing, with
     // both number of queries and number of centroids being at least 512.
-    idx_t tileRows = 0;
-    idx_t tileCols = 0;
+    int tileRows = 0;
+    int tileCols = 0;
     chooseTileSize(
             numQueries,
             numCentroids,
@@ -313,7 +306,7 @@ void runGeneralDistance(
             tileRows,
             tileCols);
 
-    auto numColTiles = utils::divUp(numCentroids, tileCols);
+    int numColTiles = utils::divUp(numCentroids, tileCols);
 
     // We can have any number of vectors to query against, even less than k, in
     // which case we'll return -1 for the index
@@ -338,15 +331,15 @@ void runGeneralDistance(
     DeviceTensor<float, 2, true>* outDistanceBufs[2] = {
             &outDistanceBuf1, &outDistanceBuf2};
 
-    DeviceTensor<idx_t, 2, true> outIndexBuf1(
+    DeviceTensor<int, 2, true> outIndexBuf1(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {tileRows, numColTiles * k});
-    DeviceTensor<idx_t, 2, true> outIndexBuf2(
+    DeviceTensor<int, 2, true> outIndexBuf2(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {tileRows, numColTiles * k});
-    DeviceTensor<idx_t, 2, true>* outIndexBufs[2] = {
+    DeviceTensor<int, 2, true>* outIndexBufs[2] = {
             &outIndexBuf1, &outIndexBuf2};
 
     auto streams = res->getAlternateStreamsCurrentDevice();
@@ -356,13 +349,13 @@ void runGeneralDistance(
     bool interrupt = false;
 
     // Tile over the input queries
-    for (idx_t i = 0; i < numQueries; i += tileRows) {
+    for (int i = 0; i < numQueries; i += tileRows) {
         if (interrupt || InterruptCallback::is_interrupted()) {
             interrupt = true;
             break;
         }
 
-        auto curQuerySize = std::min(tileRows, numQueries - i);
+        int curQuerySize = std::min(tileRows, numQueries - i);
 
         auto outDistanceView = outDistances.narrow(0, i, curQuerySize);
         auto outIndexView = outIndices.narrow(0, i, curQuerySize);
@@ -375,14 +368,14 @@ void runGeneralDistance(
                 outIndexBufs[curStream]->narrow(0, 0, curQuerySize);
 
         // Tile over the centroids
-        for (idx_t j = 0; j < numCentroids; j += tileCols) {
+        for (int j = 0; j < numCentroids; j += tileCols) {
             if (InterruptCallback::is_interrupted()) {
                 interrupt = true;
                 break;
             }
 
-            auto curCentroidSize = std::min(tileCols, numCentroids - j);
-            auto curColTile = j / tileCols;
+            int curCentroidSize = std::min(tileCols, numCentroids - j);
+            int curColTile = j / tileCols;
 
             auto centroidsView =
                     sliceCentroids(centroids, true, j, curCentroidSize);

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 #define FAISS_AUTO_TUNE_H
 
 #include <stdint.h>
+#include <unordered_map>
 #include <vector>
 
 #include <faiss/Index.h>
@@ -23,6 +24,7 @@ namespace faiss {
  * higher is better.
  */
 struct AutoTuneCriterion {
+    typedef Index::idx_t idx_t;
     idx_t nq;     ///< nb of queries this criterion is evaluated on
     idx_t nnn;    ///< nb of NNs that the query should request
     idx_t gt_nnn; ///< nb of GT NNs required to evaluate criterion
@@ -86,7 +88,7 @@ struct OperatingPoint {
     double perf;     ///< performance measure (output of a Criterion)
     double t;        ///< corresponding execution time (ms)
     std::string key; ///< key that identifies this op pt
-    int64_t cno;     ///< integer identifier
+    int64_t cno;     ///< integer identifer
 };
 
 struct OperatingPoints {

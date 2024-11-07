@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,6 @@
 
 #include <faiss/Index.h>
 #include <faiss/IndexBinary.h>
-#include <faiss/impl/IDSelector.h>
 
 #include <unordered_map>
 #include <vector>
@@ -19,11 +18,12 @@ namespace faiss {
 /** Index that translates search results to ids */
 template <typename IndexT>
 struct IndexIDMapTemplate : IndexT {
+    using idx_t = typename IndexT::idx_t;
     using component_t = typename IndexT::component_t;
     using distance_t = typename IndexT::distance_t;
 
-    IndexT* index = nullptr; ///! the sub-index
-    bool own_fields = false; ///! whether pointers are deleted in destructo
+    IndexT* index;   ///! the sub-index
+    bool own_fields; ///! whether pointers are deleted in destructo
     std::vector<idx_t> id_map;
 
     explicit IndexIDMapTemplate(IndexT* index);
@@ -60,9 +60,6 @@ struct IndexIDMapTemplate : IndexT {
     void merge_from(IndexT& otherIndex, idx_t add_id = 0) override;
     void check_compatible_for_merge(const IndexT& otherIndex) const override;
 
-    size_t sa_code_size() const override;
-    void add_sa_codes(idx_t n, const uint8_t* x, const idx_t* xids) override;
-
     ~IndexIDMapTemplate() override;
     IndexIDMapTemplate() {
         own_fields = false;
@@ -77,6 +74,7 @@ using IndexBinaryIDMap = IndexIDMapTemplate<IndexBinary>;
  *  implementation via a 2-way index */
 template <typename IndexT>
 struct IndexIDMap2Template : IndexIDMapTemplate<IndexT> {
+    using idx_t = typename IndexT::idx_t;
     using component_t = typename IndexT::component_t;
     using distance_t = typename IndexT::distance_t;
 
@@ -105,26 +103,5 @@ struct IndexIDMap2Template : IndexIDMapTemplate<IndexT> {
 
 using IndexIDMap2 = IndexIDMap2Template<Index>;
 using IndexBinaryIDMap2 = IndexIDMap2Template<IndexBinary>;
-
-// IDSelector that translates the ids using an IDMap
-struct IDSelectorTranslated : IDSelector {
-    const std::vector<int64_t>& id_map;
-    const IDSelector* sel;
-
-    IDSelectorTranslated(
-            const std::vector<int64_t>& id_map,
-            const IDSelector* sel)
-            : id_map(id_map), sel(sel) {}
-
-    IDSelectorTranslated(IndexBinaryIDMap& index_idmap, const IDSelector* sel)
-            : id_map(index_idmap.id_map), sel(sel) {}
-
-    IDSelectorTranslated(IndexIDMap& index_idmap, const IDSelector* sel)
-            : id_map(index_idmap.id_map), sel(sel) {}
-
-    bool is_member(idx_t id) const override {
-        return sel->is_member(id_map[id]);
-    }
-};
 
 } // namespace faiss

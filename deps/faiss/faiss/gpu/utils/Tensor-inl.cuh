@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -573,12 +573,12 @@ template <
         typename IndexT,
         template <typename U>
         class PtrTraits>
-__host__ __device__ IndexT
+__host__ __device__ size_t
 Tensor<T, Dim, InnerContig, IndexT, PtrTraits>::numElements() const {
-    auto size = getSize(0);
+    size_t size = (size_t)getSize(0);
 
     for (int i = 1; i < Dim; ++i) {
-        size *= getSize(i);
+        size *= (size_t)getSize(i);
     }
 
     return size;
@@ -593,10 +593,10 @@ template <
         class PtrTraits>
 __host__ __device__ bool Tensor<T, Dim, InnerContig, IndexT, PtrTraits>::
         isContiguous() const {
-    IndexT prevSize = 1;
+    long prevSize = 1;
 
     for (int i = Dim - 1; i >= 0; --i) {
-        if (getSize(i) != 1) {
+        if (getSize(i) != (IndexT)1) {
             if (getStride(i) == prevSize) {
                 prevSize *= getSize(i);
             } else {

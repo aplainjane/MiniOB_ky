@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,34 +36,6 @@ float fvec_L1(const float* x, const float* y, size_t d);
 /// infinity distance
 float fvec_Linf(const float* x, const float* y, size_t d);
 
-/// Special version of inner product that computes 4 distances
-/// between x and yi, which is performance oriented.
-void fvec_inner_product_batch_4(
-        const float* x,
-        const float* y0,
-        const float* y1,
-        const float* y2,
-        const float* y3,
-        const size_t d,
-        float& dis0,
-        float& dis1,
-        float& dis2,
-        float& dis3);
-
-/// Special version of L2sqr that computes 4 distances
-/// between x and yi, which is performance oriented.
-void fvec_L2sqr_batch_4(
-        const float* x,
-        const float* y0,
-        const float* y1,
-        const float* y2,
-        const float* y3,
-        const size_t d,
-        float& dis0,
-        float& dis1,
-        float& dis2,
-        float& dis3);
-
 /** Compute pairwise distances between sets of vectors
  *
  * @param d     dimension of the vectors
@@ -99,17 +71,6 @@ void fvec_L2sqr_ny(
         const float* x,
         const float* y,
         size_t d,
-        size_t ny);
-
-/* compute ny square L2 distance between x and a set of transposed contiguous
-   y vectors. squared lengths of y should be provided as well */
-void fvec_L2sqr_ny_transposed(
-        float* dis,
-        const float* x,
-        const float* y,
-        const float* y_sqlen,
-        size_t d,
-        size_t d_offset,
         size_t ny);
 
 /* compute ny square L2 distance between x and a set of contiguous y vectors
@@ -198,16 +159,8 @@ void fvec_sub(size_t d, const float* a, const float* b, float* c);
  * Compute a subset of  distances
  ***************************************************************************/
 
-/** compute the inner product between x and a subset y of ny vectors defined by
- * ids
- *
- * ip(i, j) = inner_product(x(i, :), y(ids(i, j), :))
- *
- * @param ip    output array, size nx * ny
- * @param x     first-term vector, size nx * d
- * @param y     second-term vector, size (max(ids) + 1) * d
- * @param ids   ids to sample from y, size nx * ny
- */
+/* compute the inner product between x and a subset y of ny vectors,
+  whose indices are given by idy.  */
 void fvec_inner_products_by_idx(
         float* ip,
         const float* x,
@@ -217,16 +170,7 @@ void fvec_inner_products_by_idx(
         size_t nx,
         size_t ny);
 
-/** compute the squared L2 distances between x and a subset y of ny vectors
- * defined by ids
- *
- * dis(i, j) = inner_product(x(i, :), y(ids(i, j), :))
- *
- * @param dis   output array, size nx * ny
- * @param x     first-term vector, size nx * d
- * @param y     second-term vector, size (max(ids) + 1) * d
- * @param ids   ids to sample from y, size nx * ny
- */
+/* same but for a subset in y indexed by idsy (ny vectors in total) */
 void fvec_L2sqr_by_idx(
         float* dis,
         const float* x,
@@ -253,14 +197,7 @@ void pairwise_indexed_L2sqr(
         const int64_t* iy,
         float* dis);
 
-/** compute dis[j] = inner_product(x[ix[j]], y[iy[j]]) forall j=0..n-1
- *
- * @param x  size (max(ix) + 1, d)
- * @param y  size (max(iy) + 1, d)
- * @param ix size n
- * @param iy size n
- * @param dis size n
- */
+/* same for inner product */
 void pairwise_indexed_inner_product(
         size_t d,
         size_t n,
@@ -285,7 +222,7 @@ FAISS_API extern int distance_compute_blas_database_bs;
 // rather than a heap
 FAISS_API extern int distance_compute_min_k_reservoir;
 
-/** Return the k nearest neighbors of each of the nx vectors x among the ny
+/** Return the k nearest neighors of each of the nx vectors x among the ny
  *  vector y, w.r.t to max inner product.
  *
  * @param x    query vectors, size nx * d
@@ -301,7 +238,7 @@ void knn_inner_product(
         float_minheap_array_t* res,
         const IDSelector* sel = nullptr);
 
-/**  Return the k nearest neighbors of each of the nx vectors x among the ny
+/**  Return the k nearest neighors of each of the nx vectors x among the ny
  *  vector y, for the inner product metric.
  *
  * @param x    query vectors, size nx * d
@@ -320,7 +257,7 @@ void knn_inner_product(
         int64_t* indexes,
         const IDSelector* sel = nullptr);
 
-/** Return the k nearest neighbors of each of the nx vectors x among the ny
+/** Return the k nearest neighors of each of the nx vectors x among the ny
  *  vector y, for the L2 distance
  * @param x    query vectors, size nx * d
  * @param y    database vectors, size ny * d
@@ -338,7 +275,7 @@ void knn_L2sqr(
         const float* y_norm2 = nullptr,
         const IDSelector* sel = nullptr);
 
-/**  Return the k nearest neighbors of each of the nx vectors x among the ny
+/**  Return the k nearest neighors of each of the nx vectors x among the ny
  *  vector y, for the L2 distance
  *
  * @param x    query vectors, size nx * d
@@ -376,7 +313,6 @@ void knn_inner_products_by_idx(
         const int64_t* subset,
         size_t d,
         size_t nx,
-        size_t ny,
         size_t nsubset,
         size_t k,
         float* vals,
@@ -399,7 +335,6 @@ void knn_L2sqr_by_idx(
         const int64_t* subset,
         size_t d,
         size_t nx,
-        size_t ny,
         size_t nsubset,
         size_t k,
         float* vals,
@@ -413,7 +348,7 @@ void knn_L2sqr_by_idx(
 /// Forward declaration, see AuxIndexStructures.h
 struct RangeSearchResult;
 
-/** Return the k nearest neighbors of each of the nx vectors x among the ny
+/** Return the k nearest neighors of each of the nx vectors x among the ny
  *  vector y, w.r.t to max inner product
  *
  * @param x      query vectors, size nx * d
@@ -459,28 +394,5 @@ void compute_PQ_dis_tables_dsub2(
 /***************************************************************************
  * Templatized versions of distance functions
  ***************************************************************************/
-
-/***************************************************************************
- * Misc  matrix and vector manipulation functions
- ***************************************************************************/
-
-/** compute c := a + bf * b for a, b and c tables
- *
- * @param n   size of the tables
- * @param a   size n
- * @param b   size n
- * @param c   restult table, size n
- */
-void fvec_madd(size_t n, const float* a, float bf, const float* b, float* c);
-
-/** same as fvec_madd, also return index of the min of the result table
- * @return    index of the min of table c
- */
-int fvec_madd_and_argmin(
-        size_t n,
-        const float* a,
-        float bf,
-        const float* b,
-        float* c);
 
 } // namespace faiss

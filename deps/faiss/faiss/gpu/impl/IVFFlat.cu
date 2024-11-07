@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,7 +31,7 @@ namespace gpu {
 IVFFlat::IVFFlat(
         GpuResources* res,
         int dim,
-        idx_t nlist,
+        int nlist,
         faiss::MetricType metric,
         float metricArg,
         bool useResidual,
@@ -52,21 +52,19 @@ IVFFlat::IVFFlat(
 
 IVFFlat::~IVFFlat() {}
 
-size_t IVFFlat::getGpuVectorsEncodingSize_(idx_t numVecs) const {
+size_t IVFFlat::getGpuVectorsEncodingSize_(int numVecs) const {
     if (interleavedLayout_) {
         // bits per scalar code
-        idx_t bits = scalarQ_ ? scalarQ_->bits : 32 /* float */;
+        int bits = scalarQ_ ? scalarQ_->bits : 32 /* float */;
 
-        int warpSize = getWarpSizeCurrentDevice();
+        // bytes to encode a block of 32 vectors (single dimension)
+        int bytesPerDimBlock = bits * 32 / 8;
 
-        // bytes to encode a block of warpSize vectors (single dimension)
-        idx_t bytesPerDimBlock = bits * warpSize / 8;
+        // bytes to fully encode 32 vectors
+        int bytesPerBlock = bytesPerDimBlock * dim_;
 
-        // bytes to fully encode warpSize vectors
-        idx_t bytesPerBlock = bytesPerDimBlock * dim_;
-
-        // number of blocks of warpSize vectors we have
-        idx_t numBlocks = utils::divUp(numVecs, warpSize);
+        // number of blocks of 32 vectors we have
+        int numBlocks = utils::divUp(numVecs, 32);
 
         // total size to encode numVecs
         return bytesPerBlock * numBlocks;
@@ -78,7 +76,7 @@ size_t IVFFlat::getGpuVectorsEncodingSize_(idx_t numVecs) const {
     }
 }
 
-size_t IVFFlat::getCpuVectorsEncodingSize_(idx_t numVecs) const {
+size_t IVFFlat::getCpuVectorsEncodingSize_(int numVecs) const {
     size_t sizePerVector =
             (scalarQ_ ? scalarQ_->code_size : sizeof(float) * dim_);
 
@@ -87,7 +85,7 @@ size_t IVFFlat::getCpuVectorsEncodingSize_(idx_t numVecs) const {
 
 std::vector<uint8_t> IVFFlat::translateCodesToGpu_(
         std::vector<uint8_t> codes,
-        idx_t numVecs) const {
+        size_t numVecs) const {
     if (!interleavedLayout_) {
         // same format
         return codes;
@@ -102,7 +100,7 @@ std::vector<uint8_t> IVFFlat::translateCodesToGpu_(
 
 std::vector<uint8_t> IVFFlat::translateCodesFromGpu_(
         std::vector<uint8_t> codes,
-        idx_t numVecs) const {
+        size_t numVecs) const {
     if (!interleavedLayout_) {
         // same format
         return codes;
@@ -117,13 +115,13 @@ std::vector<uint8_t> IVFFlat::translateCodesFromGpu_(
 void IVFFlat::appendVectors_(
         Tensor<float, 2, true>& vecs,
         Tensor<float, 2, true>& ivfCentroidResiduals,
-        Tensor<idx_t, 1, true>& indices,
-        Tensor<idx_t, 1, true>& uniqueLists,
-        Tensor<idx_t, 1, true>& vectorsByUniqueList,
-        Tensor<idx_t, 1, true>& uniqueListVectorStart,
-        Tensor<idx_t, 1, true>& uniqueListStartOffset,
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& indices,
+        Tensor<Index::idx_t, 1, true>& uniqueLists,
+        Tensor<int, 1, true>& vectorsByUniqueList,
+        Tensor<int, 1, true>& uniqueListVectorStart,
+        Tensor<int, 1, true>& uniqueListStartOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
         cudaStream_t stream) {
     //
     // Append the new encodings
@@ -169,13 +167,13 @@ void IVFFlat::search(
         int nprobe,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices) {
+        Tensor<Index::idx_t, 2, true>& outIndices) {
     auto stream = resources_->getDefaultStreamCurrentDevice();
 
     // These are caught at a higher level
     FAISS_ASSERT(nprobe <= GPU_MAX_SELECTION_K);
     FAISS_ASSERT(k <= GPU_MAX_SELECTION_K);
-    nprobe = int(std::min(idx_t(nprobe), getNumLists()));
+    nprobe = std::min(nprobe, (int)getNumLists());
 
     FAISS_ASSERT(queries.getSize(1) == dim_);
 
@@ -187,7 +185,7 @@ void IVFFlat::search(
             resources_,
             makeTempAlloc(AllocType::Other, stream),
             {queries.getSize(0), nprobe});
-    DeviceTensor<idx_t, 2, true> coarseIndices(
+    DeviceTensor<Index::idx_t, 2, true> coarseIndices(
             resources_,
             makeTempAlloc(AllocType::Other, stream),
             {queries.getSize(0), nprobe});
@@ -225,10 +223,10 @@ void IVFFlat::searchPreassigned(
         Index* coarseQuantizer,
         Tensor<float, 2, true>& vecs,
         Tensor<float, 2, true>& ivfDistances,
-        Tensor<idx_t, 2, true>& ivfAssignments,
+        Tensor<Index::idx_t, 2, true>& ivfAssignments,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         bool storePairs) {
     FAISS_ASSERT(ivfDistances.getSize(0) == vecs.getSize(0));
     FAISS_ASSERT(ivfAssignments.getSize(0) == vecs.getSize(0));
@@ -285,62 +283,14 @@ void IVFFlat::searchPreassigned(
             storePairs);
 }
 
-void IVFFlat::reconstruct_n(idx_t i0, idx_t ni, float* out) {
-    if (ni == 0) {
-        // nothing to do
-        return;
-    }
-
-    int warpSize = getWarpSizeCurrentDevice();
-    auto stream = resources_->getDefaultStreamCurrentDevice();
-
-    for (idx_t list_no = 0; list_no < numLists_; list_no++) {
-        size_t list_size = deviceListData_[list_no]->numVecs;
-
-        auto idlist = getListIndices(list_no);
-
-        for (idx_t offset = 0; offset < list_size; offset++) {
-            idx_t id = idlist[offset];
-            if (!(id >= i0 && id < i0 + ni)) {
-                continue;
-            }
-
-            // vector data in the non-interleaved format is laid out like:
-            // v0d0 v0d1 ... v0d(dim-1) v1d0 v1d1 ... v1d(dim-1)
-
-            // vector data in the interleaved format is laid out like:
-            // (v0d0 v1d0 ... v31d0) (v0d1 v1d1 ... v31d1)
-            // (v0d(dim - 1) ... v31d(dim-1))
-            // (v32d0 v33d0 ... v63d0) (... v63d(dim-1)) (v64d0 ...)
-
-            // where vectors are chunked into groups of 32, and each dimension
-            // for each of the 32 vectors is contiguous
-
-            auto vectorChunk = offset / warpSize;
-            auto vectorWithinChunk = offset % warpSize;
-
-            auto listDataPtr = (float*)deviceListData_[list_no]->data.data();
-            listDataPtr += vectorChunk * warpSize * dim_ + vectorWithinChunk;
-
-            for (int d = 0; d < dim_; ++d) {
-                fromDevice<float>(
-                        listDataPtr + warpSize * d,
-                        out + (id - i0) * dim_ + d,
-                        1,
-                        stream);
-            }
-        }
-    }
-}
-
 void IVFFlat::searchImpl_(
         Tensor<float, 2, true>& queries,
         Tensor<float, 2, true>& coarseDistances,
-        Tensor<idx_t, 2, true>& coarseIndices,
+        Tensor<Index::idx_t, 2, true>& coarseIndices,
         Tensor<float, 3, true>& ivfCentroids,
         int k,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         bool storePairs) {
     FAISS_ASSERT(storePairs == false);
 
@@ -386,7 +336,7 @@ void IVFFlat::searchImpl_(
     // FIXME: we might ultimately be calling this function with inputs
     // from the CPU, these are unnecessary copies
     if (indicesOptions_ == INDICES_CPU) {
-        HostTensor<idx_t, 2, true> hostOutIndices(outIndices, stream);
+        HostTensor<Index::idx_t, 2, true> hostOutIndices(outIndices, stream);
 
         ivfOffsetToUserIndex(
                 hostOutIndices.data(),

@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+// Copyright 2004-present Facebook. All Rights Reserved.
 // -*- c++ -*-
 
 #include "AuxIndexStructures_c.h"
@@ -17,12 +18,8 @@
 using faiss::BufferList;
 using faiss::DistanceComputer;
 using faiss::IDSelector;
-using faiss::IDSelectorAnd;
 using faiss::IDSelectorBatch;
-using faiss::IDSelectorNot;
-using faiss::IDSelectorOr;
 using faiss::IDSelectorRange;
-using faiss::IDSelectorXOr;
 using faiss::RangeQueryResult;
 using faiss::RangeSearchPartialResult;
 using faiss::RangeSearchResult;
@@ -115,52 +112,6 @@ int faiss_IDSelectorBatch_new(
         *p_sel = reinterpret_cast<FaissIDSelectorBatch*>(
                 new IDSelectorBatch(n, indices));
         return 0;
-    }
-    CATCH_AND_HANDLE
-}
-
-int faiss_IDSelectorNot_new(
-        FaissIDSelectorNot** p_sel,
-        const FaissIDSelector* sel) {
-    try {
-        *p_sel = reinterpret_cast<FaissIDSelectorNot*>(
-                new IDSelectorNot(reinterpret_cast<const IDSelector*>(sel)));
-    }
-    CATCH_AND_HANDLE
-}
-
-int faiss_IDSelectorAnd_new(
-        FaissIDSelectorAnd** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel) {
-    try {
-        *p_sel = reinterpret_cast<FaissIDSelectorAnd*>(new IDSelectorAnd(
-                reinterpret_cast<const IDSelector*>(lhs_sel),
-                reinterpret_cast<const IDSelector*>(rhs_sel)));
-    }
-    CATCH_AND_HANDLE
-}
-
-int faiss_IDSelectorOr_new(
-        FaissIDSelectorOr** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel) {
-    try {
-        *p_sel = reinterpret_cast<FaissIDSelectorOr*>(new IDSelectorOr(
-                reinterpret_cast<const IDSelector*>(lhs_sel),
-                reinterpret_cast<const IDSelector*>(rhs_sel)));
-    }
-    CATCH_AND_HANDLE
-}
-
-int faiss_IDSelectorXOr_new(
-        FaissIDSelectorXOr** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel) {
-    try {
-        *p_sel = reinterpret_cast<FaissIDSelectorXOr*>(new IDSelectorXOr(
-                reinterpret_cast<const IDSelector*>(lhs_sel),
-                reinterpret_cast<const IDSelector*>(rhs_sel)));
     }
     CATCH_AND_HANDLE
 }

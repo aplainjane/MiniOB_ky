@@ -1,9 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 #include <climits>
 #include <cstdio>
@@ -29,7 +24,7 @@ int main() {
     /******************************************
      * Generate a test dataset
      ******************************************/
-    using idx_t = faiss::idx_t;
+    using idx_t = faiss::Index::idx_t;
     size_t d = 128;
     size_t nt = 10000;
     size_t nb = 10000;

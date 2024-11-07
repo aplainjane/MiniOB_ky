@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -16,7 +17,7 @@ import numpy as np
 
 import faiss
 
-from multiprocessing.pool import ThreadPool
+from multiprocessing.dummy import Pool as ThreadPool
 from faiss.contrib import rpc
 from faiss.contrib.datasets import SyntheticDataset
 from faiss.contrib.vecs_io import bvecs_mmap, fvecs_mmap

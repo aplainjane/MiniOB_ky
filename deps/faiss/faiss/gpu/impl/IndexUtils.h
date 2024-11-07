@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,10 +20,13 @@ namespace gpu {
 int getMaxKSelection();
 
 // Validate the k parameter for search
-void validateKSelect(int k);
+void validateKSelect(Index::idx_t k);
 
 // Validate the nprobe parameter for search
-void validateNProbe(size_t nprobe);
+void validateNProbe(Index::idx_t nprobe);
+
+/// Validate the n (number of vectors) parameter for add, search, reconstruct
+void validateNumVectors(Index::idx_t n);
 
 } // namespace gpu
 } // namespace faiss

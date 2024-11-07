@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,17 +27,17 @@ namespace gpu {
 
 // Updates the device-size array of list start pointers for codes and indices
 __global__ void runUpdateListPointers(
-        Tensor<idx_t, 1, true> listIds,
-        Tensor<idx_t, 1, true> newListLength,
+        Tensor<Index::idx_t, 1, true> listIds,
+        Tensor<int, 1, true> newListLength,
         Tensor<void*, 1, true> newCodePointers,
         Tensor<void*, 1, true> newIndexPointers,
-        idx_t* listLengths,
+        int* listLengths,
         void** listCodes,
         void** listIndices) {
-    idx_t i = idx_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < listIds.getSize(0)) {
-        idx_t listId = listIds[i];
+        Index::idx_t listId = listIds[i];
         listLengths[listId] = newListLength[i];
         listCodes[listId] = newCodePointers[i];
         listIndices[listId] = newIndexPointers[i];
@@ -45,17 +45,16 @@ __global__ void runUpdateListPointers(
 }
 
 void runUpdateListPointers(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& newListLength,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& newListLength,
         Tensor<void*, 1, true>& newCodePointers,
         Tensor<void*, 1, true>& newIndexPointers,
-        DeviceVector<idx_t>& listLengths,
+        DeviceVector<int>& listLengths,
         DeviceVector<void*>& listCodes,
         DeviceVector<void*>& listIndices,
         cudaStream_t stream) {
-    auto numThreads =
-            std::min(listIds.getSize(0), (idx_t)getMaxThreadsCurrentDevice());
-    auto numBlocks = utils::divUp(listIds.getSize(0), numThreads);
+    int numThreads = std::min(listIds.getSize(0), getMaxThreadsCurrentDevice());
+    int numBlocks = utils::divUp(listIds.getSize(0), numThreads);
 
     dim3 grid(numBlocks);
     dim3 block(numThreads);
@@ -74,39 +73,39 @@ void runUpdateListPointers(
 
 // Appends new indices for vectors being added to the IVF indices lists
 __global__ void ivfIndicesAppend(
-        Tensor<idx_t, 1, true> listIds,
-        Tensor<idx_t, 1, true> listOffset,
-        Tensor<idx_t, 1, true> indices,
+        Tensor<Index::idx_t, 1, true> listIds,
+        Tensor<int, 1, true> listOffset,
+        Tensor<Index::idx_t, 1, true> indices,
         IndicesOptions opt,
         void** listIndices) {
-    idx_t vec = idx_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    int vec = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (vec >= listIds.getSize(0)) {
         return;
     }
 
-    idx_t listId = listIds[vec];
-    idx_t offset = listOffset[vec];
+    Index::idx_t listId = listIds[vec];
+    int offset = listOffset[vec];
 
     // Add vector could be invalid (contains NaNs etc)
     if (listId == -1 || offset == -1) {
         return;
     }
 
-    idx_t index = indices[vec];
+    Index::idx_t index = indices[vec];
 
     if (opt == INDICES_32_BIT) {
         // FIXME: there could be overflow here, but where should we check this?
         ((int*)listIndices[listId])[offset] = (int)index;
     } else if (opt == INDICES_64_BIT) {
-        ((idx_t*)listIndices[listId])[offset] = index;
+        ((Index::idx_t*)listIndices[listId])[offset] = index;
     }
 }
 
 void runIVFIndicesAppend(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
-        Tensor<idx_t, 1, true>& indices,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& indices,
         IndicesOptions opt,
         DeviceVector<void*>& listIndices,
         cudaStream_t stream) {
@@ -115,9 +114,9 @@ void runIVFIndicesAppend(
             opt == INDICES_64_BIT);
 
     if (opt != INDICES_CPU && opt != INDICES_IVF) {
-        auto num = listIds.getSize(0);
-        auto threads = std::min(num, (idx_t)getMaxThreadsCurrentDevice());
-        auto blocks = utils::divUp(num, threads);
+        int num = listIds.getSize(0);
+        int threads = std::min(num, getMaxThreadsCurrentDevice());
+        int blocks = utils::divUp(num, threads);
 
         ivfIndicesAppend<<<blocks, threads, 0, stream>>>(
                 listIds, listOffset, indices, opt, listIndices.data());
@@ -132,15 +131,15 @@ void runIVFIndicesAppend(
 
 template <typename Codec>
 __global__ void ivfFlatAppend(
-        Tensor<idx_t, 1, true> listIds,
-        Tensor<idx_t, 1, true> listOffset,
+        Tensor<Index::idx_t, 1, true> listIds,
+        Tensor<int, 1, true> listOffset,
         Tensor<float, 2, true> vecs,
         void** listData,
         Codec codec) {
-    idx_t vec = blockIdx.x;
+    int vec = blockIdx.x;
 
-    idx_t listId = listIds[vec];
-    idx_t offset = listOffset[vec];
+    Index::idx_t listId = listIds[vec];
+    int offset = listOffset[vec];
 
     // Add vector could be invalid (contains NaNs etc)
     if (listId == -1 || offset == -1) {
@@ -148,10 +147,9 @@ __global__ void ivfFlatAppend(
     }
 
     // Handle whole encoding (only thread 0 will handle the remainder)
-    // FIXME: dimension < max int?
-    idx_t limit = utils::divDown(vecs.getSize(1), Codec::kDimPerIter);
+    int limit = utils::divDown(vecs.getSize(1), Codec::kDimPerIter);
 
-    idx_t i;
+    int i;
     for (i = threadIdx.x; i < limit; i += blockDim.x) {
         int realDim = i * Codec::kDimPerIter;
         float toEncode[Codec::kDimPerIter];
@@ -190,14 +188,14 @@ __global__ void ivfFlatAppend(
 }
 
 void runIVFFlatAppend(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
         Tensor<float, 2, true>& vecs,
         GpuScalarQuantizer* scalarQ,
         DeviceVector<void*>& listData,
         cudaStream_t stream) {
-    auto dim = vecs.getSize(1);
-    idx_t maxThreads = getMaxThreadsCurrentDevice();
+    int dim = vecs.getSize(1);
+    int maxThreads = getMaxThreadsCurrentDevice();
 
     // Each block will handle appending a single vector
 #define RUN_APPEND                                                  \
@@ -263,18 +261,18 @@ void runIVFFlatAppend(
 }
 
 __global__ void ivfpqAppend(
-        Tensor<idx_t, 1, true> listIds,
-        Tensor<idx_t, 1, true> listOffset,
+        Tensor<Index::idx_t, 1, true> listIds,
+        Tensor<int, 1, true> listOffset,
         Tensor<uint8_t, 2, true> encodings,
         void** listCodes) {
-    idx_t encodingToAdd = idx_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    int encodingToAdd = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (encodingToAdd >= listIds.getSize(0)) {
         return;
     }
 
-    idx_t listId = listIds[encodingToAdd];
-    idx_t vectorNumInList = listOffset[encodingToAdd];
+    Index::idx_t listId = listIds[encodingToAdd];
+    int vectorNumInList = listOffset[encodingToAdd];
 
     // Add vector could be invalid (contains NaNs etc)
     if (listId == -1 || vectorNumInList == -1) {
@@ -288,20 +286,19 @@ __global__ void ivfpqAppend(
             vectorNumInList * encodings.getSize(1);
 
     // FIXME: stride with threads instead of single thread
-    for (idx_t i = 0; i < encodings.getSize(1); ++i) {
+    for (int i = 0; i < encodings.getSize(1); ++i) {
         codeStart[i] = encoding[i];
     }
 }
 
 void runIVFPQAppend(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
         Tensor<uint8_t, 2, true>& encodings,
         DeviceVector<void*>& listCodes,
         cudaStream_t stream) {
-    idx_t threads =
-            std::min(listIds.getSize(0), (idx_t)getMaxThreadsCurrentDevice());
-    idx_t blocks = utils::divUp(listIds.getSize(0), threads);
+    int threads = std::min(listIds.getSize(0), getMaxThreadsCurrentDevice());
+    int blocks = utils::divUp(listIds.getSize(0), threads);
 
     ivfpqAppend<<<threads, blocks, 0, stream>>>(
             listIds, listOffset, encodings, listCodes.data());
@@ -321,9 +318,9 @@ __global__ void sqEncode(
         Tensor<float, 2, true> vecs,
         Tensor<typename Codec::EncodeT, 2, true> encodedVecs,
         Codec codec) {
-    idx_t vec = blockIdx.x;
+    int vec = blockIdx.x;
 
-    for (idx_t d = threadIdx.x; d < vecs.getSize(1); d += blockDim.x) {
+    for (int d = threadIdx.x; d < vecs.getSize(1); d += blockDim.x) {
         encodedVecs[vec][d] = codec.encodeNew(d, vecs[vec][d]);
     }
 }
@@ -334,35 +331,34 @@ void runSQEncode(
         Tensor<typename Codec::EncodeT, 2, true>& encodedVecs,
         Codec codec,
         cudaStream_t stream) {
-    idx_t threads =
-            std::min(vecs.getSize(1), (idx_t)getMaxThreadsCurrentDevice());
-    idx_t blocks = vecs.getSize(0);
+    int threads = std::min(vecs.getSize(1), getMaxThreadsCurrentDevice());
+    int blocks = vecs.getSize(0);
 
     sqEncode<<<blocks, threads, 0, stream>>>(vecs, encodedVecs, codec);
 }
 
 // Handles appending encoded vectors (one per EncodeT word) packed into
-// EncodeBits interleaved by kWarpSize vectors.
+// EncodeBits interleaved by 32 vectors.
 // This is used by Flat, SQ and PQ code for the interleaved format.
 template <typename EncodeT, int EncodeBits>
 __global__ void ivfInterleavedAppend(
         // the IDs (offset in listData) of the unique lists
         // being added to
-        Tensor<idx_t, 1, true> uniqueLists,
+        Tensor<Index::idx_t, 1, true> uniqueLists,
         // For each of the list IDs in uniqueLists, the start
         // offset in vectorsByUniqueList for the vectors that
         // we are adding to that list
-        Tensor<idx_t, 1, true> uniqueListVectorStart,
+        Tensor<int, 1, true> uniqueListVectorStart,
         // IDs in vecs of the vectors being added to each
         // unique list
         // The vectors (offset in vecs) added to
         // uniqueLists[i] is:
         // {vBUL[uLVS[i]], ..., vBUL[uLVS[i+1] - 1]}
-        Tensor<idx_t, 1, true> vectorsByUniqueList,
+        Tensor<int, 1, true> vectorsByUniqueList,
         // For each of the list IDs in uniqueLists, the start
         // offset (by vector) within that list where we begin
         // appending
-        Tensor<idx_t, 1, true> uniqueListStartOffset,
+        Tensor<int, 1, true> uniqueListStartOffset,
         // The EncodeT-sized encoded vectors
         Tensor<EncodeT, 2, true> encodedVecs,
         // The set of addresses for each of the lists
@@ -373,49 +369,48 @@ __global__ void ivfInterleavedAppend(
     int warpsPerBlock = blockDim.x / kWarpSize;
 
     // Each block is dedicated to a separate list
-    idx_t listId = uniqueLists[blockIdx.x];
+    Index::idx_t listId = uniqueLists[blockIdx.x];
 
     // The vecs we add to the list are at indices [vBUL[vecIdStart],
     // vBUL[vecIdEnd])
-    idx_t vecIdStart = uniqueListVectorStart[blockIdx.x];
+    int vecIdStart = uniqueListVectorStart[blockIdx.x];
     // uLVS is explicitly terminated for us with one more than the number of
     // blocks that we have
-    idx_t vecIdEnd = uniqueListVectorStart[blockIdx.x + 1];
+    int vecIdEnd = uniqueListVectorStart[blockIdx.x + 1];
 
     // How many vectors we are adding to this list
-    auto numVecsAdding = vecIdEnd - vecIdStart;
+    int numVecsAdding = vecIdEnd - vecIdStart;
 
     // The first vector we are updating within the list
     auto listVecStart = uniqueListStartOffset[blockIdx.x];
 
     // These are the actual vec IDs that we are adding (in vecs)
-    auto listVecIds = vectorsByUniqueList[vecIdStart].data();
+    int* listVecIds = vectorsByUniqueList[vecIdStart].data();
 
-    // All data is written by groups of kWarpSize vectors (to mirror the warp).
+    // All data is written by groups of 32 vectors (to mirror the warp).
     // listVecStart could be in the middle of this, or even, for sub-byte
     // encodings, mean that the first vector piece of data that we need to
     // update is in the high part of a byte.
     //
     // WarpPackedBits allows writing of arbitrary bit packed data in groups of
-    // kWarpSize, but we ensure that it only operates on the group of kWarpSize
-    // vectors. In order to do this we need to actually start updating vectors
-    // at the next lower multiple of kWarpSize from listVecStart.
-    auto alignedListVecStart = utils::roundDown(listVecStart, kWarpSize);
+    // 32, but we ensure that it only operates on the group of 32 vectors. In
+    // order to do this we need to actually start updating vectors at the next
+    // lower multiple of 32 from listVecStart.
+    int alignedListVecStart = utils::roundDown(listVecStart, 32);
 
-    // Each block of kWarpSize vectors fully encodes into this many bytes
-    constexpr int bytesPerVectorBlockDim = EncodeBits * kWarpSize / 8;
+    // Each block of 32 vectors fully encodes into this many bytes
+    constexpr int bytesPerVectorBlockDim = EncodeBits * 32 / 8;
     constexpr int wordsPerVectorBlockDim =
             bytesPerVectorBlockDim / sizeof(EncodeT);
-    auto wordsPerVectorBlock = wordsPerVectorBlockDim * encodedVecs.getSize(1);
+    int wordsPerVectorBlock = wordsPerVectorBlockDim * encodedVecs.getSize(1);
 
     EncodeT* listStart = ((EncodeT*)listData[listId]);
 
-    // Each warp within the block handles a different chunk of kWarpSize
-    auto warpVec = alignedListVecStart +
-            (faiss::gpu::Tensor<long, 1, true>::DataType)warpId * kWarpSize;
+    // Each warp within the block handles a different chunk of 32
+    int warpVec = alignedListVecStart + warpId * 32;
 
     // The warp data starts here
-    EncodeT* warpData = listStart + (warpVec / kWarpSize) * wordsPerVectorBlock;
+    EncodeT* warpData = listStart + (warpVec / 32) * wordsPerVectorBlock;
 
     // Each warp encodes a single block
     for (; warpVec < listVecStart + numVecsAdding;
@@ -425,18 +420,18 @@ __global__ void ivfInterleavedAppend(
          // encoding, which is one per warp
          warpData += warpsPerBlock * wordsPerVectorBlock) {
         // This lane is adding this vec (if it is within bounds)
-        auto laneVec = warpVec + laneId;
+        int laneVec = warpVec + laneId;
 
         // Which vector does this correspond to in the set of vectors that we
         // need to add? If this is < 0, then this particular thread is not
         // encoding / appending a new vector
-        auto laneVecAdding = laneVec - listVecStart;
+        int laneVecAdding = laneVec - listVecStart;
 
         // We are actually adding a new vector if this is within range
         bool valid = laneVecAdding >= 0 && laneVecAdding < numVecsAdding;
 
         // Now, which actual vector in vecs is this?
-        auto vecId = valid ? listVecIds[laneVecAdding] : 0;
+        int vecId = valid ? listVecIds[laneVecAdding] : 0;
 
         // Each warp that has some vector data available needs to write out the
         // vector components
@@ -453,18 +448,18 @@ __global__ void ivfInterleavedAppend(
 }
 
 void runIVFFlatInterleavedAppend(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
-        Tensor<idx_t, 1, true>& uniqueLists,
-        Tensor<idx_t, 1, true>& vectorsByUniqueList,
-        Tensor<idx_t, 1, true>& uniqueListVectorStart,
-        Tensor<idx_t, 1, true>& uniqueListStartOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& uniqueLists,
+        Tensor<int, 1, true>& vectorsByUniqueList,
+        Tensor<int, 1, true>& uniqueListVectorStart,
+        Tensor<int, 1, true>& uniqueListStartOffset,
         Tensor<float, 2, true>& vecs,
         GpuScalarQuantizer* scalarQ,
         DeviceVector<void*>& listData,
         GpuResources* res,
         cudaStream_t stream) {
-    auto dim = vecs.getSize(1);
+    int dim = vecs.getSize(1);
 
 #define RUN_APPEND(ENCODE_T, ENCODE_BITS, DATA)     \
     do {                                            \
@@ -587,12 +582,12 @@ void runIVFFlatInterleavedAppend(
 }
 
 void runIVFPQInterleavedAppend(
-        Tensor<idx_t, 1, true>& listIds,
-        Tensor<idx_t, 1, true>& listOffset,
-        Tensor<idx_t, 1, true>& uniqueLists,
-        Tensor<idx_t, 1, true>& vectorsByUniqueList,
-        Tensor<idx_t, 1, true>& uniqueListVectorStart,
-        Tensor<idx_t, 1, true>& uniqueListStartOffset,
+        Tensor<Index::idx_t, 1, true>& listIds,
+        Tensor<int, 1, true>& listOffset,
+        Tensor<Index::idx_t, 1, true>& uniqueLists,
+        Tensor<int, 1, true>& vectorsByUniqueList,
+        Tensor<int, 1, true>& uniqueListVectorStart,
+        Tensor<int, 1, true>& uniqueListStartOffset,
         int bitsPerCode,
         Tensor<uint8_t, 2, true>& encodings,
         DeviceVector<void*>& listCodes,

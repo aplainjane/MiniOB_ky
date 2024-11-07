@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,7 +19,6 @@ using namespace faiss;
 static void bench(benchmark::State& state) {
     int d = 128;
     int n = 2000;
-    state.SetLabel(faiss::get_compile_options());
 
     std::vector<float> x(d * n);
 
@@ -77,6 +76,6 @@ static void bench(benchmark::State& state) {
     }
 }
 // I think maybe n and d should be input arguments
-// for things to really make sense, idk.
+// for thigns to really make sense, idk.
 BENCHMARK(bench)->Iterations(20);
 BENCHMARK_MAIN();

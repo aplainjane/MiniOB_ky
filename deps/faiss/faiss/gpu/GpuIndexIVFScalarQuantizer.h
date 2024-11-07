@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,9 +18,11 @@ class IVFFlat;
 class GpuIndexFlat;
 
 struct GpuIndexIVFScalarQuantizerConfig : public GpuIndexIVFConfig {
+    inline GpuIndexIVFScalarQuantizerConfig() : interleavedLayout(true) {}
+
     /// Use the alternative memory layout for the IVF lists
     /// (currently the default)
-    bool interleavedLayout = true;
+    bool interleavedLayout;
 };
 
 /// Wrapper around the GPU implementation that looks like
@@ -40,7 +42,7 @@ class GpuIndexIVFScalarQuantizer : public GpuIndexIVF {
     GpuIndexIVFScalarQuantizer(
             GpuResourcesProvider* provider,
             int dims,
-            idx_t nlist,
+            int nlist,
             faiss::ScalarQuantizer::QuantizerType qtype,
             faiss::MetricType metric = MetricType::METRIC_L2,
             bool encodeResidual = true,
@@ -53,7 +55,7 @@ class GpuIndexIVFScalarQuantizer : public GpuIndexIVF {
             GpuResourcesProvider* provider,
             Index* coarseQuantizer,
             int dims,
-            idx_t nlist,
+            int nlist,
             faiss::ScalarQuantizer::QuantizerType qtype,
             faiss::MetricType metric = MetricType::METRIC_L2,
             bool encodeResidual = true,
@@ -87,14 +89,14 @@ class GpuIndexIVFScalarQuantizer : public GpuIndexIVF {
     void updateQuantizer() override;
 
     /// Trains the coarse and scalar quantizer based on the given vector data
-    void train(idx_t n, const float* x) override;
+    void train(Index::idx_t n, const float* x) override;
 
    protected:
     /// Validates index SQ parameters
     void verifySQSettings_() const;
 
     /// Called from train to handle SQ residual training
-    void trainResiduals_(idx_t n, const float* x);
+    void trainResiduals_(Index::idx_t n, const float* x);
 
    public:
     /// Exposed like the CPU version

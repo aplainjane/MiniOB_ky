@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,7 +58,7 @@ struct IVFFlatScan {
             void* vecData,
             const Codec& codec,
             const Metric& metric,
-            idx_t numVecs,
+            int numVecs,
             int dim,
             float* distanceOut) {
         // How many separate loading points are there for the decoder?
@@ -70,13 +70,13 @@ struct IVFFlatScan {
         int laneId = threadIdx.x % kWarpSize; // getLaneId();
 
         // Divide the set of vectors among the warps
-        idx_t vecsPerWarp = utils::divUp(numVecs, kIVFFlatScanWarps);
+        int vecsPerWarp = utils::divUp(numVecs, kIVFFlatScanWarps);
 
-        idx_t vecStart = vecsPerWarp * warpId;
-        idx_t vecEnd = min(vecsPerWarp * (warpId + 1), numVecs);
+        int vecStart = vecsPerWarp * warpId;
+        int vecEnd = min(vecsPerWarp * (warpId + 1), numVecs);
 
         // Walk the list of vectors for this warp
-        for (idx_t vec = vecStart; vec < vecEnd; ++vec) {
+        for (int vec = vecStart; vec < vecEnd; ++vec) {
             Metric dist = metric.zero();
 
             // Scan the dimensions available that have whole units for the
@@ -137,12 +137,12 @@ __global__ void ivfFlatScan(
         Tensor<float, 2, true> queries,
         bool useResidual,
         Tensor<float, 3, true> residualBase,
-        Tensor<idx_t, 2, true> listIds,
+        Tensor<Index::idx_t, 2, true> listIds,
         void** allListData,
-        idx_t* listLengths,
+        int* listLengths,
         Codec codec,
         Metric metric,
-        Tensor<idx_t, 2, true> prefixSumOffsets,
+        Tensor<int, 2, true> prefixSumOffsets,
         Tensor<float, 1, true> distance) {
     extern __shared__ float smem[];
 
@@ -151,9 +151,9 @@ __global__ void ivfFlatScan(
 
     // This is where we start writing out data
     // We ensure that before the array (at offset -1), there is a 0 value
-    auto outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
+    int outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
 
-    idx_t listId = listIds[queryId][probeId];
+    Index::idx_t listId = listIds[queryId][probeId];
     // Safety guard in case NaNs in input cause no list ID to be generated
     if (listId == -1) {
         return;
@@ -185,35 +185,50 @@ __global__ void ivfFlatScan(
 void runIVFFlatScanTile(
         GpuResources* res,
         Tensor<float, 2, true>& queries,
-        Tensor<idx_t, 2, true>& listIds,
+        Tensor<Index::idx_t, 2, true>& listIds,
         DeviceVector<void*>& listData,
         DeviceVector<void*>& listIndices,
         IndicesOptions indicesOptions,
-        DeviceVector<idx_t>& listLengths,
+        DeviceVector<int>& listLengths,
         Tensor<char, 1, true>& thrustMem,
-        Tensor<idx_t, 2, true>& prefixSumOffsets,
+        Tensor<int, 2, true>& prefixSumOffsets,
         Tensor<float, 1, true>& allDistances,
         Tensor<float, 3, true>& heapDistances,
-        Tensor<idx_t, 3, true>& heapIndices,
+        Tensor<int, 3, true>& heapIndices,
         int k,
-        bool use64BitSelection,
         faiss::MetricType metricType,
         bool useResidual,
         Tensor<float, 3, true>& residualBase,
         GpuScalarQuantizer* scalarQ,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         cudaStream_t stream) {
-    auto dim = queries.getSize(1);
+    int dim = queries.getSize(1);
+
+    // Check the amount of shared memory per block available based on our type
+    // is sufficient
+    if (scalarQ &&
+        (scalarQ->qtype == ScalarQuantizer::QuantizerType::QT_8bit ||
+         scalarQ->qtype == ScalarQuantizer::QuantizerType::QT_4bit)) {
+        int maxDim =
+                getMaxSharedMemPerBlockCurrentDevice() / (sizeof(float) * 2);
+
+        FAISS_THROW_IF_NOT_FMT(
+                dim < maxDim,
+                "Insufficient shared memory available on the GPU "
+                "for QT_8bit or QT_4bit with %d dimensions; "
+                "maximum dimensions possible is %d",
+                dim,
+                maxDim);
+    }
 
     // Calculate offset lengths, so we know where to write out
     // intermediate results
     runCalcListOffsets(
             res, listIds, listLengths, prefixSumOffsets, thrustMem, stream);
 
-    int warpSize = getWarpSizeCurrentDevice();
     auto grid = dim3(listIds.getSize(1), listIds.getSize(0));
-    auto block = dim3(warpSize * kIVFFlatScanWarps);
+    auto block = dim3(kWarpSize * kIVFFlatScanWarps);
 
 #define RUN_IVF_FLAT                                                  \
     do {                                                              \
@@ -301,7 +316,6 @@ void runIVFFlatScanTile(
             allDistances,
             listIds.getSize(1),
             k,
-            use64BitSelection,
             metricToSortDirection(metricType),
             heapDistances,
             heapIndices,
@@ -319,7 +333,6 @@ void runIVFFlatScanTile(
             prefixSumOffsets,
             listIds,
             k,
-            use64BitSelection,
             metricToSortDirection(metricType),
             outDistances,
             outIndices,
@@ -328,12 +341,12 @@ void runIVFFlatScanTile(
 
 void runIVFFlatScan(
         Tensor<float, 2, true>& queries,
-        Tensor<idx_t, 2, true>& listIds,
+        Tensor<Index::idx_t, 2, true>& listIds,
         DeviceVector<void*>& listData,
         DeviceVector<void*>& listIndices,
         IndicesOptions indicesOptions,
-        DeviceVector<idx_t>& listLengths,
-        idx_t maxListLength,
+        DeviceVector<int>& listLengths,
+        int maxListLength,
         int k,
         faiss::MetricType metric,
         bool useResidual,
@@ -342,62 +355,80 @@ void runIVFFlatScan(
         // output
         Tensor<float, 2, true>& outDistances,
         // output
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         GpuResources* res) {
+    constexpr int kMinQueryTileSize = 8;
+    constexpr int kMaxQueryTileSize = 128;
+    constexpr int kThrustMemSize = 16384;
+
+    int nprobe = listIds.getSize(1);
     auto stream = res->getDefaultStreamCurrentDevice();
-
-    auto nprobe = listIds.getSize(1);
-
-    // If the maximum list length (in terms of number of vectors) times nprobe
-    // (number of lists) is > 2^31 - 1, then we will use 64-bit indexing in the
-    // selection kernels
-    bool use64BitSelection =
-            maxListLength * nprobe > idx_t(std::numeric_limits<int32_t>::max());
 
     // Make a reservation for Thrust to do its dirty work (global memory
     // cross-block reduction space); hopefully this is large enough.
-    constexpr idx_t kThrustMemSize = 16384;
-
     DeviceTensor<char, 1, true> thrustMem1(
             res, makeTempAlloc(AllocType::Other, stream), {kThrustMemSize});
     DeviceTensor<char, 1, true> thrustMem2(
             res, makeTempAlloc(AllocType::Other, stream), {kThrustMemSize});
     DeviceTensor<char, 1, true>* thrustMem[2] = {&thrustMem1, &thrustMem2};
 
-    // How much temporary memory would we need to handle a single query?
-    size_t sizePerQuery = getIVFPerQueryTempMemory(k, nprobe, maxListLength);
+    // How much temporary storage is available?
+    // If possible, we'd like to fit within the space available.
+    size_t sizeAvailable = res->getTempMemoryAvailableCurrentDevice();
 
-    // How many queries do we wish to run at once?
-    idx_t queryTileSize = getIVFQueryTileSize(
-            queries.getSize(0),
-            res->getTempMemoryAvailableCurrentDevice(),
-            sizePerQuery);
+    // We run two passes of heap selection
+    // This is the size of the first-level heap passes
+    constexpr int kNProbeSplit = 8;
+    int pass2Chunks = std::min(nprobe, kNProbeSplit);
+
+    size_t sizeForFirstSelectPass =
+            pass2Chunks * k * (sizeof(float) + sizeof(int));
+
+    // How much temporary storage we need per each query
+    size_t sizePerQuery = 2 *                         // # streams
+            ((nprobe * sizeof(int) + sizeof(int)) +   // prefixSumOffsets
+             nprobe * maxListLength * sizeof(float) + // allDistances
+             sizeForFirstSelectPass);
+
+    int queryTileSize = (int)(sizeAvailable / sizePerQuery);
+
+    if (queryTileSize < kMinQueryTileSize) {
+        queryTileSize = kMinQueryTileSize;
+    } else if (queryTileSize > kMaxQueryTileSize) {
+        queryTileSize = kMaxQueryTileSize;
+    }
+
+    // FIXME: we should adjust queryTileSize to deal with this, since
+    // indexing is in int32
+    FAISS_ASSERT(
+            queryTileSize * nprobe * maxListLength <
+            std::numeric_limits<int>::max());
 
     // Temporary memory buffers
     // Make sure there is space prior to the start which will be 0, and
     // will handle the boundary condition without branches
-    DeviceTensor<idx_t, 1, true> prefixSumOffsetSpace1(
+    DeviceTensor<int, 1, true> prefixSumOffsetSpace1(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize * nprobe + 1});
-    DeviceTensor<idx_t, 1, true> prefixSumOffsetSpace2(
+    DeviceTensor<int, 1, true> prefixSumOffsetSpace2(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize * nprobe + 1});
 
-    DeviceTensor<idx_t, 2, true> prefixSumOffsets1(
+    DeviceTensor<int, 2, true> prefixSumOffsets1(
             prefixSumOffsetSpace1[1].data(), {queryTileSize, nprobe});
-    DeviceTensor<idx_t, 2, true> prefixSumOffsets2(
+    DeviceTensor<int, 2, true> prefixSumOffsets2(
             prefixSumOffsetSpace2[1].data(), {queryTileSize, nprobe});
-    DeviceTensor<idx_t, 2, true>* prefixSumOffsets[2] = {
+    DeviceTensor<int, 2, true>* prefixSumOffsets[2] = {
             &prefixSumOffsets1, &prefixSumOffsets2};
 
     // Make sure the element before prefixSumOffsets is 0, since we
     // depend upon simple, boundary-less indexing to get proper results
     CUDA_VERIFY(cudaMemsetAsync(
-            prefixSumOffsetSpace1.data(), 0, sizeof(idx_t), stream));
+            prefixSumOffsetSpace1.data(), 0, sizeof(int), stream));
     CUDA_VERIFY(cudaMemsetAsync(
-            prefixSumOffsetSpace2.data(), 0, sizeof(idx_t), stream));
+            prefixSumOffsetSpace2.data(), 0, sizeof(int), stream));
 
     DeviceTensor<float, 1, true> allDistances1(
             res,
@@ -410,7 +441,6 @@ void runIVFFlatScan(
     DeviceTensor<float, 1, true>* allDistances[2] = {
             &allDistances1, &allDistances2};
 
-    idx_t pass2Chunks = getIVFKSelectionPass2Chunks(nprobe);
     DeviceTensor<float, 3, true> heapDistances1(
             res,
             makeTempAlloc(AllocType::Other, stream),
@@ -422,24 +452,23 @@ void runIVFFlatScan(
     DeviceTensor<float, 3, true>* heapDistances[2] = {
             &heapDistances1, &heapDistances2};
 
-    DeviceTensor<idx_t, 3, true> heapIndices1(
+    DeviceTensor<int, 3, true> heapIndices1(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize, pass2Chunks, k});
-    DeviceTensor<idx_t, 3, true> heapIndices2(
+    DeviceTensor<int, 3, true> heapIndices2(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize, pass2Chunks, k});
-    DeviceTensor<idx_t, 3, true>* heapIndices[2] = {
-            &heapIndices1, &heapIndices2};
+    DeviceTensor<int, 3, true>* heapIndices[2] = {&heapIndices1, &heapIndices2};
 
     auto streams = res->getAlternateStreamsCurrentDevice();
     streamWait(streams, {stream});
 
     int curStream = 0;
 
-    for (idx_t query = 0; query < queries.getSize(0); query += queryTileSize) {
-        auto numQueriesInTile =
+    for (int query = 0; query < queries.getSize(0); query += queryTileSize) {
+        int numQueriesInTile =
                 std::min(queryTileSize, queries.getSize(0) - query);
 
         auto prefixSumOffsetsView =
@@ -475,7 +504,6 @@ void runIVFFlatScan(
                 heapDistancesView,
                 heapIndicesView,
                 k,
-                use64BitSelection,
                 metric,
                 useResidual,
                 residualBaseView,

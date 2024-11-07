@@ -1,9 +1,4 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 #ifndef PQ_AVX2_INL_H
 #define PQ_AVX2_INL_H
@@ -1493,14 +1488,12 @@ struct IndexPQDecoderImpl<
 
 // Suitable for PQ[1]x8
 // Suitable for PQ[1]x10
-// Suitable for PQ[1]x12
 // Suitable for PQ[1]x16
 template <intptr_t DIM, intptr_t FINE_SIZE, intptr_t FINE_BITS = 8>
 struct IndexPQDecoder {
     static_assert(
-            FINE_BITS == 8 || FINE_BITS == 10 || FINE_BITS == 12 ||
-                    FINE_BITS == 16,
-            "Only 8, 10, 12 or 16 bits are currently supported for FINE_BITS");
+            FINE_BITS == 8 || FINE_BITS == 10 || FINE_BITS == 16,
+            "Only 8, 10 or 16 bits are currently supported for FINE_BITS");
 
     static constexpr intptr_t dim = DIM;
     static constexpr intptr_t fineSize = FINE_SIZE;

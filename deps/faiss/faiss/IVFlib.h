@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -47,6 +47,8 @@ IndexIVF* try_extract_index_ivf(Index* index);
  * @param shift_ids: translate the ids from index1 to index0->prev_ntotal
  */
 void merge_into(Index* index0, Index* index1, bool shift_ids);
+
+typedef Index::idx_t idx_t;
 
 /* Returns the cluster the embeddings belong to.
  *

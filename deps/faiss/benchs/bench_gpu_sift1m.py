@@ -1,4 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -85,8 +85,7 @@ print("benchmark")
 
 for lnprobe in range(10):
     nprobe = 1 << lnprobe
-    index.nprobe
-    index.nprobe = nprobe
+    index.setNumProbes(nprobe)
     t, r = evaluate(index, xq, gt, 100)
 
     print("nprobe=%4d %.3f ms recalls= %.4f %.4f %.4f" % (nprobe, t, r[1], r[10], r[100]))

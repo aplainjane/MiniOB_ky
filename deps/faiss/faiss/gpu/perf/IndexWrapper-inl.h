@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -58,8 +58,8 @@ void IndexWrapper<GpuIndex>::runOnIndices(std::function<void(GpuIndex*)> f) {
 }
 
 template <typename GpuIndex>
-void IndexWrapper<GpuIndex>::setNumProbes(size_t nprobe) {
-    runOnIndices([nprobe](GpuIndex* index) { index->nprobe = nprobe; });
+void IndexWrapper<GpuIndex>::setNumProbes(int nprobe) {
+    runOnIndices([nprobe](GpuIndex* index) { index->setNumProbes(nprobe); });
 }
 
 } // namespace gpu

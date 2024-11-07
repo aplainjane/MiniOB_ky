@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,7 +21,7 @@ DeviceTensor<T, Dim, true> toDeviceTemporary(
         int dstDevice,
         T* src,
         cudaStream_t stream,
-        std::initializer_list<idx_t> sizes) {
+        std::initializer_list<int> sizes) {
     int dev = getDeviceForAddress(src);
     DeviceTensor<T, Dim, true> oldT(src, sizes);
 
@@ -46,7 +46,7 @@ DeviceTensor<T, Dim, true> toDeviceNonTemporary(
         int dstDevice,
         T* src,
         cudaStream_t stream,
-        std::initializer_list<idx_t> sizes) {
+        std::initializer_list<int> sizes) {
     int dev = getDeviceForAddress(src);
     DeviceTensor<T, Dim, true> oldT(src, sizes);
 
@@ -74,10 +74,12 @@ DeviceTensor<T, 1, true> toDeviceTemporary(
     // Uses the current device if device == -1
     DeviceScope scope(device);
 
+    FAISS_ASSERT(src.size() < (size_t)std::numeric_limits<int>::max());
+
     DeviceTensor<T, 1, true> out(
             resources,
             makeTempAlloc(AllocType::Other, stream),
-            {(idx_t)src.size()});
+            {(int)src.size()});
 
     out.copyFrom(src, stream);
 
@@ -89,7 +91,7 @@ template <typename T, int Dim>
 HostTensor<T, Dim, true> toHost(
         T* src,
         cudaStream_t stream,
-        std::initializer_list<idx_t> sizes) {
+        std::initializer_list<int> sizes) {
     int dev = getDeviceForAddress(src);
 
     if (dev == -1) {
@@ -119,7 +121,6 @@ inline void fromDevice(T* src, T* dst, size_t num, cudaStream_t stream) {
     if (dev == -1) {
         CUDA_VERIFY(cudaMemcpyAsync(
                 dst, src, num * sizeof(T), cudaMemcpyDeviceToHost, stream));
-        cudaStreamSynchronize(stream);
     } else {
         CUDA_VERIFY(cudaMemcpyAsync(
                 dst, src, num * sizeof(T), cudaMemcpyDeviceToDevice, stream));

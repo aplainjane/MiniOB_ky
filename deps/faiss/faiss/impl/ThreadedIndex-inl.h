@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ ThreadedIndex<IndexT>::ThreadedIndex(bool threaded)
 
 template <typename IndexT>
 ThreadedIndex<IndexT>::ThreadedIndex(int d, bool threaded)
-        : IndexT(d), isThreaded_(threaded) {}
+        : IndexT(d), own_fields(false), isThreaded_(threaded) {}
 
 template <typename IndexT>
 ThreadedIndex<IndexT>::~ThreadedIndex() {
@@ -35,7 +35,7 @@ ThreadedIndex<IndexT>::~ThreadedIndex() {
             FAISS_ASSERT(!(bool)p.second);
         }
 
-        if (own_indices) {
+        if (own_fields) {
             delete p.first;
         }
     }
@@ -102,7 +102,7 @@ void ThreadedIndex<IndexT>::removeIndex(IndexT* index) {
             indices_.erase(it);
             onAfterRemoveIndex(index);
 
-            if (own_indices) {
+            if (own_fields) {
                 delete index;
             }
 

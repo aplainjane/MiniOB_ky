@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,9 +11,6 @@
 #include <faiss/utils/AlignedTable.h>
 
 namespace faiss {
-
-struct CodePacker;
-struct NormTableScaler;
 
 /** Fast scan version of IndexPQ and IndexAQ. Works for 4-bit PQ and AQ for now.
  *
@@ -28,6 +25,7 @@ struct NormTableScaler;
  * 14: no qbs with heap accumulator
  * 15: no qbs with reservoir accumulator
  */
+
 struct IndexFastScan : Index {
     // implementation to select
     int implem = 0;
@@ -88,25 +86,25 @@ struct IndexFastScan : Index {
             uint8_t* lut,
             float* normalizers) const;
 
-    template <bool is_max>
+    template <bool is_max, class Scaler>
     void search_dispatch_implem(
             idx_t n,
             const float* x,
             idx_t k,
             float* distances,
             idx_t* labels,
-            const NormTableScaler* scaler) const;
+            const Scaler& scaler) const;
 
-    template <class Cfloat>
+    template <class Cfloat, class Scaler>
     void search_implem_234(
             idx_t n,
             const float* x,
             idx_t k,
             float* distances,
             idx_t* labels,
-            const NormTableScaler* scaler) const;
+            const Scaler& scaler) const;
 
-    template <class C>
+    template <class C, class Scaler>
     void search_implem_12(
             idx_t n,
             const float* x,
@@ -114,9 +112,9 @@ struct IndexFastScan : Index {
             float* distances,
             idx_t* labels,
             int impl,
-            const NormTableScaler* scaler) const;
+            const Scaler& scaler) const;
 
-    template <class C>
+    template <class C, class Scaler>
     void search_implem_14(
             idx_t n,
             const float* x,
@@ -124,13 +122,10 @@ struct IndexFastScan : Index {
             float* distances,
             idx_t* labels,
             int impl,
-            const NormTableScaler* scaler) const;
+            const Scaler& scaler) const;
 
     void reconstruct(idx_t key, float* recons) const override;
     size_t remove_ids(const IDSelector& sel) override;
-
-    CodePacker* get_CodePacker() const;
-
     void merge_from(Index& otherIndex, idx_t add_id = 0) override;
     void check_compatible_for_merge(const Index& otherIndex) const override;
 };

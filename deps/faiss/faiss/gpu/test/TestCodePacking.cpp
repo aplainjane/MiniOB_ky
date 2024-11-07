@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,6 @@
 
 #include <faiss/gpu/impl/InterleavedCodes.h>
 #include <faiss/gpu/test/TestUtils.h>
-#include <faiss/gpu/utils/DeviceUtils.h>
 #include <faiss/gpu/utils/StaticUtils.h>
 #include <gtest/gtest.h>
 #include <cmath>
@@ -120,9 +119,8 @@ TEST(TestCodePacking, InterleavedCodes_UnpackPack) {
                 std::cout << bitsPerCode << " " << dims << " " << numVecs
                           << "\n";
 
-                int warpSize = getWarpSizeCurrentDevice();
-                int blocks = utils::divUp(numVecs, warpSize);
-                int bytesPerDimBlock = warpSize * bitsPerCode / 8;
+                int blocks = utils::divUp(numVecs, 32);
+                int bytesPerDimBlock = 32 * bitsPerCode / 8;
                 int bytesPerBlock = bytesPerDimBlock * dims;
                 int size = blocks * bytesPerBlock;
 
@@ -134,9 +132,9 @@ TEST(TestCodePacking, InterleavedCodes_UnpackPack) {
 
                     for (int i = 0; i < blocks; ++i) {
                         for (int j = 0; j < dims; ++j) {
-                            for (int k = 0; k < warpSize; ++k) {
+                            for (int k = 0; k < 32; ++k) {
                                 for (int l = 0; l < bytesPerCode; ++l) {
-                                    int vec = i * warpSize + k;
+                                    int vec = i * 32 + k;
                                     if (vec < numVecs) {
                                         data[i * bytesPerBlock +
                                              j * bytesPerDimBlock +
@@ -150,8 +148,7 @@ TEST(TestCodePacking, InterleavedCodes_UnpackPack) {
                     for (int i = 0; i < blocks; ++i) {
                         for (int j = 0; j < dims; ++j) {
                             for (int k = 0; k < bytesPerDimBlock; ++k) {
-                                int loVec =
-                                        i * warpSize + (k * 8) / bitsPerCode;
+                                int loVec = i * 32 + (k * 8) / bitsPerCode;
                                 int hiVec = loVec + 1;
                                 int hiVec2 = hiVec + 1;
 

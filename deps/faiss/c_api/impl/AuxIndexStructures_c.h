@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+// Copyright 2004-present Facebook. All Rights Reserved.
 // -*- c -*-
 
 #ifndef FAISS_AUX_INDEX_STRUCTURES_C_H
@@ -80,29 +81,6 @@ int faiss_IDSelectorBatch_new(
         FaissIDSelectorBatch** p_sel,
         size_t n,
         const idx_t* indices);
-
-FAISS_DECLARE_CLASS(IDSelectorNot)
-int faiss_IDSelectorNot_new(
-        FaissIDSelectorNot** p_sel,
-        const FaissIDSelector* sel);
-
-FAISS_DECLARE_CLASS(IDSelectorAnd)
-int faiss_IDSelectorAnd_new(
-        FaissIDSelectorAnd** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel);
-
-FAISS_DECLARE_CLASS(IDSelectorOr)
-int faiss_IDSelectorOr_new(
-        FaissIDSelectorOr** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel);
-
-FAISS_DECLARE_CLASS(IDSelectorXOr)
-int faiss_IDSelectorXOr_new(
-        FaissIDSelectorXOr** p_sel,
-        const FaissIDSelector* lhs_sel,
-        const FaissIDSelector* rhs_sel);
 
 // Below are structures used only by Index implementations
 

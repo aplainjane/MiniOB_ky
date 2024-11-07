@@ -1,9 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
+// -*- c++ -*-
 
 // I/O code for indexes
 
@@ -33,12 +35,9 @@ struct IOReader;
 struct IOWriter;
 struct InvertedLists;
 
-/// skip the storage for graph-based indexes
-const int IO_FLAG_SKIP_STORAGE = 1;
-
-void write_index(const Index* idx, const char* fname, int io_flags = 0);
-void write_index(const Index* idx, FILE* f, int io_flags = 0);
-void write_index(const Index* idx, IOWriter* writer, int io_flags = 0);
+void write_index(const Index* idx, const char* fname);
+void write_index(const Index* idx, FILE* f);
+void write_index(const Index* idx, IOWriter* writer);
 
 void write_index_binary(const IndexBinary* idx, const char* fname);
 void write_index_binary(const IndexBinary* idx, FILE* f);
@@ -53,12 +52,6 @@ const int IO_FLAG_ONDISK_SAME_DIR = 4;
 const int IO_FLAG_SKIP_IVF_DATA = 8;
 // don't initialize precomputed table after loading
 const int IO_FLAG_SKIP_PRECOMPUTE_TABLE = 16;
-// don't compute the sdc table for PQ-based indices
-// this will prevent distances from being computed
-// between elements in the index. For indices like HNSWPQ,
-// this will prevent graph building because sdc
-// computations are required to construct the graph
-const int IO_FLAG_PQ_SKIP_SDC_TABLE = 32;
 // try to memmap data (useful to load an ArrayInvertedLists as an
 // OnDiskInvertedLists)
 const int IO_FLAG_MMAP = IO_FLAG_SKIP_IVF_DATA | 0x646f0000;

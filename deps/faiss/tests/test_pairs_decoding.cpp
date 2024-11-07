@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,7 +21,7 @@
 
 namespace {
 
-typedef faiss::idx_t idx_t;
+typedef faiss::Index::idx_t idx_t;
 
 /*************************************************************
  * Test utils
@@ -171,23 +171,23 @@ int test_search_and_return_centroids(const char* index_key) {
  * Test entry points
  *************************************************************/
 
-TEST(testSearchCentroid, IVFFlat) {
+TEST(test_search_centroid, IVFFlat) {
     bool ok = test_search_centroid("IVF32,Flat");
     EXPECT_TRUE(ok);
 }
 
-TEST(testSearchCentroid, PCAIVFFlat) {
+TEST(test_search_centroid, PCAIVFFlat) {
     bool ok = test_search_centroid("PCA16,IVF32,Flat");
     EXPECT_TRUE(ok);
 }
 
-TEST(testSearchAndReturnCentroids, IVFFlat) {
+TEST(test_search_and_return_centroids, IVFFlat) {
     int err = test_search_and_return_centroids("IVF32,Flat");
     EXPECT_NE(err, 1);
     EXPECT_NE(err, 2);
 }
 
-TEST(testSearchAndReturnCentroids, PCAIVFFlat) {
+TEST(test_search_and_return_centroids, PCAIVFFlat) {
     int err = test_search_and_return_centroids("PCA16,IVF32,Flat");
     EXPECT_NE(err, 1);
     EXPECT_NE(err, 2);

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -76,6 +76,13 @@ void GpuIndexBinaryFlat::copyFrom(const faiss::IndexBinaryFlat* index) {
 
     this->d = index->d;
 
+    // GPU code has 32 bit indices
+    FAISS_THROW_IF_NOT_FMT(
+            index->ntotal <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "GPU index only supports up to %zu indices; "
+            "attempting to copy CPU index with %zu parameters",
+            (size_t)std::numeric_limits<int>::max(),
+            (size_t)index->ntotal);
     this->ntotal = index->ntotal;
 
     // destroy old first before allocating new
@@ -110,12 +117,21 @@ void GpuIndexBinaryFlat::copyTo(faiss::IndexBinaryFlat* index) const {
     }
 }
 
-void GpuIndexBinaryFlat::add(idx_t n, const uint8_t* x) {
+void GpuIndexBinaryFlat::add(faiss::IndexBinary::idx_t n, const uint8_t* x) {
     DeviceScope scope(binaryFlatConfig_.device);
+
+    validateNumVectors(n);
 
     // To avoid multiple re-allocations, ensure we have enough storage
     // available
     data_->reserve(n, resources_->getDefaultStream(binaryFlatConfig_.device));
+
+    // Due to GPU indexing in int32, we can't store more than this
+    // number of vectors on a GPU
+    FAISS_THROW_IF_NOT_FMT(
+            this->ntotal + n <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "GPU index only supports up to %zu indices",
+            (size_t)std::numeric_limits<int>::max());
 
     data_->add(
             (const unsigned char*)x,
@@ -133,11 +149,11 @@ void GpuIndexBinaryFlat::reset() {
 }
 
 void GpuIndexBinaryFlat::search(
-        idx_t n,
+        faiss::IndexBinary::idx_t n,
         const uint8_t* x,
-        idx_t k,
+        faiss::IndexBinary::idx_t k,
         int32_t* distances,
-        faiss::idx_t* labels,
+        faiss::IndexBinary::idx_t* labels,
         const SearchParameters* params) const {
     DeviceScope scope(binaryFlatConfig_.device);
     auto stream = resources_->getDefaultStream(binaryFlatConfig_.device);
@@ -148,6 +164,7 @@ void GpuIndexBinaryFlat::search(
 
     FAISS_THROW_IF_NOT_MSG(!params, "params not implemented");
 
+    validateNumVectors(n);
     validateKSelect(k);
 
     // The input vectors may be too large for the GPU, but we still
@@ -161,10 +178,13 @@ void GpuIndexBinaryFlat::search(
             binaryFlatConfig_.device,
             distances,
             stream,
-            {n, k});
+            {(int)n, (int)k});
 
-    auto outIndices = toDeviceTemporary<idx_t, 2>(
-            resources_.get(), binaryFlatConfig_.device, labels, stream, {n, k});
+    // FlatIndex only supports an interface returning int indices
+    DeviceTensor<int, 2, true> outIntIndices(
+            resources_.get(),
+            makeTempAlloc(AllocType::Other, stream),
+            {(int)n, (int)k});
 
     bool usePaged = false;
 
@@ -175,32 +195,43 @@ void GpuIndexBinaryFlat::search(
         // -> GPU.
         // Currently, we don't handle the case where the output data won't
         // fit on the GPU (e.g., n * k is too large for the GPU memory).
-        size_t dataSize = n * (this->d / 8) * sizeof(uint8_t);
+        size_t dataSize = (size_t)n * (this->d / 8) * sizeof(uint8_t);
 
         if (dataSize >= kMinPageSize) {
             searchFromCpuPaged_(
-                    n, x, k, outDistances.data(), outIndices.data());
+                    n, x, k, outDistances.data(), outIntIndices.data());
             usePaged = true;
         }
     }
 
     if (!usePaged) {
-        searchNonPaged_(n, x, k, outDistances.data(), outIndices.data());
+        searchNonPaged_(n, x, k, outDistances.data(), outIntIndices.data());
     }
+
+    // Convert and copy int indices out
+    auto outIndices = toDeviceTemporary<Index::idx_t, 2>(
+            resources_.get(),
+            binaryFlatConfig_.device,
+            labels,
+            stream,
+            {(int)n, (int)k});
+
+    // Convert int to idx_t
+    convertTensor<int, Index::idx_t, 2>(stream, outIntIndices, outIndices);
 
     // Copy back if necessary
     fromDevice<int32_t, 2>(outDistances, distances, stream);
-    fromDevice<idx_t, 2>(outIndices, labels, stream);
+    fromDevice<Index::idx_t, 2>(outIndices, labels, stream);
 }
 
 void GpuIndexBinaryFlat::searchNonPaged_(
-        idx_t n,
+        int n,
         const uint8_t* x,
         int k,
         int32_t* outDistancesData,
-        idx_t* outIndicesData) const {
+        int* outIndicesData) const {
     Tensor<int32_t, 2, true> outDistances(outDistancesData, {n, k});
-    Tensor<idx_t, 2, true> outIndices(outIndicesData, {n, k});
+    Tensor<int, 2, true> outIndices(outIndicesData, {n, k});
 
     auto stream = resources_->getDefaultStream(binaryFlatConfig_.device);
 
@@ -211,42 +242,44 @@ void GpuIndexBinaryFlat::searchNonPaged_(
             binaryFlatConfig_.device,
             const_cast<uint8_t*>(x),
             stream,
-            {n, (this->d / 8)});
+            {n, (int)(this->d / 8)});
 
     data_->query(vecs, k, outDistances, outIndices);
 }
 
 void GpuIndexBinaryFlat::searchFromCpuPaged_(
-        idx_t n,
+        int n,
         const uint8_t* x,
         int k,
         int32_t* outDistancesData,
-        idx_t* outIndicesData) const {
+        int* outIndicesData) const {
     Tensor<int32_t, 2, true> outDistances(outDistancesData, {n, k});
-    Tensor<idx_t, 2, true> outIndices(outIndicesData, {n, k});
+    Tensor<int, 2, true> outIndices(outIndicesData, {n, k});
 
-    idx_t vectorSize = sizeof(uint8_t) * (this->d / 8);
+    auto vectorSize = sizeof(uint8_t) * (this->d / 8);
 
     // Just page without overlapping copy with compute (as GpuIndexFlat does)
-    auto batchSize =
-            utils::nextHighestPowerOf2(((idx_t)kMinPageSize / vectorSize));
+    int batchSize = utils::nextHighestPowerOf2(
+            (int)((size_t)kMinPageSize / vectorSize));
 
-    for (idx_t cur = 0; cur < n; cur += batchSize) {
-        auto num = std::min(batchSize, n - cur);
+    for (int cur = 0; cur < n; cur += batchSize) {
+        int num = std::min(batchSize, n - cur);
 
         auto outDistancesSlice = outDistances.narrowOutermost(cur, num);
         auto outIndicesSlice = outIndices.narrowOutermost(cur, num);
 
         searchNonPaged_(
                 num,
-                x + cur * (this->d / 8),
+                x + (size_t)cur * (this->d / 8),
                 k,
                 outDistancesSlice.data(),
                 outIndicesSlice.data());
     }
 }
 
-void GpuIndexBinaryFlat::reconstruct(faiss::idx_t key, uint8_t* out) const {
+void GpuIndexBinaryFlat::reconstruct(
+        faiss::IndexBinary::idx_t key,
+        uint8_t* out) const {
     DeviceScope scope(binaryFlatConfig_.device);
 
     FAISS_THROW_IF_NOT_MSG(key < this->ntotal, "index out of bounds");

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,38 +25,22 @@ namespace faiss {
 namespace gpu {
 
 /// Default CPU search size for which we use paged copies
-constexpr idx_t kMinPageSize = (idx_t)256 * 1024 * 1024;
+constexpr size_t kMinPageSize = (size_t)256 * 1024 * 1024;
 
 /// Size above which we page copies from the CPU to GPU (non-paged
 /// memory usage)
-constexpr idx_t kNonPinnedPageSize = (idx_t)256 * 1024 * 1024;
+constexpr size_t kNonPinnedPageSize = (size_t)256 * 1024 * 1024;
 
 // Default size for which we page add or search
-constexpr idx_t kAddPageSize = (idx_t)256 * 1024 * 1024;
+constexpr size_t kAddPageSize = (size_t)256 * 1024 * 1024;
 
 // Or, maximum number of vectors to consider per page of add or search
-constexpr idx_t kAddVecSize = (idx_t)512 * 1024;
+constexpr size_t kAddVecSize = (size_t)512 * 1024;
 
 // Use a smaller search size, as precomputed code usage on IVFPQ
 // requires substantial amounts of memory
 // FIXME: parameterize based on algorithm need
-constexpr idx_t kSearchVecSize = (idx_t)32 * 1024;
-
-/// Caches device major version
-extern int device_major_version;
-
-bool should_use_raft(GpuIndexConfig config_) {
-    if (device_major_version < 0) {
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, config_.device);
-        device_major_version = prop.major;
-    }
-
-    if (device_major_version < 7)
-        return false;
-
-    return config_.use_raft;
-}
+constexpr size_t kSearchVecSize = (size_t)32 * 1024;
 
 GpuIndex::GpuIndex(
         std::shared_ptr<GpuResources> resources,
@@ -80,7 +64,7 @@ GpuIndex::GpuIndex(
                     (config_.memorySpace == MemorySpace::Unified &&
                      getFullUnifiedMemSupport(config_.device)),
             "Device %d does not support full CUDA 8 Unified Memory (CC 6.0+)",
-            config_.device);
+            config.device);
 
     metric_arg = metricArg;
 
@@ -116,54 +100,61 @@ size_t GpuIndex::getMinPagingSize() const {
     return minPagedSize_;
 }
 
-void GpuIndex::add(idx_t n, const float* x) {
+void GpuIndex::add(Index::idx_t n, const float* x) {
     // Pass to add_with_ids
     add_with_ids(n, x, nullptr);
 }
 
-void GpuIndex::add_with_ids(idx_t n, const float* x, const idx_t* ids) {
+void GpuIndex::add_with_ids(
+        Index::idx_t n,
+        const float* x,
+        const Index::idx_t* ids) {
     DeviceScope scope(config_.device);
     FAISS_THROW_IF_NOT_MSG(this->is_trained, "Index not trained");
+
+    validateNumVectors(n);
 
     if (n == 0) {
         // nothing to add
         return;
     }
 
-    std::vector<idx_t> generatedIds;
+    std::vector<Index::idx_t> generatedIds;
 
     // Generate IDs if we need them
     if (!ids && addImplRequiresIDs_()) {
-        generatedIds = std::vector<idx_t>(n);
+        generatedIds = std::vector<Index::idx_t>(n);
 
-        for (idx_t i = 0; i < n; ++i) {
+        for (Index::idx_t i = 0; i < n; ++i) {
             generatedIds[i] = this->ntotal + i;
         }
     }
 
-    addPaged_(n, x, ids ? ids : generatedIds.data());
+    addPaged_((int)n, x, ids ? ids : generatedIds.data());
 }
 
-void GpuIndex::addPaged_(idx_t n, const float* x, const idx_t* ids) {
+void GpuIndex::addPaged_(int n, const float* x, const Index::idx_t* ids) {
     if (n > 0) {
-        idx_t totalSize = n * this->d * sizeof(float);
+        size_t totalSize = (size_t)n * this->d * sizeof(float);
 
-        if (!should_use_raft(config_) &&
-            (totalSize > kAddPageSize || n > kAddVecSize)) {
+        if (totalSize > kAddPageSize || n > kAddVecSize) {
             // How many vectors fit into kAddPageSize?
-            idx_t maxNumVecsForPageSize =
-                    kAddPageSize / (this->d * sizeof(float));
+            size_t maxNumVecsForPageSize =
+                    kAddPageSize / ((size_t)this->d * sizeof(float));
 
             // Always add at least 1 vector, if we have huge vectors
-            maxNumVecsForPageSize = std::max(maxNumVecsForPageSize, idx_t(1));
+            maxNumVecsForPageSize = std::max(maxNumVecsForPageSize, (size_t)1);
 
-            auto tileSize = std::min(n, maxNumVecsForPageSize);
+            size_t tileSize = std::min((size_t)n, maxNumVecsForPageSize);
             tileSize = std::min(tileSize, kSearchVecSize);
 
-            for (idx_t i = 0; i < n; i += tileSize) {
-                auto curNum = std::min(tileSize, n - i);
+            for (size_t i = 0; i < (size_t)n; i += tileSize) {
+                size_t curNum = std::min(tileSize, n - i);
 
-                addPage_(curNum, x + i * this->d, ids ? ids + i : nullptr);
+                addPage_(
+                        curNum,
+                        x + i * (size_t)this->d,
+                        ids ? ids + i : nullptr);
             }
         } else {
             addPage_(n, x, ids);
@@ -171,7 +162,7 @@ void GpuIndex::addPaged_(idx_t n, const float* x, const idx_t* ids) {
     }
 }
 
-void GpuIndex::addPage_(idx_t n, const float* x, const idx_t* ids) {
+void GpuIndex::addPage_(int n, const float* x, const Index::idx_t* ids) {
     // At this point, `x` can be resident on CPU or GPU, and `ids` may be
     // resident on CPU, GPU or may be null.
     //
@@ -187,10 +178,10 @@ void GpuIndex::addPage_(idx_t n, const float* x, const idx_t* ids) {
             {n, this->d});
 
     if (ids) {
-        auto indices = toDeviceTemporary<idx_t, 1>(
+        auto indices = toDeviceTemporary<Index::idx_t, 1>(
                 resources_.get(),
                 config_.device,
-                const_cast<idx_t*>(ids),
+                const_cast<Index::idx_t*>(ids),
                 stream,
                 {n});
 
@@ -200,10 +191,15 @@ void GpuIndex::addPage_(idx_t n, const float* x, const idx_t* ids) {
     }
 }
 
-void GpuIndex::assign(idx_t n, const float* x, idx_t* labels, idx_t k) const {
+void GpuIndex::assign(
+        Index::idx_t n,
+        const float* x,
+        Index::idx_t* labels,
+        Index::idx_t k) const {
     DeviceScope scope(config_.device);
     FAISS_THROW_IF_NOT_MSG(this->is_trained, "Index not trained");
 
+    validateNumVectors(n);
     validateKSelect(k);
 
     auto stream = resources_->getDefaultStream(config_.device);
@@ -211,22 +207,25 @@ void GpuIndex::assign(idx_t n, const float* x, idx_t* labels, idx_t k) const {
     // We need to create a throw-away buffer for distances, which we don't use
     // but which we do need for the search call
     DeviceTensor<float, 2, true> distances(
-            resources_.get(), makeTempAlloc(AllocType::Other, stream), {n, k});
+            resources_.get(),
+            makeTempAlloc(AllocType::Other, stream),
+            {(int)n, (int)k});
 
     // Forward to search
     search(n, x, k, distances.data(), labels);
 }
 
 void GpuIndex::search(
-        idx_t n,
+        Index::idx_t n,
         const float* x,
-        idx_t k,
+        Index::idx_t k,
         float* distances,
-        idx_t* labels,
+        Index::idx_t* labels,
         const SearchParameters* params) const {
     DeviceScope scope(config_.device);
     FAISS_THROW_IF_NOT_MSG(this->is_trained, "Index not trained");
 
+    validateNumVectors(n);
     validateKSelect(k);
 
     if (n == 0 || k == 0) {
@@ -246,10 +245,14 @@ void GpuIndex::search(
     // If we reach a point where all inputs are too big, we can add
     // another level of tiling.
     auto outDistances = toDeviceTemporary<float, 2>(
-            resources_.get(), config_.device, distances, stream, {n, k});
+            resources_.get(),
+            config_.device,
+            distances,
+            stream,
+            {(int)n, (int)k});
 
-    auto outLabels = toDeviceTemporary<idx_t, 2>(
-            resources_.get(), config_.device, labels, stream, {n, k});
+    auto outLabels = toDeviceTemporary<Index::idx_t, 2>(
+            resources_.get(), config_.device, labels, stream, {(int)n, (int)k});
 
     bool usePaged = false;
 
@@ -275,7 +278,7 @@ void GpuIndex::search(
 
     // Copy back if necessary
     fromDevice<float, 2>(outDistances, distances, stream);
-    fromDevice<idx_t, 2>(outLabels, labels, stream);
+    fromDevice<Index::idx_t, 2>(outLabels, labels, stream);
 }
 
 void GpuIndex::search_and_reconstruct(
@@ -291,11 +294,11 @@ void GpuIndex::search_and_reconstruct(
 }
 
 void GpuIndex::searchNonPaged_(
-        idx_t n,
+        int n,
         const float* x,
         int k,
         float* outDistancesData,
-        idx_t* outIndicesData,
+        Index::idx_t* outIndicesData,
         const SearchParameters* params) const {
     auto stream = resources_->getDefaultStream(config_.device);
 
@@ -306,40 +309,40 @@ void GpuIndex::searchNonPaged_(
             config_.device,
             const_cast<float*>(x),
             stream,
-            {n, this->d});
+            {n, (int)this->d});
 
     searchImpl_(n, vecs.data(), k, outDistancesData, outIndicesData, params);
 }
 
 void GpuIndex::searchFromCpuPaged_(
-        idx_t n,
+        int n,
         const float* x,
         int k,
         float* outDistancesData,
-        idx_t* outIndicesData,
+        Index::idx_t* outIndicesData,
         const SearchParameters* params) const {
     Tensor<float, 2, true> outDistances(outDistancesData, {n, k});
-    Tensor<idx_t, 2, true> outIndices(outIndicesData, {n, k});
+    Tensor<Index::idx_t, 2, true> outIndices(outIndicesData, {n, k});
 
     // Is pinned memory available?
     auto pinnedAlloc = resources_->getPinnedMemory();
-    idx_t pageSizeInVecs =
-            ((pinnedAlloc.second / 2) / (sizeof(float) * this->d));
+    int pageSizeInVecs =
+            (int)((pinnedAlloc.second / 2) / (sizeof(float) * this->d));
 
     if (!pinnedAlloc.first || pageSizeInVecs < 1) {
         // Just page without overlapping copy with compute
-        idx_t batchSize = utils::nextHighestPowerOf2(
-                (kNonPinnedPageSize / (sizeof(float) * this->d)));
+        int batchSize = utils::nextHighestPowerOf2(
+                (int)((size_t)kNonPinnedPageSize / (sizeof(float) * this->d)));
 
-        for (idx_t cur = 0; cur < n; cur += batchSize) {
-            auto num = std::min(batchSize, n - cur);
+        for (int cur = 0; cur < n; cur += batchSize) {
+            int num = std::min(batchSize, n - cur);
 
             auto outDistancesSlice = outDistances.narrowOutermost(cur, num);
             auto outIndicesSlice = outIndices.narrowOutermost(cur, num);
 
             searchNonPaged_(
                     num,
-                    x + cur * this->d,
+                    x + (size_t)cur * this->d,
                     k,
                     outDistancesSlice.data(),
                     outIndicesSlice.data(),
@@ -366,6 +369,10 @@ void GpuIndex::searchFromCpuPaged_(
     auto defaultStream = resources_->getDefaultStream(config_.device);
     auto copyStream = resources_->getAsyncCopyStream(config_.device);
 
+    FAISS_ASSERT(
+            (size_t)pageSizeInVecs * this->d <=
+            (size_t)std::numeric_limits<int>::max());
+
     float* bufPinnedA = (float*)pinnedAlloc.first;
     float* bufPinnedB = bufPinnedA + (size_t)pageSizeInVecs * this->d;
     float* bufPinned[2] = {bufPinnedA, bufPinnedB};
@@ -375,11 +382,11 @@ void GpuIndex::searchFromCpuPaged_(
     DeviceTensor<float, 2, true> bufGpuA(
             resources_.get(),
             makeTempAlloc(AllocType::Other, defaultStream),
-            {pageSizeInVecs, this->d});
+            {(int)pageSizeInVecs, (int)this->d});
     DeviceTensor<float, 2, true> bufGpuB(
             resources_.get(),
             makeTempAlloc(AllocType::Other, defaultStream),
-            {pageSizeInVecs, this->d});
+            {(int)pageSizeInVecs, (int)this->d});
     DeviceTensor<float, 2, true>* bufGpus[2] = {&bufGpuA, &bufGpuB};
 
     // Copy completion events for the pinned buffers
@@ -388,25 +395,26 @@ void GpuIndex::searchFromCpuPaged_(
     // Execute completion events for the GPU buffers
     std::unique_ptr<CudaEvent> eventGpuExecuteDone[2];
 
-    // All offsets are in terms of number of vectors
+    // All offsets are in terms of number of vectors; they remain within
+    // int bounds (as this function only handles max in vectors)
 
     // Current start offset for buffer 1
-    idx_t cur1 = 0;
-    idx_t cur1BufIndex = 0;
+    int cur1 = 0;
+    int cur1BufIndex = 0;
 
     // Current start offset for buffer 2
-    idx_t cur2 = -1;
-    idx_t cur2BufIndex = 0;
+    int cur2 = -1;
+    int cur2BufIndex = 0;
 
     // Current start offset for buffer 3
-    idx_t cur3 = -1;
-    idx_t cur3BufIndex = 0;
+    int cur3 = -1;
+    int cur3BufIndex = 0;
 
     while (cur3 < n) {
         // Start async pinned -> GPU copy first (buf 2)
         if (cur2 != -1 && cur2 < n) {
             // Copy pinned to GPU
-            auto numToCopy = std::min(pageSizeInVecs, n - cur2);
+            int numToCopy = std::min(pageSizeInVecs, n - cur2);
 
             // Make sure any previous execution has completed before continuing
             auto& eventPrev = eventGpuExecuteDone[cur2BufIndex];
@@ -417,7 +425,7 @@ void GpuIndex::searchFromCpuPaged_(
             CUDA_VERIFY(cudaMemcpyAsync(
                     bufGpus[cur2BufIndex]->data(),
                     bufPinned[cur2BufIndex],
-                    numToCopy * this->d * sizeof(float),
+                    (size_t)numToCopy * this->d * sizeof(float),
                     cudaMemcpyHostToDevice,
                     copyStream));
 
@@ -430,9 +438,9 @@ void GpuIndex::searchFromCpuPaged_(
             cur2BufIndex = (cur2BufIndex == 0) ? 1 : 0;
         }
 
-        if (cur3 != idx_t(-1) && cur3 < n) {
+        if (cur3 != -1 && cur3 < n) {
             // Process on GPU
-            auto numToProcess = std::min(pageSizeInVecs, n - cur3);
+            int numToProcess = std::min(pageSizeInVecs, n - cur3);
 
             // Make sure the previous copy has completed before continuing
             auto& eventPrev = eventPinnedCopyDone[cur3BufIndex];
@@ -467,7 +475,7 @@ void GpuIndex::searchFromCpuPaged_(
 
         if (cur1 < n) {
             // Copy CPU mem to CPU pinned
-            auto numToCopy = std::min(pageSizeInVecs, n - cur1);
+            int numToCopy = std::min(pageSizeInVecs, n - cur1);
 
             // Make sure any previous copy has completed before continuing
             auto& eventPrev = eventPinnedCopyDone[cur1BufIndex];
@@ -476,8 +484,8 @@ void GpuIndex::searchFromCpuPaged_(
             }
 
             memcpy(bufPinned[cur1BufIndex],
-                   x + cur1 * this->d,
-                   numToCopy * this->d * sizeof(float));
+                   x + (size_t)cur1 * this->d,
+                   (size_t)numToCopy * this->d * sizeof(float));
 
             // We pick up from here
             cur2 = cur1;
@@ -487,16 +495,18 @@ void GpuIndex::searchFromCpuPaged_(
     }
 }
 
-void GpuIndex::compute_residual(const float* x, float* residual, idx_t key)
-        const {
+void GpuIndex::compute_residual(
+        const float* x,
+        float* residual,
+        Index::idx_t key) const {
     FAISS_THROW_MSG("compute_residual not implemented for this type of index");
 }
 
 void GpuIndex::compute_residual_n(
-        idx_t n,
+        Index::idx_t n,
         const float* xs,
         float* residuals,
-        const idx_t* keys) const {
+        const Index::idx_t* keys) const {
     FAISS_THROW_MSG(
             "compute_residual_n not implemented for this type of index");
 }
@@ -531,25 +541,4 @@ bool isGpuIndexImplemented(faiss::Index* index) {
 }
 
 } // namespace gpu
-
-// This is the one defined in utils.cpp
-// Crossing fingers that the InitGpuCompileOptions_instance will
-// be instanciated after this global variable
-extern std::string gpu_compile_options;
-
-struct InitGpuCompileOptions {
-    InitGpuCompileOptions() {
-        gpu_compile_options = "GPU ";
-#ifdef USE_NVIDIA_RAFT
-        gpu_compile_options += "NVIDIA_RAFT ";
-#endif
-
-#ifdef USE_AMD_ROCM
-        gpu_compile_options += "AMD_ROCM ";
-#endif
-    }
-};
-
-InitGpuCompileOptions InitGpuCompileOptions_instance;
-
 } // namespace faiss

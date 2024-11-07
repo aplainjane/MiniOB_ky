@@ -1,12 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 #include <faiss/gpu/impl/InterleavedCodes.h>
-#include <faiss/gpu/utils/DeviceUtils.h>
 #include <faiss/gpu/utils/StaticUtils.h>
 #include <faiss/impl/FaissAssert.h>
 
@@ -167,16 +166,15 @@ void unpackInterleavedWord(
         int numVecs,
         int dims,
         int bitsPerCode) {
-    int warpSize = getWarpSizeCurrentDevice();
-    int wordsPerDimBlock = (size_t)warpSize * bitsPerCode / (8 * sizeof(T));
+    int wordsPerDimBlock = 32 * bitsPerCode / (8 * sizeof(T));
     int wordsPerBlock = wordsPerDimBlock * dims;
-    int numBlocks = utils::divUp(numVecs, warpSize);
+    int numBlocks = utils::divUp(numVecs, 32);
 
 #pragma omp parallel for
     for (int i = 0; i < numVecs; ++i) {
-        int block = i / warpSize;
+        int block = i / 32;
         FAISS_ASSERT(block < numBlocks);
-        int lane = i % warpSize;
+        int lane = i % 32;
 
         for (int j = 0; j < dims; ++j) {
             int srcOffset = block * wordsPerBlock + j * wordsPerDimBlock + lane;
@@ -190,10 +188,9 @@ std::vector<uint8_t> unpackInterleaved(
         int numVecs,
         int dims,
         int bitsPerCode) {
-    int warpSize = getWarpSizeCurrentDevice();
-    int bytesPerDimBlock = warpSize * bitsPerCode / 8;
+    int bytesPerDimBlock = 32 * bitsPerCode / 8;
     int bytesPerBlock = bytesPerDimBlock * dims;
-    int numBlocks = utils::divUp(numVecs, warpSize);
+    int numBlocks = utils::divUp(numVecs, 32);
     size_t totalSize = (size_t)bytesPerBlock * numBlocks;
     FAISS_ASSERT(data.size() == totalSize);
 
@@ -220,8 +217,8 @@ std::vector<uint8_t> unpackInterleaved(
     } else if (bitsPerCode == 4) {
 #pragma omp parallel for
         for (int i = 0; i < numVecs; ++i) {
-            int block = i / warpSize;
-            int lane = i % warpSize;
+            int block = i / 32;
+            int lane = i % 32;
 
             int word = lane / 2;
             int subWord = lane % 2;
@@ -238,8 +235,8 @@ std::vector<uint8_t> unpackInterleaved(
     } else if (bitsPerCode == 5) {
 #pragma omp parallel for
         for (int i = 0; i < numVecs; ++i) {
-            int block = i / warpSize;
-            int blockVector = i % warpSize;
+            int block = i / 32;
+            int blockVector = i % 32;
 
             for (int j = 0; j < dims; ++j) {
                 uint8_t* dimBlock =
@@ -260,8 +257,8 @@ std::vector<uint8_t> unpackInterleaved(
     } else if (bitsPerCode == 6) {
 #pragma omp parallel for
         for (int i = 0; i < numVecs; ++i) {
-            int block = i / warpSize;
-            int blockVector = i % warpSize;
+            int block = i / 32;
+            int blockVector = i % 32;
 
             for (int j = 0; j < dims; ++j) {
                 uint8_t* dimBlock =
@@ -445,18 +442,17 @@ void packInterleavedWord(
         int numVecs,
         int dims,
         int bitsPerCode) {
-    int warpSize = getWarpSizeCurrentDevice();
-    int wordsPerDimBlock = (size_t)warpSize * bitsPerCode / (8 * sizeof(T));
+    int wordsPerDimBlock = 32 * bitsPerCode / (8 * sizeof(T));
     int wordsPerBlock = wordsPerDimBlock * dims;
-    int numBlocks = utils::divUp(numVecs, warpSize);
+    int numBlocks = utils::divUp(numVecs, 32);
 
     // We're guaranteed that all other slots not filled by the vectors present
     // are initialized to zero (from the vector constructor in packInterleaved)
 #pragma omp parallel for
     for (int i = 0; i < numVecs; ++i) {
-        int block = i / warpSize;
+        int block = i / 32;
         FAISS_ASSERT(block < numBlocks);
-        int lane = i % warpSize;
+        int lane = i % 32;
 
         for (int j = 0; j < dims; ++j) {
             int dstOffset = block * wordsPerBlock + j * wordsPerDimBlock + lane;
@@ -470,10 +466,9 @@ std::vector<uint8_t> packInterleaved(
         int numVecs,
         int dims,
         int bitsPerCode) {
-    int warpSize = getWarpSizeCurrentDevice();
-    int bytesPerDimBlock = warpSize * bitsPerCode / 8;
+    int bytesPerDimBlock = 32 * bitsPerCode / 8;
     int bytesPerBlock = bytesPerDimBlock * dims;
-    int numBlocks = utils::divUp(numVecs, warpSize);
+    int numBlocks = utils::divUp(numVecs, 32);
     size_t totalSize = (size_t)bytesPerBlock * numBlocks;
 
     // bit codes padded to whole bytes
@@ -504,7 +499,7 @@ std::vector<uint8_t> packInterleaved(
         for (int i = 0; i < numBlocks; ++i) {
             for (int j = 0; j < dims; ++j) {
                 for (int k = 0; k < bytesPerDimBlock; ++k) {
-                    int loVec = i * warpSize + k * 2;
+                    int loVec = i * 32 + k * 2;
                     int hiVec = loVec + 1;
 
                     uint8_t lo = loVec < numVecs ? data[loVec * dims + j] : 0;
@@ -521,7 +516,7 @@ std::vector<uint8_t> packInterleaved(
             for (int j = 0; j < dims; ++j) {
                 for (int k = 0; k < bytesPerDimBlock; ++k) {
                     // What input vectors we are pulling from
-                    int loVec = i * warpSize + (k * 8) / 5;
+                    int loVec = i * 32 + (k * 8) / 5;
                     int hiVec = loVec + 1;
                     int hiVec2 = hiVec + 1;
 
@@ -541,7 +536,7 @@ std::vector<uint8_t> packInterleaved(
             for (int j = 0; j < dims; ++j) {
                 for (int k = 0; k < bytesPerDimBlock; ++k) {
                     // What input vectors we are pulling from
-                    int loVec = i * warpSize + (k * 8) / 6;
+                    int loVec = i * 32 + (k * 8) / 6;
                     int hiVec = loVec + 1;
 
                     uint8_t lo = loVec < numVecs ? data[loVec * dims + j] : 0;

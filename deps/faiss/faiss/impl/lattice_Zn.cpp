@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -455,7 +455,7 @@ void ZnSphereCodec::decode(uint64_t code, float* c) const {
     int nnz = 0;
     for (int i = 0; i < dim; i++) {
         if (c[i] != 0) {
-            if (signs & (uint64_t(1) << nnz)) {
+            if (signs & (1UL << nnz)) {
                 c[i] = -c[i];
             }
             nnz++;
@@ -636,7 +636,7 @@ void ZnSphereCodecRec::decode(uint64_t code, float* c) const {
     }
 }
 
-// if not use_rec, instantiate an arbitrary harmless znc_rec
+// if not use_rec, instanciate an arbitrary harmless znc_rec
 ZnSphereCodecAlt::ZnSphereCodecAlt(int dim, int r2)
         : ZnSphereCodec(dim, r2),
           use_rec((dim & (dim - 1)) == 0),

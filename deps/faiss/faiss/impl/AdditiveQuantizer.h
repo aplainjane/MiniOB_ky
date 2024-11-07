@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -29,43 +28,31 @@ struct AdditiveQuantizer : Quantizer {
     std::vector<float> codebooks; ///< codebooks
 
     // derived values
-    /// codebook #1 is stored in rows codebook_offsets[i]:codebook_offsets[i+1]
-    /// in the codebooks table of size total_codebook_size by d
     std::vector<uint64_t> codebook_offsets;
-    size_t tot_bits = 0;            ///< total number of bits (indexes + norms)
-    size_t norm_bits = 0;           ///< bits allocated for the norms
-    size_t total_codebook_size = 0; ///< size of the codebook in vectors
-    bool only_8bit = false;         ///< are all nbits = 8 (use faster decoder)
+    size_t tot_bits;            ///< total number of bits (indexes + norms)
+    size_t norm_bits;           ///< bits allocated for the norms
+    size_t total_codebook_size; ///< size of the codebook in vectors
+    bool only_8bit;             ///< are all nbits = 8 (use faster decoder)
 
-    bool verbose = false;    ///< verbose during training?
-    bool is_trained = false; ///< is trained or not
+    bool verbose;    ///< verbose during training?
+    bool is_trained; ///< is trained or not
 
-    /// auxiliary data for ST_norm_lsq2x4 and ST_norm_rq2x4
-    /// store norms of codebook entries for 4-bit fastscan
-    std::vector<float> norm_tabs;
-    IndexFlat1D qnorm; ///< store and search norms
-
-    void compute_codebook_tables();
-
-    /// norms of all codebook entries (size total_codebook_size)
-    std::vector<float> centroid_norms;
-
-    /// dot products of all codebook entries with the previous codebooks
-    /// size sum(codebook_offsets[m] * 2^nbits[m], m=0..M-1)
-    std::vector<float> codebook_cross_products;
+    IndexFlat1D qnorm;            ///< store and search norms
+    std::vector<float> norm_tabs; ///< store norms of codebook entries for 4-bit
+                                  ///< fastscan search
 
     /// norms and distance matrixes with beam search can get large, so use this
     /// to control for the amount of memory that can be allocated
-    size_t max_mem_distances = 5 * (size_t(1) << 30);
+    size_t max_mem_distances;
 
     /// encode a norm into norm_bits bits
     uint64_t encode_norm(float norm) const;
 
-    /// encode norm by non-uniform scalar quantization
-    uint32_t encode_qcint(float x) const;
+    uint32_t encode_qcint(
+            float x) const; ///< encode norm by non-uniform scalar quantization
 
-    /// decode norm by non-uniform scalar quantization
-    float decode_qcint(uint32_t c) const;
+    float decode_qcint(uint32_t c)
+            const; ///< decode norm by non-uniform scalar quantization
 
     /// Encodes how search is performed and how vectors are encoded
     enum Search_type_t {
@@ -158,7 +145,7 @@ struct AdditiveQuantizer : Quantizer {
     Search_type_t search_type;
 
     /// min/max for quantization of norms
-    float norm_min = NAN, norm_max = NAN;
+    float norm_min, norm_max;
 
     template <bool is_IP, Search_type_t effective_search_type>
     float compute_1_distance_LUT(const uint8_t* codes, const float* LUT) const;
@@ -170,6 +157,7 @@ struct AdditiveQuantizer : Quantizer {
      * Support for exhaustive distance computations with all the centroids.
      * Hence, the number of these centroids should not be too large.
      ****************************************************************************/
+    using idx_t = Index::idx_t;
 
     /// decoding function for a code in a 64-bit word
     void decode_64bit(idx_t n, float* x) const;
@@ -215,4 +203,4 @@ struct AdditiveQuantizer : Quantizer {
     virtual ~AdditiveQuantizer();
 };
 
-} // namespace faiss
+}; // namespace faiss

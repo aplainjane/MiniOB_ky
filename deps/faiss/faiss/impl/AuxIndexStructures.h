@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@
 #include <mutex>
 #include <vector>
 
-#include <faiss/MetricType.h>
+#include <faiss/Index.h>
 #include <faiss/impl/platform_macros.h>
 
 namespace faiss {
@@ -31,16 +31,19 @@ struct RangeSearchResult {
     size_t nq;    ///< nb of queries
     size_t* lims; ///< size (nq + 1)
 
+    typedef Index::idx_t idx_t;
+
     idx_t* labels;    ///< result for query i is labels[lims[i]:lims[i+1]]
     float* distances; ///< corresponding distances (not sorted)
 
     size_t buffer_size; ///< size of the result buffers used
 
     /// lims must be allocated on input to range_search.
-    explicit RangeSearchResult(size_t nq, bool alloc_lims = true);
+    explicit RangeSearchResult(idx_t nq, bool alloc_lims = true);
 
     /// called when lims contains the nb of elements result entries
     /// for each query
+
     virtual void do_allocation();
 
     virtual ~RangeSearchResult();
@@ -59,6 +62,8 @@ struct RangeSearchResult {
 /** List of temporary buffers used to store results before they are
  *  copied to the RangeSearchResult object. */
 struct BufferList {
+    typedef Index::idx_t idx_t;
+
     // buffer sizes in # entries
     size_t buffer_size;
 
@@ -89,6 +94,7 @@ struct RangeSearchPartialResult;
 
 /// result structure for a single query
 struct RangeQueryResult {
+    using idx_t = Index::idx_t;
     idx_t qno;   //< id of the query
     size_t nres; //< nb of results for this query
     RangeSearchPartialResult* pres;
@@ -122,7 +128,7 @@ struct RangeSearchPartialResult : BufferList {
     void copy_result(bool incremental = false);
 
     /// merge a set of PartialResult's into one RangeSearchResult
-    /// on output the partialresults are empty!
+    /// on ouptut the partialresults are empty!
     static void merge(
             std::vector<RangeSearchPartialResult*>& partial_results,
             bool do_delete = true);
@@ -161,18 +167,10 @@ struct FAISS_API InterruptCallback {
     static size_t get_period_hint(size_t flops);
 };
 
-struct TimeoutCallback : InterruptCallback {
-    std::chrono::time_point<std::chrono::steady_clock> start;
-    double timeout;
-    bool want_interrupt() override;
-    void set_timeout(double timeout_in_seconds);
-    static void reset(double timeout_in_seconds);
-};
-
 /// set implementation optimized for fast access.
 struct VisitedTable {
     std::vector<uint8_t> visited;
-    uint8_t visno;
+    int visno;
 
     explicit VisitedTable(int size) : visited(size), visno(1) {}
 

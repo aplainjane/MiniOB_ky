@@ -1,12 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 #include <faiss/IndexFlat.h>
-#include <faiss/gpu/GpuIndex.h>
 #include <faiss/gpu/GpuIndexFlat.h>
 #include <faiss/gpu/GpuResources.h>
 #include <faiss/gpu/impl/IndexUtils.h>
@@ -17,10 +16,6 @@
 #include <faiss/gpu/utils/CopyUtils.cuh>
 #include <faiss/gpu/utils/Float16.cuh>
 #include <limits>
-
-#if defined USE_NVIDIA_RAFT
-#include <faiss/gpu/impl/RaftFlatIndex.cuh>
-#endif
 
 namespace faiss {
 namespace gpu {
@@ -72,7 +67,11 @@ GpuIndexFlat::GpuIndexFlat(
     this->is_trained = true;
 
     // Construct index
-    resetIndex_(dims);
+    data_.reset(new FlatIndex(
+            resources_.get(),
+            dims,
+            flatConfig_.useFloat16,
+            config_.memorySpace));
 }
 
 GpuIndexFlat::GpuIndexFlat(
@@ -87,43 +86,34 @@ GpuIndexFlat::GpuIndexFlat(
     this->is_trained = true;
 
     // Construct index
-    resetIndex_(dims);
+    data_.reset(new FlatIndex(
+            resources_.get(),
+            dims,
+            flatConfig_.useFloat16,
+            config_.memorySpace));
 }
 
 GpuIndexFlat::~GpuIndexFlat() {}
-
-void GpuIndexFlat::resetIndex_(int dims) {
-#if defined USE_NVIDIA_RAFT
-
-    if (should_use_raft(config_)) {
-        data_.reset(new RaftFlatIndex(
-                resources_.get(),
-                dims,
-                flatConfig_.useFloat16,
-                config_.memorySpace));
-    } else
-#else
-    if (should_use_raft(config_)) {
-        FAISS_THROW_MSG(
-                "RAFT has not been compiled into the current version so it cannot be used.");
-    } else
-#endif
-    {
-        data_.reset(new FlatIndex(
-                resources_.get(),
-                dims,
-                flatConfig_.useFloat16,
-                config_.memorySpace));
-    }
-}
 
 void GpuIndexFlat::copyFrom(const faiss::IndexFlat* index) {
     DeviceScope scope(config_.device);
 
     GpuIndex::copyFrom(index);
 
+    // GPU code has 32 bit indices
+    FAISS_THROW_IF_NOT_FMT(
+            index->ntotal <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "GPU index only supports up to %zu indices; "
+            "attempting to copy CPU index with %zu parameters",
+            (size_t)std::numeric_limits<int>::max(),
+            (size_t)index->ntotal);
+
     data_.reset();
-    resetIndex_(this->d);
+    data_.reset(new FlatIndex(
+            resources_.get(),
+            this->d,
+            flatConfig_.useFloat16,
+            config_.memorySpace));
 
     // The index could be empty
     if (index->ntotal > 0) {
@@ -163,14 +153,15 @@ void GpuIndexFlat::reset() {
     this->ntotal = 0;
 }
 
-void GpuIndexFlat::train(idx_t n, const float* x) {
+void GpuIndexFlat::train(Index::idx_t n, const float* x) {
     // nothing to do
 }
 
-void GpuIndexFlat::add(idx_t n, const float* x) {
+void GpuIndexFlat::add(Index::idx_t n, const float* x) {
     DeviceScope scope(config_.device);
 
     FAISS_THROW_IF_NOT_MSG(this->is_trained, "Index not trained");
+    validateNumVectors(n);
 
     if (n == 0) {
         // nothing to add
@@ -195,7 +186,7 @@ bool GpuIndexFlat::addImplRequiresIDs_() const {
     return false;
 }
 
-void GpuIndexFlat::addImpl_(idx_t n, const float* x, const idx_t* ids) {
+void GpuIndexFlat::addImpl_(int n, const float* x, const Index::idx_t* ids) {
     // current device already set
     // n already validated
     FAISS_ASSERT(data_);
@@ -204,31 +195,51 @@ void GpuIndexFlat::addImpl_(idx_t n, const float* x, const idx_t* ids) {
     // We do not support add_with_ids
     FAISS_THROW_IF_NOT_MSG(!ids, "add_with_ids not supported");
 
+    // Due to GPU indexing in int32, we can't store more than this
+    // number of vectors on a GPU
+    FAISS_THROW_IF_NOT_FMT(
+            this->ntotal + n <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "GPU index only supports up to %zu indices",
+            (size_t)std::numeric_limits<int>::max());
+
     data_->add(x, n, resources_->getDefaultStream(config_.device));
     this->ntotal += n;
 }
 
 void GpuIndexFlat::searchImpl_(
-        idx_t n,
+        int n,
         const float* x,
         int k,
         float* distances,
-        idx_t* labels,
+        Index::idx_t* labels,
         const SearchParameters* params) const {
     // current device already set
     // n/k already validated
     auto stream = resources_->getDefaultStream(config_.device);
 
     // Input and output data are already resident on the GPU
-    Tensor<float, 2, true> queries(const_cast<float*>(x), {n, this->d});
+    Tensor<float, 2, true> queries(const_cast<float*>(x), {n, (int)this->d});
     Tensor<float, 2, true> outDistances(distances, {n, k});
-    Tensor<idx_t, 2, true> outLabels(labels, {n, k});
+    Tensor<Index::idx_t, 2, true> outLabels(labels, {n, k});
+
+    // FlatIndex only supports int indices
+    DeviceTensor<int, 2, true> outIntLabels(
+            resources_.get(), makeTempAlloc(AllocType::Other, stream), {n, k});
 
     data_->query(
-            queries, k, metric_type, metric_arg, outDistances, outLabels, true);
+            queries,
+            k,
+            metric_type,
+            metric_arg,
+            outDistances,
+            outIntLabels,
+            true);
+
+    // Convert int to idx_t
+    convertTensor<int, Index::idx_t, 2>(stream, outIntLabels, outLabels);
 }
 
-void GpuIndexFlat::reconstruct(idx_t key, float* out) const {
+void GpuIndexFlat::reconstruct(Index::idx_t key, float* out) const {
     DeviceScope scope(config_.device);
 
     FAISS_THROW_IF_NOT_FMT(
@@ -251,13 +262,16 @@ void GpuIndexFlat::reconstruct(idx_t key, float* out) const {
     fromDevice(vec.data(), out, this->d, stream);
 }
 
-void GpuIndexFlat::reconstruct_n(idx_t i0, idx_t n, float* out) const {
+void GpuIndexFlat::reconstruct_n(Index::idx_t i0, Index::idx_t n, float* out)
+        const {
     DeviceScope scope(config_.device);
 
     if (n == 0) {
         // nothing to do
         return;
     }
+
+    validateNumVectors(n);
 
     FAISS_THROW_IF_NOT_FMT(
             i0 < this->ntotal,
@@ -269,10 +283,19 @@ void GpuIndexFlat::reconstruct_n(idx_t i0, idx_t n, float* out) const {
             "max index requested (%zu) out of bounds (ntotal %zu)",
             i0 + n - 1,
             this->ntotal);
+    FAISS_THROW_IF_NOT_FMT(
+            n <= (Index::idx_t)std::numeric_limits<int>::max(),
+            "number of vectors requested (%zu) must be less than %zu",
+            n,
+            (Index::idx_t)std::numeric_limits<int>::max());
     auto stream = resources_->getDefaultStream(config_.device);
 
     auto outDevice = toDeviceTemporary<float, 2>(
-            resources_.get(), config_.device, out, stream, {n, this->d});
+            resources_.get(),
+            config_.device,
+            out,
+            stream,
+            {(int)n, (int)this->d});
 
     FAISS_ASSERT(data_);
     data_->reconstruct(i0, n, outDevice);
@@ -280,8 +303,10 @@ void GpuIndexFlat::reconstruct_n(idx_t i0, idx_t n, float* out) const {
     fromDevice<float, 2>(outDevice, out, stream);
 }
 
-void GpuIndexFlat::reconstruct_batch(idx_t n, const idx_t* keys, float* out)
-        const {
+void GpuIndexFlat::reconstruct_batch(
+        Index::idx_t n,
+        const Index::idx_t* keys,
+        float* out) const {
     DeviceScope scope(config_.device);
     auto stream = resources_->getDefaultStream(config_.device);
 
@@ -290,15 +315,21 @@ void GpuIndexFlat::reconstruct_batch(idx_t n, const idx_t* keys, float* out)
         return;
     }
 
-    auto keysDevice = toDeviceTemporary<faiss::idx_t, 1>(
+    validateNumVectors(n);
+
+    auto keysDevice = toDeviceTemporary<faiss::Index::idx_t, 1>(
             resources_.get(),
             config_.device,
-            const_cast<idx_t*>(keys),
+            const_cast<Index::idx_t*>(keys),
             stream,
-            {n});
+            {(int)n});
 
     auto outDevice = toDeviceTemporary<float, 2>(
-            resources_.get(), config_.device, out, stream, {n, this->d});
+            resources_.get(),
+            config_.device,
+            out,
+            stream,
+            {(int)n, (int)this->d});
 
     FAISS_ASSERT(data_);
     data_->reconstruct(keysDevice, outDevice);
@@ -307,16 +338,18 @@ void GpuIndexFlat::reconstruct_batch(idx_t n, const idx_t* keys, float* out)
     fromDevice<float, 2>(outDevice, out, stream);
 }
 
-void GpuIndexFlat::compute_residual(const float* x, float* residual, idx_t key)
-        const {
+void GpuIndexFlat::compute_residual(
+        const float* x,
+        float* residual,
+        Index::idx_t key) const {
     compute_residual_n(1, x, residual, &key);
 }
 
 void GpuIndexFlat::compute_residual_n(
-        idx_t n,
+        Index::idx_t n,
         const float* xs,
         float* residuals,
-        const idx_t* keys) const {
+        const Index::idx_t* keys) const {
     DeviceScope scope(config_.device);
     auto stream = resources_->getDefaultStream(config_.device);
 
@@ -325,20 +358,26 @@ void GpuIndexFlat::compute_residual_n(
         return;
     }
 
+    validateNumVectors(n);
+
     auto vecsDevice = toDeviceTemporary<float, 2>(
             resources_.get(),
             config_.device,
             const_cast<float*>(xs),
             stream,
-            {n, this->d});
-    auto idsDevice = toDeviceTemporary<idx_t, 1>(
+            {(int)n, (int)this->d});
+    auto idsDevice = toDeviceTemporary<Index::idx_t, 1>(
             resources_.get(),
             config_.device,
-            const_cast<idx_t*>(keys),
+            const_cast<Index::idx_t*>(keys),
             stream,
-            {n});
+            {(int)n});
     auto residualDevice = toDeviceTemporary<float, 2>(
-            resources_.get(), config_.device, residuals, stream, {n, this->d});
+            resources_.get(),
+            config_.device,
+            residuals,
+            stream,
+            {(int)n, (int)this->d});
 
     FAISS_ASSERT(data_);
     data_->computeResidual(vecsDevice, idsDevice, residualDevice);

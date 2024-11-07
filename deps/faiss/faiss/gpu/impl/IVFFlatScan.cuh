@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,12 +21,12 @@ class GpuResources;
 
 void runIVFFlatScan(
         Tensor<float, 2, true>& queries,
-        Tensor<idx_t, 2, true>& listIds,
+        Tensor<Index::idx_t, 2, true>& listIds,
         DeviceVector<void*>& listData,
         DeviceVector<void*>& listIndices,
         IndicesOptions indicesOptions,
-        DeviceVector<idx_t>& listLengths,
-        idx_t maxListLength,
+        DeviceVector<int>& listLengths,
+        int maxListLength,
         int k,
         faiss::MetricType metric,
         bool useResidual,
@@ -35,7 +35,7 @@ void runIVFFlatScan(
         // output
         Tensor<float, 2, true>& outDistances,
         // output
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         GpuResources* res);
 
 } // namespace gpu

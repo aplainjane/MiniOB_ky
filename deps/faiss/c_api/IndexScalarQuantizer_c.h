@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+// Copyright 2004-present Facebook. All Rights Reserved.
 // -*- c -*-
 
 #ifndef FAISS_INDEX_SCALAR_QUANTIZER_C_H
@@ -25,9 +26,6 @@ typedef enum FaissQuantizerType {
     QT_fp16,
     QT_8bit_direct, ///< fast indexing of uint8s
     QT_6bit,        ///< 6 bits per component
-    QT_bf16,
-    QT_8bit_direct_signed, ///< fast indexing of signed int8s ranging from [-128
-                           ///< to 127]
 } FaissQuantizerType;
 
 // forward declaration
@@ -89,6 +87,11 @@ int faiss_IndexIVFScalarQuantizer_add_core(
         const float* x,
         const idx_t* xids,
         const idx_t* precomputed_idx);
+
+int faiss_IndexIVFScalarQuantizer_train_residual(
+        FaissIndexIVFScalarQuantizer* index,
+        idx_t n,
+        const float* x);
 
 #ifdef __cplusplus
 }

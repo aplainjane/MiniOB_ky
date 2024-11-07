@@ -1,8 +1,3 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import unittest
 import faiss
 import numpy as np
@@ -72,6 +67,7 @@ class TestMerge1(unittest.TestCase):
             index.merge_from(indexes[i], index.ntotal)
 
         _D, I = index.search(xq, k)
+        print(I[:5, :6])
 
         ndiff = (I != Iref).sum()
         print('%d / %d differences' % (ndiff, nq * k))
@@ -167,7 +163,7 @@ class TestMerge2(unittest.TestCase):
         self.do_flat_codes_test("Flat")
 
     def test_merge_IndexPQ(self):
-        self.do_flat_codes_test("PQ8np")
+        self.do_flat_codes_test("PQ8")
 
     def test_merge_IndexLSH(self):
         self.do_flat_codes_test("LSHr")
@@ -178,28 +174,18 @@ class TestMerge2(unittest.TestCase):
     def test_merge_PreTransform(self):
         self.do_flat_codes_test("PCA16,SQ4")
 
-    def do_fast_scan_test(self, factory_key, size1, with_add_id=False):
+    def do_fast_scan_test(self, factory_key, size1):
         ds = SyntheticDataset(110, 1000, 1000, 100)
-        index_trained = faiss.index_factory(ds.d, factory_key)
-        index_trained.train(ds.get_train())
-        # test both clone and index_read/write
-        if True:
-            index1 = faiss.deserialize_index(
-                faiss.serialize_index(index_trained))
-        else:
-            index1 = faiss.clone_index(index_trained)
-        # assert index1.aq.qnorm.ntotal == index_trained.aq.qnorm.ntotal
-
+        index1 = faiss.index_factory(ds.d, factory_key)
+        index1.train(ds.get_train())
         index1.add(ds.get_database())
         _, Iref = index1.search(ds.get_queries(), 5)
         index1.reset()
-        index2 = faiss.clone_index(index_trained)
+        index2 = faiss.index_factory(ds.d, factory_key)
+        index2.train(ds.get_train())
         index1.add(ds.get_database()[:size1])
         index2.add(ds.get_database()[size1:])
-        if with_add_id:
-            index1.merge_from(index2, add_id=index1.ntotal)
-        else:
-            index1.merge_from(index2)
+        index1.merge_from(index2)
         _, Inew = index1.search(ds.get_queries(), 5)
         np.testing.assert_array_equal(Inew, Iref)
 
@@ -214,9 +200,6 @@ class TestMerge2(unittest.TestCase):
 
     def test_merge_IndexAdditiveQuantizerFastScan(self):
         self.do_fast_scan_test("RQ10x4fs_32_Nrq2x4", 330)
-
-    def test_merge_IVFFastScan(self):
-        self.do_fast_scan_test("IVF20,PQ5x4fs", 123, with_add_id=True)
 
     def do_test_with_ids(self, factory_key):
         ds = SyntheticDataset(32, 300, 300, 100)
@@ -241,49 +224,3 @@ class TestMerge2(unittest.TestCase):
 
     def test_merge_IDMap2(self):
         self.do_test_with_ids("Flat,IDMap2")
-
-
-class TestRemoveFastScan(unittest.TestCase):
-
-    def do_fast_scan_test(self,
-                          factory_key,
-                          with_ids=False,
-                          direct_map_type=faiss.DirectMap.NoMap):
-        ds = SyntheticDataset(110, 1000, 1000, 100)
-        index = faiss.index_factory(ds.d, factory_key)
-        index.train(ds.get_train())
-
-        index.reset()
-        tokeep = [i % 3 == 0 for i in range(ds.nb)]
-        if with_ids:
-            index.add_with_ids(ds.get_database()[tokeep], np.arange(ds.nb)[tokeep])
-            faiss.extract_index_ivf(index).nprobe = 5
-        else:
-            index.add(ds.get_database()[tokeep])
-        _, Iref = index.search(ds.get_queries(), 5)
-
-        index.reset()
-        if with_ids:
-            index.add_with_ids(ds.get_database(), np.arange(ds.nb))
-            index.set_direct_map_type(direct_map_type)
-            faiss.extract_index_ivf(index).nprobe = 5
-        else:
-            index.add(ds.get_database())
-        index.remove_ids(np.where(np.logical_not(tokeep))[0])
-        _, Inew = index.search(ds.get_queries(), 5)
-        np.testing.assert_array_equal(Inew, Iref)
-
-    def test_remove_PQFastScan(self):
-        # with_ids is not support for this type of index
-        self.do_fast_scan_test("PQ5x4fs", False)
-
-    def test_remove_IVFPQFastScan(self):
-        self.do_fast_scan_test("IVF20,PQ5x4fs", True)
-
-    def test_remove_IVFPQFastScan_2(self):
-        self.assertRaisesRegex(Exception,
-                               ".*not supported.*",
-                               self.do_fast_scan_test,
-                               "IVF20,PQ5x4fs",
-                               True,
-                               faiss.DirectMap.Hashtable)

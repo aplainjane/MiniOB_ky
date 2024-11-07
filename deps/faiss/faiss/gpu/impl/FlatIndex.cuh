@@ -1,24 +1,8 @@
-// @lint-ignore-every LICENSELINT
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */
-/*
- * Copyright (c) 2023, NVIDIA CORPORATION.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #pragma once
@@ -46,7 +30,7 @@ class FlatIndex {
     bool getUseFloat16() const;
 
     /// Returns the number of vectors we contain
-    idx_t getSize() const;
+    int getSize() const;
 
     /// Returns the dimensionality of the vectors
     int getDim() const;
@@ -60,44 +44,49 @@ class FlatIndex {
     /// Returns a reference to our vectors currently in use (if useFloat16 mode)
     Tensor<half, 2, true>& getVectorsFloat16Ref();
 
-    virtual void query(
+    void query(
             Tensor<float, 2, true>& vecs,
             int k,
             faiss::MetricType metric,
             float metricArg,
             Tensor<float, 2, true>& outDistances,
-            Tensor<idx_t, 2, true>& outIndices,
+            Tensor<int, 2, true>& outIndices,
             bool exactDistance);
 
-    virtual void query(
+    void query(
             Tensor<half, 2, true>& vecs,
             int k,
             faiss::MetricType metric,
             float metricArg,
             Tensor<float, 2, true>& outDistances,
-            Tensor<idx_t, 2, true>& outIndices,
+            Tensor<int, 2, true>& outIndices,
             bool exactDistance);
 
     /// Compute residual for set of vectors
     void computeResidual(
             Tensor<float, 2, true>& vecs,
-            Tensor<idx_t, 1, true>& ids,
+            Tensor<Index::idx_t, 1, true>& ids,
             Tensor<float, 2, true>& residuals);
 
     /// Gather vectors given the set of IDs
-    void reconstruct(Tensor<idx_t, 1, true>& ids, Tensor<float, 2, true>& vecs);
+    void reconstruct(
+            Tensor<Index::idx_t, 1, true>& ids,
+            Tensor<float, 2, true>& vecs);
 
     /// Gather vectors given a range of IDs
-    void reconstruct(idx_t start, idx_t num, Tensor<float, 2, true>& vecs);
+    void reconstruct(
+            Index::idx_t start,
+            Index::idx_t num,
+            Tensor<float, 2, true>& vecs);
 
     /// Add vectors to ourselves; the pointer passed can be on the host
     /// or the device
-    void add(const float* data, idx_t numVecs, cudaStream_t stream);
+    void add(const float* data, int numVecs, cudaStream_t stream);
 
     /// Free all storage
     void reset();
 
-   protected:
+   private:
     /// Collection of GPU resources that we use
     GpuResources* resources_;
 
@@ -111,7 +100,7 @@ class FlatIndex {
     MemorySpace space_;
 
     /// How many vectors we have
-    idx_t num_;
+    int num_;
 
     /// The underlying expandable storage for float32 data
     DeviceVector<char> rawData32_;

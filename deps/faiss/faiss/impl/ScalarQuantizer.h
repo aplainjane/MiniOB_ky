@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -32,12 +32,9 @@ struct ScalarQuantizer : Quantizer {
         QT_fp16,
         QT_8bit_direct, ///< fast indexing of uint8s
         QT_6bit,        ///< 6 bits per component
-        QT_bf16,
-        QT_8bit_direct_signed, ///< fast indexing of signed int8s ranging from
-                               ///< [-128 to 127]
     };
 
-    QuantizerType qtype = QT_8bit;
+    QuantizerType qtype;
 
     /** The uniform encoder can estimate the range of representable
      * values of the unform encoder using different statistics. Here
@@ -51,11 +48,11 @@ struct ScalarQuantizer : Quantizer {
         RS_optim,     ///< alternate optimization of reconstruction error
     };
 
-    RangeStat rangestat = RS_minmax;
-    float rangestat_arg = 0;
+    RangeStat rangestat;
+    float rangestat_arg;
 
     /// bits per scalar code
-    size_t bits = 0;
+    size_t bits;
 
     /// trained values (including the range)
     std::vector<float> trained;
@@ -67,6 +64,14 @@ struct ScalarQuantizer : Quantizer {
     void set_derived_sizes();
 
     void train(size_t n, const float* x) override;
+
+    /// Used by an IVF index to train based on the residuals
+    void train_residual(
+            size_t n,
+            const float* x,
+            Index* quantizer,
+            bool by_residual,
+            bool verbose);
 
     /** Encode a set of vectors
      *

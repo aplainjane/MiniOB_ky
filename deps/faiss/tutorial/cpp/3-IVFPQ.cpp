@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexIVFPQ.h>
 
-using idx_t = faiss::idx_t;
+using idx_t = faiss::Index::idx_t;
 
 int main() {
     int d = 64;      // dimension

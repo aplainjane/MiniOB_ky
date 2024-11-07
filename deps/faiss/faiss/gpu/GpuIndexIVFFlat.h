@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,8 +8,6 @@
 #pragma once
 
 #include <faiss/gpu/GpuIndexIVF.h>
-#include <faiss/impl/ScalarQuantizer.h>
-
 #include <memory>
 
 namespace faiss {
@@ -23,9 +21,11 @@ class IVFFlat;
 class GpuIndexFlat;
 
 struct GpuIndexIVFFlatConfig : public GpuIndexIVFConfig {
+    inline GpuIndexIVFFlatConfig() : interleavedLayout(true) {}
+
     /// Use the alternative memory layout for the IVF lists
     /// (currently the default)
-    bool interleavedLayout = true;
+    bool interleavedLayout;
 };
 
 /// Wrapper around the GPU implementation that looks like
@@ -44,7 +44,7 @@ class GpuIndexIVFFlat : public GpuIndexIVF {
     GpuIndexIVFFlat(
             GpuResourcesProvider* provider,
             int dims,
-            idx_t nlist,
+            int nlist,
             faiss::MetricType metric = faiss::METRIC_L2,
             GpuIndexIVFFlatConfig config = GpuIndexIVFFlatConfig());
 
@@ -54,7 +54,7 @@ class GpuIndexIVFFlat : public GpuIndexIVF {
             GpuResourcesProvider* provider,
             Index* coarseQuantizer,
             int dims,
-            idx_t nlist,
+            int nlist,
             faiss::MetricType metric = faiss::METRIC_L2,
             GpuIndexIVFFlatConfig config = GpuIndexIVFFlatConfig());
 
@@ -85,24 +85,7 @@ class GpuIndexIVFFlat : public GpuIndexIVF {
     void updateQuantizer() override;
 
     /// Trains the coarse quantizer based on the given vector data
-    void train(idx_t n, const float* x) override;
-
-    void reconstruct_n(idx_t i0, idx_t n, float* out) const override;
-
-   protected:
-    /// Initialize appropriate index
-    void setIndex_(
-            GpuResources* resources,
-            int dim,
-            int nlist,
-            faiss::MetricType metric,
-            float metricArg,
-            bool useResidual,
-            /// Optional ScalarQuantizer
-            faiss::ScalarQuantizer* scalarQ,
-            bool interleavedLayout,
-            IndicesOptions indicesOptions,
-            MemorySpace space);
+    void train(Index::idx_t n, const float* x) override;
 
    protected:
     /// Our configuration options

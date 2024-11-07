@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -53,37 +53,37 @@ class GpuIndexBinaryFlat : public IndexBinary {
     /// in the index instance
     void copyTo(faiss::IndexBinaryFlat* index) const;
 
-    void add(faiss::idx_t n, const uint8_t* x) override;
+    void add(faiss::IndexBinary::idx_t n, const uint8_t* x) override;
 
     void reset() override;
 
     void search(
-            idx_t n,
+            faiss::IndexBinary::idx_t n,
             const uint8_t* x,
-            // faiss::IndexBinary has idx_t for k
-            idx_t k,
+            faiss::IndexBinary::idx_t k,
             int32_t* distances,
-            faiss::idx_t* labels,
+            faiss::IndexBinary::idx_t* labels,
             const faiss::SearchParameters* params = nullptr) const override;
 
-    void reconstruct(faiss::idx_t key, uint8_t* recons) const override;
+    void reconstruct(faiss::IndexBinary::idx_t key, uint8_t* recons)
+            const override;
 
    protected:
     /// Called from search when the input data is on the CPU;
     /// potentially allows for pinned memory usage
     void searchFromCpuPaged_(
-            idx_t n,
+            int n,
             const uint8_t* x,
             int k,
             int32_t* outDistancesData,
-            idx_t* outIndicesData) const;
+            int* outIndicesData) const;
 
     void searchNonPaged_(
-            idx_t n,
+            int n,
             const uint8_t* x,
             int k,
             int32_t* outDistancesData,
-            idx_t* outIndicesData) const;
+            int* outIndicesData) const;
 
    protected:
     /// Manages streans, cuBLAS handles and scratch memory for devices

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,8 +14,6 @@
 
 #include <faiss/IndexBinary.h>
 
-#include <faiss/utils/approx_topk/mode.h>
-
 namespace faiss {
 
 /** Index that stores the full vectors and performs exhaustive search. */
@@ -29,8 +27,6 @@ struct IndexBinaryFlat : IndexBinary {
     bool use_heap = true;
 
     size_t query_batch_size = 32;
-
-    ApproxTopK_mode_t approx_topk_mode = ApproxTopK_mode_t::EXACT_TOPK;
 
     explicit IndexBinaryFlat(idx_t d);
 

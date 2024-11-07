@@ -1,10 +1,11 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
+// Copyright 2004-present Facebook. All Rights Reserved.
 // -*- c++ -*-
 
 #include "GpuAutoTune_c.h"
@@ -86,9 +87,9 @@ int faiss_index_cpu_to_gpu_multiple(
 }
 
 int faiss_index_cpu_to_gpu_multiple_with_options(
-        FaissGpuResourcesProvider* const* providers_vec,
+        FaissGpuResourcesProvider** providers_vec,
         size_t providers_vec_size,
-        const int* devices,
+        int* devices,
         size_t devices_size,
         const FaissIndex* index,
         const FaissGpuMultipleClonerOptions* options,

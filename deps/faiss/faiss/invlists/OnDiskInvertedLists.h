@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,7 +31,7 @@ struct OnDiskOneList {
 
 /** On-disk storage of inverted lists.
  *
- * The data is stored in a mmapped chunk of memory (base pointer ptr,
+ * The data is stored in a mmapped chunk of memory (base ptointer ptr,
  * size totsize). Each list is a range of memory that contains (object
  * List) that contains:
  *
@@ -101,10 +101,9 @@ struct OnDiskInvertedLists : InvertedLists {
 
     // copy all inverted lists into *this, in compact form (without
     // allocating slots)
-    size_t merge_from_multiple(
+    size_t merge_from(
             const InvertedLists** ils,
             int n_il,
-            bool shift_ids = false,
             bool verbose = false);
 
     /// same as merge_from for a single invlist

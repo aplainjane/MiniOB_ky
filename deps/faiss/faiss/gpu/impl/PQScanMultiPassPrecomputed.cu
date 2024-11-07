@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,16 +35,16 @@ __global__ void pqScanPrecomputedInterleaved(
         Tensor<CodeDistanceT, 3, true> precompTerm2,
         // (query id)(sub q)(code id)
         Tensor<CodeDistanceT, 3, true> precompTerm3,
-        Tensor<idx_t, 2, true> ivfListIds,
+        Tensor<Index::idx_t, 2, true> ivfListIds,
         void** listCodes,
-        idx_t* listLengths,
-        Tensor<idx_t, 2, true> prefixSumOffsets,
+        int* listLengths,
+        Tensor<int, 2, true> prefixSumOffsets,
         Tensor<float, 1, true> distance) {
     // Each block handles a single query versus single list
     auto queryId = blockIdx.y;
     auto probeId = blockIdx.x;
 
-    idx_t listId = ivfListIds[queryId][probeId];
+    Index::idx_t listId = ivfListIds[queryId][probeId];
     // Safety guard in case NaNs in input cause no list ID to be generated
     if (listId == -1) {
         return;
@@ -60,29 +60,29 @@ __global__ void pqScanPrecomputedInterleaved(
 
     // This is where we start writing out data
     // We ensure that before the array (at offset -1), there is a 0 value
-    auto outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
+    int outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
     float* distanceOut = distance[outBase].data();
 
     auto vecsBase = (EncodeT*)listCodes[listId];
-    idx_t numVecs = listLengths[listId];
+    int numVecs = listLengths[listId];
 
-    // How many vector blocks of kWarpSize are in this list?
-    idx_t numBlocks = utils::divUp(numVecs, idx_t(kWarpSize));
+    // How many vector blocks of 32 are in this list?
+    int numBlocks = utils::divUp(numVecs, 32);
 
-    // Number of EncodeT words per each dimension of block of kWarpSize vecs
-    constexpr idx_t bytesPerVectorBlockDim = EncodeBits * kWarpSize / 8;
-    constexpr idx_t wordsPerVectorBlockDim =
+    // Number of EncodeT words per each dimension of block of 32 vecs
+    constexpr int bytesPerVectorBlockDim = EncodeBits * 32 / 8;
+    constexpr int wordsPerVectorBlockDim =
             bytesPerVectorBlockDim / sizeof(EncodeT);
-    idx_t wordsPerVectorBlock = wordsPerVectorBlockDim * numSubQuantizers;
+    int wordsPerVectorBlock = wordsPerVectorBlockDim * numSubQuantizers;
 
     // This is constant for the (query, probe)
     float term1 = precompTerm1[queryId][probeId];
 
-    for (idx_t block = warpId; block < numBlocks; block += numWarps) {
+    for (int block = warpId; block < numBlocks; block += numWarps) {
         float dist = term1;
 
         // This is the vector a given lane/thread handles
-        idx_t vec = block * kWarpSize + laneId;
+        int vec = block * kWarpSize + laneId;
         bool valid = vec < numVecs;
 
         EncodeT* data = vecsBase + block * wordsPerVectorBlock;
@@ -129,14 +129,14 @@ inline __device__ void loadPrecomputedTerm(
         // Load the data by float4 for efficiency, and then handle any remainder
         // limitVec is the number of whole vec words we can load, in terms
         // of whole blocks performing the load
-        idx_t limitVec = numCodes / (kUnroll * kWordSize * blockDim.x);
+        int limitVec = numCodes / (kUnroll * kWordSize * blockDim.x);
         limitVec *= kUnroll * blockDim.x;
 
         LookupVecT* smemV = (LookupVecT*)smem;
         LookupVecT* term2StartV = (LookupVecT*)term2Start;
         LookupVecT* term3StartV = (LookupVecT*)term3Start;
 
-        for (idx_t i = threadIdx.x; i < limitVec; i += kUnroll * blockDim.x) {
+        for (int i = threadIdx.x; i < limitVec; i += kUnroll * blockDim.x) {
             LookupVecT vals[kUnroll];
 
 #pragma unroll
@@ -164,16 +164,16 @@ inline __device__ void loadPrecomputedTerm(
         // fit into kUnroll x blockDim.x
         int remainder = limitVec * kWordSize;
 
-        for (idx_t i = remainder + threadIdx.x; i < numCodes; i += blockDim.x) {
+        for (int i = remainder + threadIdx.x; i < numCodes; i += blockDim.x) {
             smem[i] = Math<LookupT>::add(term2Start[i], term3Start[i]);
         }
     } else {
         // Potential unaligned load
         constexpr int kUnroll = 4;
 
-        idx_t limit = utils::roundDown(numCodes, kUnroll * blockDim.x);
+        int limit = utils::roundDown(numCodes, kUnroll * blockDim.x);
 
-        idx_t i = threadIdx.x;
+        int i = threadIdx.x;
         for (; i < limit; i += kUnroll * blockDim.x) {
             LookupT vals[kUnroll];
 
@@ -206,10 +206,10 @@ __global__ void pqScanPrecomputedMultiPass(
         Tensor<float, 2, true> precompTerm1,
         Tensor<LookupT, 3, true> precompTerm2,
         Tensor<LookupT, 3, true> precompTerm3,
-        Tensor<idx_t, 2, true> ivfListIds,
+        Tensor<Index::idx_t, 2, true> ivfListIds,
         void** listCodes,
-        idx_t* listLengths,
-        Tensor<idx_t, 2, true> prefixSumOffsets,
+        int* listLengths,
+        Tensor<int, 2, true> prefixSumOffsets,
         Tensor<float, 1, true> distance) {
     // precomputed term 2 + 3 storage
     // (sub q)(code id)
@@ -224,19 +224,19 @@ __global__ void pqScanPrecomputedMultiPass(
 
     // This is where we start writing out data
     // We ensure that before the array (at offset -1), there is a 0 value
-    idx_t outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
+    int outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
     float* distanceOut = distance[outBase].data();
 
-    idx_t listId = ivfListIds[queryId][probeId];
+    Index::idx_t listId = ivfListIds[queryId][probeId];
     // Safety guard in case NaNs in input cause no list ID to be generated
     if (listId == -1) {
         return;
     }
 
     uint8_t* codeList = (uint8_t*)listCodes[listId];
-    idx_t limit = listLengths[listId];
+    int limit = listLengths[listId];
 
-    constexpr idx_t kNumCode32 =
+    constexpr int kNumCode32 =
             NumSubQuantizers <= 4 ? 1 : (NumSubQuantizers / 4);
     unsigned int code32[kNumCode32];
     unsigned int nextCode32[kNumCode32];
@@ -259,7 +259,7 @@ __global__ void pqScanPrecomputedMultiPass(
 
     // Each thread handles one code element in the list, with a
     // block-wide stride
-    for (idx_t codeIndex = threadIdx.x; codeIndex < limit;
+    for (int codeIndex = threadIdx.x; codeIndex < limit;
          codeIndex += blockDim.x) {
         // Prefetch next codes
         if (codeIndex + blockDim.x < limit) {
@@ -310,7 +310,7 @@ void runMultiPassTile(
         Tensor<float, 2, true>& precompTerm1,
         NoTypeTensor<3, true>& precompTerm2,
         NoTypeTensor<3, true>& precompTerm3,
-        Tensor<idx_t, 2, true>& ivfListIds,
+        Tensor<Index::idx_t, 2, true>& ivfListIds,
         bool useFloat16Lookup,
         bool interleavedCodeLayout,
         int bitsPerSubQuantizer,
@@ -319,16 +319,15 @@ void runMultiPassTile(
         DeviceVector<void*>& listCodes,
         DeviceVector<void*>& listIndices,
         IndicesOptions indicesOptions,
-        DeviceVector<idx_t>& listLengths,
+        DeviceVector<int>& listLengths,
         Tensor<char, 1, true>& thrustMem,
-        Tensor<idx_t, 2, true>& prefixSumOffsets,
+        Tensor<int, 2, true>& prefixSumOffsets,
         Tensor<float, 1, true>& allDistances,
         Tensor<float, 3, true>& heapDistances,
-        Tensor<idx_t, 3, true>& heapIndices,
+        Tensor<int, 3, true>& heapIndices,
         int k,
-        bool use64BitSelection,
         Tensor<float, 2, true>& outDistances,
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         cudaStream_t stream) {
     // Calculate offset lengths, so we know where to write out
     // intermediate results
@@ -508,7 +507,6 @@ void runMultiPassTile(
             allDistances,
             ivfListIds.getSize(1),
             k,
-            use64BitSelection,
             false, // L2 distance chooses smallest
             heapDistances,
             heapIndices,
@@ -526,7 +524,6 @@ void runMultiPassTile(
             prefixSumOffsets,
             ivfListIds,
             k,
-            use64BitSelection,
             false, // L2 distance chooses smallest
             outDistances,
             outIndices,
@@ -543,7 +540,7 @@ void runPQScanMultiPassPrecomputed(
         NoTypeTensor<3, true>& precompTerm2,
         // (query id)(sub q)(code id)
         NoTypeTensor<3, true>& precompTerm3,
-        Tensor<idx_t, 2, true>& ivfListIds,
+        Tensor<Index::idx_t, 2, true>& ivfListIds,
         bool useFloat16Lookup,
         bool interleavedCodeLayout,
         int bitsPerSubQuantizer,
@@ -552,76 +549,87 @@ void runPQScanMultiPassPrecomputed(
         DeviceVector<void*>& listCodes,
         DeviceVector<void*>& listIndices,
         IndicesOptions indicesOptions,
-        DeviceVector<idx_t>& listLengths,
-        idx_t maxListLength,
+        DeviceVector<int>& listLengths,
+        int maxListLength,
         int k,
         // output
         Tensor<float, 2, true>& outDistances,
         // output
-        Tensor<idx_t, 2, true>& outIndices,
+        Tensor<Index::idx_t, 2, true>& outIndices,
         GpuResources* res) {
+    constexpr int kMinQueryTileSize = 8;
+    constexpr int kMaxQueryTileSize = 128;
+    constexpr int kThrustMemSize = 16384;
+
+    int nprobe = ivfListIds.getSize(1);
+
     auto stream = res->getDefaultStreamCurrentDevice();
-
-    auto nprobe = ivfListIds.getSize(1);
-
-    // If the maximum list length (in terms of number of vectors) times nprobe
-    // (number of lists) is > 2^31 - 1, then we will use 64-bit indexing in the
-    // selection kernels
-    constexpr int k32Limit = idx_t(std::numeric_limits<int32_t>::max());
-
-    bool use64BitSelection = (maxListLength * nprobe > k32Limit) ||
-            (queries.getSize(0) > k32Limit);
 
     // Make a reservation for Thrust to do its dirty work (global memory
     // cross-block reduction space); hopefully this is large enough.
-    constexpr idx_t kThrustMemSize = 16384;
-
     DeviceTensor<char, 1, true> thrustMem1(
             res, makeTempAlloc(AllocType::Other, stream), {kThrustMemSize});
     DeviceTensor<char, 1, true> thrustMem2(
             res, makeTempAlloc(AllocType::Other, stream), {kThrustMemSize});
     DeviceTensor<char, 1, true>* thrustMem[2] = {&thrustMem1, &thrustMem2};
 
-    // How much temporary memory would we need to handle a single query?
-    size_t sizePerQuery = getIVFPQPerQueryTempMemory(
-            k,
-            nprobe,
-            maxListLength,
-            true, /* precomputed codes */
-            numSubQuantizers,
-            numSubQuantizerCodes);
+    // How much temporary storage is available?
+    // If possible, we'd like to fit within the space available.
+    size_t sizeAvailable = res->getTempMemoryAvailableCurrentDevice();
 
-    // How many queries do we wish to run at once?
-    idx_t queryTileSize = getIVFQueryTileSize(
-            queries.getSize(0),
-            res->getTempMemoryAvailableCurrentDevice(),
-            sizePerQuery);
+    // We run two passes of heap selection
+    // This is the size of the first-level heap passes
+    constexpr int kNProbeSplit = 8;
+    int pass2Chunks = std::min(nprobe, kNProbeSplit);
+
+    size_t sizeForFirstSelectPass =
+            pass2Chunks * k * (sizeof(float) + sizeof(int));
+
+    // How much temporary storage we need per each query
+    size_t sizePerQuery = 2 *                         // # streams
+            ((nprobe * sizeof(int) + sizeof(int)) +   // prefixSumOffsets
+             nprobe * maxListLength * sizeof(float) + // allDistances
+             sizeForFirstSelectPass);
+
+    int queryTileSize = (int)(sizeAvailable / sizePerQuery);
+
+    if (queryTileSize < kMinQueryTileSize) {
+        queryTileSize = kMinQueryTileSize;
+    } else if (queryTileSize > kMaxQueryTileSize) {
+        queryTileSize = kMaxQueryTileSize;
+    }
+
+    // FIXME: we should adjust queryTileSize to deal with this, since
+    // indexing is in int32
+    FAISS_ASSERT(
+            queryTileSize * nprobe * maxListLength <=
+            std::numeric_limits<int>::max());
 
     // Temporary memory buffers
     // Make sure there is space prior to the start which will be 0, and
     // will handle the boundary condition without branches
-    DeviceTensor<idx_t, 1, true> prefixSumOffsetSpace1(
+    DeviceTensor<int, 1, true> prefixSumOffsetSpace1(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize * nprobe + 1});
-    DeviceTensor<idx_t, 1, true> prefixSumOffsetSpace2(
+    DeviceTensor<int, 1, true> prefixSumOffsetSpace2(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize * nprobe + 1});
 
-    DeviceTensor<idx_t, 2, true> prefixSumOffsets1(
+    DeviceTensor<int, 2, true> prefixSumOffsets1(
             prefixSumOffsetSpace1[1].data(), {queryTileSize, nprobe});
-    DeviceTensor<idx_t, 2, true> prefixSumOffsets2(
+    DeviceTensor<int, 2, true> prefixSumOffsets2(
             prefixSumOffsetSpace2[1].data(), {queryTileSize, nprobe});
-    DeviceTensor<idx_t, 2, true>* prefixSumOffsets[2] = {
+    DeviceTensor<int, 2, true>* prefixSumOffsets[2] = {
             &prefixSumOffsets1, &prefixSumOffsets2};
 
     // Make sure the element before prefixSumOffsets is 0, since we
     // depend upon simple, boundary-less indexing to get proper results
     CUDA_VERIFY(cudaMemsetAsync(
-            prefixSumOffsetSpace1.data(), 0, sizeof(idx_t), stream));
+            prefixSumOffsetSpace1.data(), 0, sizeof(int), stream));
     CUDA_VERIFY(cudaMemsetAsync(
-            prefixSumOffsetSpace2.data(), 0, sizeof(idx_t), stream));
+            prefixSumOffsetSpace2.data(), 0, sizeof(int), stream));
 
     DeviceTensor<float, 1, true> allDistances1(
             res,
@@ -634,7 +642,6 @@ void runPQScanMultiPassPrecomputed(
     DeviceTensor<float, 1, true>* allDistances[2] = {
             &allDistances1, &allDistances2};
 
-    idx_t pass2Chunks = getIVFKSelectionPass2Chunks(nprobe);
     DeviceTensor<float, 3, true> heapDistances1(
             res,
             makeTempAlloc(AllocType::Other, stream),
@@ -646,24 +653,23 @@ void runPQScanMultiPassPrecomputed(
     DeviceTensor<float, 3, true>* heapDistances[2] = {
             &heapDistances1, &heapDistances2};
 
-    DeviceTensor<idx_t, 3, true> heapIndices1(
+    DeviceTensor<int, 3, true> heapIndices1(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize, pass2Chunks, k});
-    DeviceTensor<idx_t, 3, true> heapIndices2(
+    DeviceTensor<int, 3, true> heapIndices2(
             res,
             makeTempAlloc(AllocType::Other, stream),
             {queryTileSize, pass2Chunks, k});
-    DeviceTensor<idx_t, 3, true>* heapIndices[2] = {
-            &heapIndices1, &heapIndices2};
+    DeviceTensor<int, 3, true>* heapIndices[2] = {&heapIndices1, &heapIndices2};
 
     auto streams = res->getAlternateStreamsCurrentDevice();
     streamWait(streams, {stream});
 
     int curStream = 0;
 
-    for (idx_t query = 0; query < queries.getSize(0); query += queryTileSize) {
-        idx_t numQueriesInTile =
+    for (int query = 0; query < queries.getSize(0); query += queryTileSize) {
+        int numQueriesInTile =
                 std::min(queryTileSize, queries.getSize(0) - query);
 
         auto prefixSumOffsetsView =
@@ -708,7 +714,6 @@ void runPQScanMultiPassPrecomputed(
                 heapDistancesView,
                 heapIndicesView,
                 k,
-                use64BitSelection,
                 outDistanceView,
                 outIndicesView,
                 streams[curStream]);

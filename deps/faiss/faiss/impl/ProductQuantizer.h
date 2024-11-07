@@ -1,5 +1,5 @@
-/*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,12 +21,10 @@
 
 namespace faiss {
 
-/** Product Quantizer.
- * PQ is trained using k-means, minimizing the L2 distance to centroids.
- * PQ supports L2 and Inner Product search, however the quantization error is
- * biased towards L2 distance.
- */
+/** Product Quantizer. Implemented only for METRIC_L2 */
 struct ProductQuantizer : Quantizer {
+    using idx_t = Index::idx_t;
+
     size_t M;     ///< number of subquantizers
     size_t nbits; ///< number of bits per quantization index
 
@@ -39,9 +37,9 @@ struct ProductQuantizer : Quantizer {
     enum train_type_t {
         Train_default,
         Train_hot_start,     ///< the centroids are already initialized
-        Train_shared,        ///< share dictionary across PQ segments
-        Train_hypercube,     ///< initialize centroids with nbits-D hypercube
-        Train_hypercube_pca, ///< initialize centroids with nbits-D hypercube
+        Train_shared,        ///< share dictionary accross PQ segments
+        Train_hypercube,     ///< intialize centroids with nbits-D hypercube
+        Train_hypercube_pca, ///< intialize centroids with nbits-D hypercube
     };
     train_type_t train_type;
 

@@ -428,7 +428,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         Record *record = nullptr;
         rc = table->get_record(vec_result[i], *record);
         if (rc != RC::SUCCESS) {
-          LOG_ERROR("Failed to get record from table. (vec index)",);
+          LOG_WARN("Failed to get record from table. (vec index)");
           return RC::INTERNAL;
         }
         record_set.push_back(record);
@@ -474,17 +474,15 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       // 排序
       std::sort(tuple_set.begin(), tuple_set.end(), 
         [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
-
-          int target_index = order_index;
-          const Value& v1 = t1[target_index];
-          const Value& v2 = t2[target_index];
+          // need be used
+          //int target_index = order_index;
+          // const Value& v1 = t1[target_index];
+          // const Value& v2 = t2[target_index];
 
           Value v1_float;
           v1_float.set_float(FLT_MAX);
           Value v2_float;
           v2_float.set_float(FLT_MAX);
-
-          int ret = 0;
 
           switch (order_op)
           {

@@ -56,8 +56,6 @@ public:
     return having_stmts; 
   }
 
-  Db *get_db() { return this->session_->get_current_db(); }
-
   VecOrderByNode &get_vec_order_rules() { 
     return vec_order_rules_; 
   }

@@ -39,7 +39,7 @@ RC CreateTablePhysicalOperator::open(Trx *trx)
       for (int i = 0; i < tuple->cell_num(); i++) {
         tuple->cell_at(i, values[i]);
       }
-      rc = table->make_record(values.size()-1, values.data(), record);
+      rc = table->make_record(values.size(), values.data(), record,true);
       if(RC::SUCCESS != rc) {
         LOG_WARN("failed to make record, rc=%s", strrc(rc));
         return rc;

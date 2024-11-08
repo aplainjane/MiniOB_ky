@@ -176,6 +176,7 @@ RC ExpressionBinder::bind_unbound_field_expression(
     Field      field(table, field_meta);
     FieldExpr *field_expr = new FieldExpr(field);
     field_expr->set_name(field_name);
+    field_expr->set_alias(expr->alias());
     bound_expressions.emplace_back(field_expr);
   }
 
@@ -355,7 +356,6 @@ RC ExpressionBinder::bind_arithmetic_expression(
   if (right.get() != right_expr.get()) {
     right_expr.reset(right.release());
   }
-
   bound_expressions.emplace_back(std::move(expr));
   return RC::SUCCESS;
 }
@@ -448,6 +448,7 @@ RC ExpressionBinder::bind_aggregate_expression(
 
   auto aggregate_expr = make_unique<AggregateExpr>(aggregate_type, std::move(child_expr));
   aggregate_expr->set_name(unbound_aggregate_expr->name());
+  aggregate_expr->set_alias(unbound_aggregate_expr->alias());
   rc = check_aggregate_expression(*aggregate_expr);
   if (OB_FAIL(rc)) {
     return rc;

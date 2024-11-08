@@ -159,7 +159,8 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
   std::vector<Value> *                       value_list;
   std::vector<ConditionSqlNode> *            condition_list;
   std::vector<RelAttrSqlNode> *              rel_attr_list;
-  std::vector<std::string> *                 relation_list;
+  std::vector<std::pair<std::string,std::string>> *     relation_list;
+  std::vector<std::string> *                 index_list;
   char *                                     string;
   int                                        number;
   float                                      floats;
@@ -176,6 +177,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 
 /** type 定义了各种解析后的结果输出的是什么类型。类型对应了 union 中的定义的成员变量名称 **/
 %type <number>              type
+%type <string>              alias
 %type <condition>           condition
 %type <value>               value
 %type <number>              number
@@ -194,6 +196,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <condition_list>      condition_list
 %type <string>              storage_format
 %type <relation_list>       rel_list
+%type <index_list>          index_rel_list
 %type <expression>          expression
 %type <expression>          simple_expression
 %type <expression>          arith_expr
@@ -321,7 +324,7 @@ desc_table_stmt:
     ;
 
 create_index_stmt:    /*create index 语句的语法解析树*/
-    CREATE INDEX ID ON ID LBRACE ID rel_list RBRACE
+    CREATE INDEX ID ON ID LBRACE ID index_rel_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
       CreateIndexSqlNode &create_index = $$->create_index;
@@ -340,7 +343,7 @@ create_index_stmt:    /*create index 语句的语法解析树*/
         delete($8);
       }
     }
-    | CREATE UNIQUE INDEX ID ON ID LBRACE ID rel_list RBRACE
+    | CREATE UNIQUE INDEX ID ON ID LBRACE ID index_rel_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_INDEX);
       CreateIndexSqlNode &create_index = $$->create_index;
@@ -360,7 +363,21 @@ create_index_stmt:    /*create index 语句的语法解析树*/
       }
     }
     ;
-
+index_rel_list:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | COMMA ID index_rel_list {
+      if ($3 != nullptr) {
+        $$ = $3;
+      } else {
+        $$ = new std::vector<std::string>;
+      }
+      $$->emplace_back($2);
+      free($2);
+    }
+    ;
 drop_index_stmt:      /*drop index 语句的语法解析树*/
     DROP INDEX ID ON ID
     {
@@ -394,7 +411,7 @@ create_table_stmt:    /*create table 语句的语法解析树*/
       null_field.name = NULL_FIELD_NAME;
       null_field.length = 4;
       null_field.isnull = false;
-      create_table.attr_infos.push_back(null_field);
+      create_table.attr_infos.emplace_back(null_field);
 
       if ($8 != nullptr) {
         create_table.storage_format = $8;
@@ -612,12 +629,12 @@ set_clause_list:
     set_clause
     {
         $$ = new std::vector<UpdateKV>();
-        $$->push_back(*$1);
+        $$->emplace_back(*$1);
         delete $1;  // 确保 $1 是 new 出来的对象
     }
     | set_clause_list COMMA set_clause
     {
-        $1->push_back(*$3);
+        $1->emplace_back(*$3);
         $$ = $1;
         delete $3;  // 确保 $3 是 new 出来的对象
     }
@@ -653,42 +670,47 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $2;
       }
     }
-    | SELECT expression_list FROM ID rel_list join_list where group_by having order_by
+    | SELECT expression_list FROM ID alias rel_list join_list where group_by having order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
         $$->selection.expressions.swap(*$2);
         delete $2;
       }
-      if ($5 != nullptr) {
-        $$->selection.relations.swap(*$5);
-        delete $5;
+      if ($6 != nullptr) {
+        $$->selection.relations.swap(*$6);
+        delete $6;
       }
-      $$->selection.relations.push_back($4);
+      std::string temp = "";
+      if (nullptr != $5) {
+        temp = $5;
+      }
+      $$->selection.relations.emplace_back($4,temp);
+      free($5);
       std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
 
-      if ($7 != nullptr) {
-        $$->selection.conditions.swap(*$7);
-        delete $7;
+      if ($8 != nullptr) {
+        $$->selection.conditions.swap(*$8);
+        delete $8;
       }
       free($4);
       
-      if ($6 != nullptr) {
-        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
-        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
-        delete $6;
-      }
-      if ($8 != nullptr) {
-        $$->selection.group_by.swap(*$8);
-        delete $8;
+      if ($7 != nullptr) {
+        $$->selection.relations.insert($$->selection.relations.end(), $7->relations.begin(), $7->relations.end());
+        $$->selection.conditions.insert($$->selection.conditions.end(), $7->conditions.begin(), $7->conditions.end());
+        delete $7;
       }
       if ($9 != nullptr) {
-        $$->selection.having_conditions.swap(*$9);
+        $$->selection.group_by.swap(*$9);
         delete $9;
       }
       if ($10 != nullptr) {
-        $$->selection.order_rules.swap(*$10);
+        $$->selection.having_conditions.swap(*$10);
         delete $10;
+      }
+      if ($11 != nullptr) {
+        $$->selection.order_rules.swap(*$11);
+        delete $11;
       }
     }
     ;
@@ -700,20 +722,38 @@ calc_stmt:
       delete $2;
     }
     ;
+alias:
+    /* empty */ {
+      $$ = nullptr;
+    }
+    | ID {
+      $$ = $1;
+    }
+    | AS ID {
+      $$ = $2;
+    }
 expression_list:
-    expression
+    expression alias
     {
       $$ = new std::vector<std::unique_ptr<Expression>>;
+      if (nullptr != $2) {
+        $1->set_alias($2);
+      }
       $$->emplace_back($1);
+      free($2);
     }
-    | expression COMMA expression_list
+    | expression alias COMMA expression_list
     {
-      if ($3 != nullptr) {
-        $$ = $3;
+      if ($4 != nullptr) {
+        $$ = $4;
       } else {
         $$ = new std::vector<std::unique_ptr<Expression>>;
       }
+      if (nullptr != $2) {
+        $1->set_alias($2);
+      }
       $$->emplace($$->begin(), $1);
+      free($2);
     }
     ;
 expression:
@@ -877,32 +917,32 @@ aggr_expr:
     }
     | SUM LBRACE RBRACE {
       std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
-      empty->push_back(std::make_unique<ValueExpr>());
-      empty->push_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("SUM", empty, sql_string, &@$);
     }
     | AVG LBRACE RBRACE {
       std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
-      empty->push_back(std::make_unique<ValueExpr>());
-      empty->push_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("AVG", empty, sql_string, &@$);
     }
     | MIN LBRACE RBRACE {
       std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
-      empty->push_back(std::make_unique<ValueExpr>());
-      empty->push_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("MIN", empty, sql_string, &@$);
     }
     | MAX LBRACE RBRACE {
       std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
-      empty->push_back(std::make_unique<ValueExpr>());
-      empty->push_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("MAX", empty, sql_string, &@$);
     }
     | COUNT LBRACE RBRACE {
       std::vector<std::unique_ptr<Expression> >* empty = new std::vector<std::unique_ptr<Expression> >;
-      empty->push_back(std::make_unique<ValueExpr>());
-      empty->push_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
+      empty->emplace_back(std::make_unique<ValueExpr>());
       $$ = create_aggregate_expression("COUNT", empty, sql_string, &@$);
     }
     ;
@@ -927,14 +967,17 @@ rel_list:
     {
       $$ = nullptr;
     }
-    | COMMA ID rel_list {
-      if ($3 != nullptr) {
-        $$ = $3;
+    | COMMA ID alias rel_list {
+      if ($4 != nullptr) {
+        $$ = $4;
       } else {
-        $$ = new std::vector<std::string>;
+        $$ = new std::vector<std::pair<std::string,std::string>>;
       }
-
-      $$->push_back($2);
+      std::string temp = "";
+      if (nullptr != $3) {
+        temp = $3;
+      }
+      $$->emplace_back($2,temp);
       free($2);
     }
     ;
@@ -946,22 +989,25 @@ join_list:
     | INNER join_list {
       $$ = $2;
     }
-    | JOIN ID ON condition_list join_list {
+    | JOIN ID alias ON condition_list join_list {
       $$ = new JoinSqlNode();
 
-      if ($4 != nullptr) {
-        $$->conditions.swap(*$4);
-        delete $4;
+      if ($5 != nullptr) {
+        $$->conditions.swap(*$5);
+        delete $5;
       }
-
-      $$->relations.push_back($2);
+      std::string temp = "";
+      if (nullptr != $3) {
+        temp = $3;
+      }
+      $$->relations.emplace_back($2,temp);
 
       free($2);
 
-      if ($5 != nullptr) {
-        $$->relations.insert($$->relations.end(), $5->relations.begin(), $5->relations.end());
-        $$->conditions.insert($$->conditions.end(), $5->conditions.begin(), $5->conditions.end());
-        delete $5;
+      if ($6 != nullptr) {
+        $$->relations.insert($$->relations.end(), $6->relations.begin(), $6->relations.end());
+        $$->conditions.insert($$->conditions.end(), $6->conditions.begin(), $6->conditions.end());
+        delete $6;
       }
     }
     

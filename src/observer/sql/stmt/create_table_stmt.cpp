@@ -87,6 +87,11 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
       }
       attr_infos.emplace_back(attr_info);
     }
+    AttrInfoSqlNode attr_info;
+    attr_info.name = NULL_FIELD_NAME;
+    attr_info.type = AttrType::INTS;
+    attr_info.length = 4;
+    attr_infos.emplace_back(attr_info);
     if (0 != create_table.attr_infos.size()) {
       if (attr_infos.size() != create_table.attr_infos.size()) {
         LOG_ERROR("field size mismatch with output column size of select_stmt");

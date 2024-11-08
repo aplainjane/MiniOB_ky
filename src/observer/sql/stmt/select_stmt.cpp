@@ -59,6 +59,10 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
     binder_context.add_table(table);
     tables.push_back(table);
     table_map.insert({table_name, table});
+    if(select_sql.vec_order_rules.first_attr.relation_name == "")
+    {
+      select_sql.vec_order_rules.first_attr.relation_name = table_name;
+    }
   }
 
   // collect query fields in `select` statement

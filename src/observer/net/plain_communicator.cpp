@@ -269,7 +269,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   if (order_rules.size() > 0)
   {
-     std::cout<<"5"<<endl;
+     //std::cout<<"5"<<endl;
     // 获得排序列的索引与标识
     std::vector<int> order_index;
     std::vector<OrderOp> order_op;
@@ -406,7 +406,12 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       )
       {
         order_index = i;
-        table = db->find_table(spec.table_name());
+        if(vec_order_rules.first_attr.relation_name != "")
+          table = db->find_table(vec_order_rules.first_attr.relation_name.c_str());
+        else
+        {
+          break;
+        }
         if (nullptr == table) {
           LOG_WARN("no such table for vec search.");
           return RC::SCHEMA_TABLE_NOT_EXIST;
@@ -419,11 +424,11 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       }
     }
 
-    std::cout<<have_index<<endl;
+    //std::cout<<have_index<<endl;
 
     if (have_index) {
       // use ann search
-      std::cout<<"1"<<endl;
+      //std::cout<<"1"<<endl;
 
       std::vector<Value> vec_result;
       IvfflatIndex * ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
@@ -514,7 +519,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
     } else {
 
-      std::cout<<"2"<<endl;
+      //std::cout<<"2"<<endl;
       // search with function result
       // 取出全部Tuple
       Value cmp_value = vec_order_rules.value;
@@ -697,7 +702,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
           int ret = v1_float.compare(v2_float);
           if (ret != 0) {
             // 根据排序方向决定顺序    
-            return ret > 0;
+            return ret < 0;
           }
       
           // 如果所有字段都相等，返回false表示保持当前顺序
@@ -764,7 +769,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   }
   else {
-    std::cout<<"3"<<endl;
+    //std::cout<<"3"<<endl;
 
     while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
       assert(tuple != nullptr);

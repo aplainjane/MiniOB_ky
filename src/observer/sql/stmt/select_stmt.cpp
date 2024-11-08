@@ -78,6 +78,10 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
   std::vector<std::string> expression_alias_set;
   for (int i = 0;i<(int)select_sql.expressions.size();i++) {
     RC rc = expression_binder.bind_expression(select_sql.expressions[i], bound_expressions);
+    if (OB_FAIL(rc)) {
+      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+      return rc;
+    }
     if(strcmp(bound_expressions[i]->alias(), "") != 0)
     {
       string alias=bound_expressions[i]->alias();
@@ -87,10 +91,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       }
       expression_alias_set.push_back(alias);
     }
-    if (OB_FAIL(rc)) {
-      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
-      return rc;
-    }
+    
   }
   for (ConditionSqlNode &condition : select_sql.having_conditions)
   {

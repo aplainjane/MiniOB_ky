@@ -406,7 +406,12 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       )
       {
         order_index = i;
-        table = db->find_table(spec.table_name());
+        if(vec_order_rules.first_attr.relation_name != "")
+          table = db->find_table(vec_order_rules.first_attr.relation_name.c_str());
+        else
+        {
+          break;
+        }
         if (nullptr == table) {
           LOG_WARN("no such table for vec search.");
           return RC::SCHEMA_TABLE_NOT_EXIST;
@@ -591,7 +596,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
                 }, left_vec2[i]);
               }
               result = sqrt(result);
-              v1_tmp = result;
+              v2_tmp = result;
 
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);
@@ -696,7 +701,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
           int ret = v1_float.compare(v2_float);
           if (ret != 0) {
             // 根据排序方向决定顺序    
-            return ret > 0;
+            return ret < 0;
           }
       
           // 如果所有字段都相等，返回false表示保持当前顺序

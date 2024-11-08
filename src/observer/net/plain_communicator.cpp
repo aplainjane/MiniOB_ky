@@ -591,7 +591,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
                 }, left_vec2[i]);
               }
               result = sqrt(result);
-              v1_tmp = result;
+              v2_tmp = result;
 
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);

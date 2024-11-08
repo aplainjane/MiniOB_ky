@@ -108,13 +108,6 @@ function do_init
     ${MAKE_COMMAND} && \
     ${MAKE_COMMAND} install
 
-   # build faiss
-  cd ${TOPDIR}/deps/3rd/faiss && \
-    mkdir -p build && \
-    cd build && \
-    ${CMAKE_COMMAND} .. -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF && \  # 根据需要修改选项
-    ${MAKE_COMMAND} -j4 && \
-    ${MAKE_COMMAND} install
 
 
   cd $current_dir

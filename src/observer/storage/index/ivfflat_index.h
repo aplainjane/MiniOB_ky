@@ -11,7 +11,7 @@ See the Mulan PSL v2 for more details. */
 #pragma once
 
 #include "storage/index/index.h"
-#include <faiss/IndexIVFFlat.h>
+#include "storage/index/IndexIVVFlat.h"
 
 /**
  * @brief ivfflat 向量索引
@@ -32,7 +32,7 @@ public:
 
   RC create(Table *table, const IndexMeta &index_meta, const FieldMeta &field_meta);
   RC open(Table *table, const char *file_name, const IndexMeta &index_meta, const FieldMeta &field_meta) { return RC::UNIMPLEMENTED; };
-  vector<RID> ann_search(const Value &base, size_t limit);
+  vector<Value> ann_search(const Value &base, size_t limit);
 
   RC close();
 
@@ -54,5 +54,6 @@ private:
   int    probes_ = 1;
   int    dim_   = 0;
   vector<RID> rids_;
-  faiss::IndexIVFFlat *index_ = nullptr; // FAISS IVFFlat index
+  vector<Value>  values_;
+  IndexIVFFlat *index_ = nullptr; // FAISS IVFFlat index
 };

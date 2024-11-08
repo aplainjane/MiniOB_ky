@@ -1,39 +1,29 @@
-// // IndexIVFFlat.h
-// #ifndef INDEX_IVF_FLAT_H
-// #define INDEX_IVF_FLAT_H
+#ifndef INDEX_IVF_FLAT_H
+#define INDEX_IVF_FLAT_H
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <iostream>
+#include "storage/index/index.h"
 
-// #include <vector>
-// #include <cmath>
-// #include <algorithm>
-
-// enum DistanceType {
-//     L2_DISTANCE,
-//     COSINE_DISTANCE,
-//     INNER_PRODUCT
-// };
-
-// class IndexIVFFlat {
-// public:
-//     IndexIVFFlat(int dim, int lists, DistanceType distance_name);
-//     ~IndexIVFFlat();
-
-//     void train(size_t n, const float* vectors);
-//     void add(size_t n, const float* vectors);
-//     void search(size_t k, const float* query, size_t nprobe, size_t limit,
-//                 float* distances, long* indices);
-
-//     void setNprobe(size_t nprobe) { nprobe_ = nprobe; }
-
-// private:
-//     int dim_;
-//     int lists_;
-//     DistanceType distance_name_;
-//     size_t nprobe_;
-//     std::vector<std::vector<float>> centroids_;
-//     std::vector<std::vector<std::vector<float>>> vectors_;
-
-//     float computeDistance(const float* v1, const float* v2);
-//     int findNearestCentroid(const float* vector);
-// };
-
-// #endif // INDEX_IVF_FLAT_H
+class IndexIVFFlat {
+public:
+    IndexIVFFlat(int dim, int nlist, FuncOp metric);
+    ~IndexIVFFlat();
+    void train(int n, const float* x);
+    void add(int n, const float* x);
+    void search(int n, const float* x, int k, float* distances, int64_t* indices);
+    void setNProbe(int nprobe) {
+        nprobe_ = nprobe;
+    }
+private:
+    int dim_;
+    int nlist_;
+    int nprobe_;
+    FuncOp metric_;
+    std::vector<std::vector<float>> centroids_;
+    std::vector<std::vector<std::pair<int64_t, std::vector<float>>>> invertedLists_;
+    float distance(const std::vector<float>& a, const std::vector<float>& b) const;
+    void assign(int n, const float* x, std::vector<int>& assignements) const;
+};
+#endif // INDEX_IVF_FLAT_H

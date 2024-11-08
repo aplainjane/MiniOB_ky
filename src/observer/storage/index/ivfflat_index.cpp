@@ -2,8 +2,7 @@
 #include "common/log/log.h"
 #include "storage/table/table.h"
 #include "storage/db/db.h"
-#include <faiss/IndexIVFFlat.h>
-#include <faiss/IndexFlat.h>
+#include "storage/index/IndexIVVFlat.h"
 
 
 RC IvfflatIndex::create(Table *table, const IndexMeta &index_meta, const FieldMeta &field_meta)
@@ -20,18 +19,12 @@ RC IvfflatIndex::create(Table *table, const IndexMeta &index_meta, const FieldMe
   // 特征维度从 field_meta 中获取
   dim_ = (field_meta.len() - 2)/20;
 
-  // 创建 FAISS 索引
-  faiss::Index *quantizer = nullptr;
-
   if (distance_name_ == I2_DISTANCE) {
-    quantizer = new faiss::IndexFlatL2(dim_); // 使用L2距离作为量化器
-    index_ = new faiss::IndexIVFFlat(quantizer, dim_, lists_, faiss::METRIC_L2);
+    index_ = new IndexIVFFlat(dim_, lists_, I2_DISTANCE);
   } else if (distance_name_ == COSINE_DISTANCE) {
-    quantizer = new faiss::IndexFlatIP(dim_); // 使用Cosine距离作为量化器
-    index_ = new faiss::IndexIVFFlat(quantizer, dim_, lists_, faiss::METRIC_INNER_PRODUCT);
+    index_ = new IndexIVFFlat(dim_, lists_, COSINE_DISTANCE);
   } else if (distance_name_ == INNER_PRODUCT) {
-    quantizer = new faiss::IndexFlatIP(dim_); // 使用IP作为量化器
-    index_ = new faiss::IndexIVFFlat(quantizer, dim_, lists_, faiss::METRIC_INNER_PRODUCT);
+    index_ = new IndexIVFFlat(dim_, lists_, INNER_PRODUCT);
   } else {
     return RC::INVALID_ARGUMENT; // 无效的距离类型
   }
@@ -52,6 +45,9 @@ RC IvfflatIndex::create(Table *table, const IndexMeta &index_meta, const FieldMe
     }
 
     char *vec_data = record.data() + field_meta.offset();
+
+    Value *val = new Value(vec_data);
+    values_.push_back(*val);
 
     std::string content(vec_data + 1, vec_data + strlen(vec_data) - 1); // 去掉中括号
     std::istringstream ss(content);
@@ -90,8 +86,8 @@ RC IvfflatIndex::create(Table *table, const IndexMeta &index_meta, const FieldMe
     flat_vector_values.insert(flat_vector_values.end(), vec.begin(), vec.end());
   }
 
-  index_->train(rids_.size(), flat_vector_values.data()); //训练
-  index_->add(rids_.size(), flat_vector_values.data()); //插值
+	index_->train(rids_.size(), flat_vector_values.data()); // 训练
+	index_->add(rids_.size(), flat_vector_values.data()); // 插入
 
   inited_ = true; 
   LOG_INFO(
@@ -110,16 +106,16 @@ RC IvfflatIndex::close()
   return RC::SUCCESS;
 }
 
-std::vector<RID> IvfflatIndex::ann_search(const Value &base, size_t limit) {
+std::vector<Value> IvfflatIndex::ann_search(const Value &base, size_t limit) {
   if (base.attr_type() != AttrType::VECTORS) {
     LOG_ERROR("Invalid base value type for ANN search. Expected VECTORS");
-    return vector<RID>();
+    return vector<Value>();
   };
 
   vector<std::variant<int, float>> base_vector = base.get_vector();
   if (base_vector.size() != dim_) {
     LOG_ERROR("Invalid base vector size for ANN search.");
-    return vector<RID>();
+    return vector<Value>();
   }
 
   // 创建一个 float 向量来存储转换后的数据
@@ -134,23 +130,23 @@ std::vector<RID> IvfflatIndex::ann_search(const Value &base, size_t limit) {
       float_vector.push_back(static_cast<float>(std::get<int>(value)));
     } else {
       LOG_ERROR("Invalid type in base vector.");
-      return vector<RID>();
+      return vector<Value>();
     }
   }
 
-  std::vector<RID> results;
+  std::vector<Value> results;
   std::vector<std::vector<float>> float_results;
   
   std::vector<long> indices(limit);
   std::vector<float> distances(limit); // 接收查询结果的距离
 
-  index_->nprobe = probes_; // 设置查询时探查的簇数量
-  index_->search(1, float_vector.data(), limit, distances.data(), indices.data());
+	index_->setNProbe(probes_); // 设置查询时探查的簇数量
+	index_->search(1, float_vector.data(), limit, distances.data(), indices.data());
 
   for (size_t i = 0; i < limit; i++) {
     long original_index = indices[i];
-    RID rid = rids_[original_index];
-    results.push_back(rid);
+    Value val = values_[original_index];
+    results.push_back(val);
   }
 
   return results;

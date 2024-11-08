@@ -509,6 +509,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     } else {
       // search with function result
       // 取出全部Tuple
+      Value cmp_value = vec_order_rules.value;
       std::vector<std::vector<Value>> tuple_set;
       while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
         std::vector<Value> temp;
@@ -527,13 +528,17 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         rc = writer_->clear();
         return write_state(event, need_disconnect);
       }
+
+      // 获取函数结果
+
+
       // 排序
       std::sort(tuple_set.begin(), tuple_set.end(), 
-        [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
-          // need be used
-          //int target_index = order_index;
-          // const Value& v1 = t1[target_index];
-          // const Value& v2 = t2[target_index];
+        [order_index, order_op, cmp_value](const std::vector<Value>& t1, const std::vector<Value>& t2) {
+
+          int target_index = order_index;
+          const Value& v1 = t1[target_index];
+          const Value& v2 = t2[target_index];
 
           Value v1_float;
           v1_float.set_float(FLT_MAX);
@@ -546,16 +551,93 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
             {
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
-              // need be finished gyf
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              for (int i = 0; i < left_vec1.size(); i++) {
+                std::visit([&result, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec1[i]));
+                
+                  result += pow(left_float - right_float, 2);
+                }, left_vec1[i]);
+              }
+              result = sqrt(result);
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              for (int i = 0; i < left_vec2.size(); i++) {
+                std::visit([&result, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec2[i]));
+                
+                  result += pow(left_float - right_float, 2);
+                }, left_vec2[i]);
+              }
+              result = sqrt(result);
+              v1_tmp = result;
+
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);
-
             } break;
             case COSINE_DISTANCE:
             {
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
-              // need be finished gyf
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              float sumA2 = 0.0f;
+              float sumB2 = 0.0f;
+              float sumAB = 0.0f;
+              for (size_t i = 0; i < left_vec1.size(); i++) {
+                std::visit([&sumA2, &sumB2, &sumAB, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec1[i]));
+                
+                  sumA2 += left_float * left_float;
+                  sumB2 += right_float * right_float;
+                  sumAB += left_float * right_float;
+                }, left_vec1[i]);
+              }
+              result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              sumA2 = 0.0f;
+              sumB2 = 0.0f;
+              sumAB = 0.0f;
+              for (size_t i = 0; i < left_vec2.size(); i++) {
+                std::visit([&sumA2, &sumB2, &sumAB, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec2[i]));
+                
+                  sumA2 += left_float * left_float;
+                  sumB2 += right_float * right_float;
+                  sumAB += left_float * right_float;
+                }, left_vec2[i]);
+              }
+              result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+              v2_tmp = result;
+
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);
             } break;
@@ -563,7 +645,37 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
             {
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
-              // need be finished gyf
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              for (int i = 0; i < left_vec1.size(); i++) {
+                std::visit([&result, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  std::visit([&result, left_float](auto&& right_val) {
+                    float right_float = static_cast<float>(right_val);
+                    result += (left_float * right_float);
+                  }, right_vec1[i]);
+                }, left_vec1[i]);
+              }
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              for (int i = 0; i < left_vec2.size(); i++) {
+                std::visit([&result, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  std::visit([&result, left_float](auto&& right_val) {
+                    float right_float = static_cast<float>(right_val);
+                    result += (left_float * right_float);
+                  }, right_vec2[i]);
+                }, left_vec2[i]);
+              }
+              v2_tmp = result;
+
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);
             } break;

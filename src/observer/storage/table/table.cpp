@@ -372,7 +372,7 @@ const char *Table::name() const { return table_meta_.name(); }
 
 const TableMeta &Table::table_meta() const { return table_meta_; }
 
-RC Table::make_record(int value_num, const Value *values, Record &record,bool flag)
+RC Table::make_record(int value_num, const Value *values, Record &record)
 {
   RC rc = RC::SUCCESS;
 
@@ -381,9 +381,6 @@ RC Table::make_record(int value_num, const Value *values, Record &record,bool fl
   if (1 + value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
     return RC::SCHEMA_FIELD_MISSING;
-  }
-  if(flag==true){
-    value_num=value_num;
   }
   // 检查字段类型是否一致
   // 当不一致时，要判断该字段是否允许NULL值

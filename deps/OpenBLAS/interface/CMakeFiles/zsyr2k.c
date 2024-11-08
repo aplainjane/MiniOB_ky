@@ -1,9 +1,0 @@
-#define ASMNAME zsyr2k
-#define ASMFNAME zsyr2k_
-#define NAME zsyr2k_
-#define CNAME zsyr2k
-#define CHAR_NAME "zsyr2k_"
-#define CHAR_CNAME "zsyr2k"
-#define DOUBLE
-#define COMPLEX
-#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syr2k.c"

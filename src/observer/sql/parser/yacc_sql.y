@@ -372,21 +372,21 @@ create_index_stmt:    /*create index 语句的语法解析树*/
     ;
 
 create_vec_index_stmt:
-    CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE DISTANCE EQ func_op COMMA TYPE EQ ID COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
+    CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_VEC_INDEX);
       CreateVecIndexSqlNode &create_vec_index = $$->create_vec_index;
       create_vec_index.index_name = $4;
       create_vec_index.relation_name = $6;
       create_vec_index.attribute_name = $8;
-      create_vec_index.distance_name = $14;
-      create_vec_index.type_name = $18;
+      create_vec_index.distance_name = $18;
+      create_vec_index.type_name = $14;
       create_vec_index.nlist = $22;
       create_vec_index.probes = $26;
       free($4);
       free($6);
       free($8);
-      free($18);
+      free($14);
     }
     ;
 

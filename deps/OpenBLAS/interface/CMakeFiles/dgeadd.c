@@ -1,8 +1,0 @@
-#define ASMNAME dgeadd
-#define ASMFNAME dgeadd_
-#define NAME dgeadd_
-#define CNAME dgeadd
-#define CHAR_NAME "dgeadd_"
-#define CHAR_CNAME "dgeadd"
-#define DOUBLE
-#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/geadd.c"

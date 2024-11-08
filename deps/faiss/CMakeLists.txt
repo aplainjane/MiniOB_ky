@@ -25,6 +25,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 option(FAISS_OPT_LEVEL "" "generic")
 option(FAISS_ENABLE_C_API "Build C API." OFF)
 
+add_subdirectory(../OpenBLAS ${CMAKE_CURRENT_SOURCE_DIR}/../OpenBLAS)
+find_library(BLAS_LIBRARIES OpenBLAS PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../OpenBLAS)
 add_subdirectory(faiss)
 
 if(FAISS_ENABLE_C_API)

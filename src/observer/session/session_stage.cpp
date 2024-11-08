@@ -95,13 +95,14 @@ RC SessionStage::handle_sql(SQLStageEvent *sql_event)
   SqlResult* sql_result = session_event->sql_result();
   sql_result->get_order_rules() = (*(sql_event->sql_node())).selection.order_rules;
   sql_result->get_having_stmt() = (*(sql_event->sql_node())).selection.having_conditions;
-  sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
 
   rc = resolve_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
     LOG_TRACE("failed to do resolve. rc=%s", strrc(rc));
     return rc;
   }
+
+  sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
 
   rc = optimize_stage_.handle_request(sql_event);
   if (rc != RC::UNIMPLEMENTED && rc != RC::SUCCESS) {

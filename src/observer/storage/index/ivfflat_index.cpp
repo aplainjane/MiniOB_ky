@@ -33,8 +33,8 @@ RC IvfflatIndex::create(Table *table, const IndexMeta &index_meta, const FieldMe
   std::vector<std::vector<float>> vector_values;
 
   if (rids_.empty()) {
-    LOG_ERROR("Failed to create index due to no training data.");
-    return RC::INTERNAL;
+    inited_ = true;
+    return RC::SUCCESS;
   }
   for (int i = 0; i < rids_.size(); i++) {
     Record record;

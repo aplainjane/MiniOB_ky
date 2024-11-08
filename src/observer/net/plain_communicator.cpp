@@ -425,9 +425,11 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     }
 
     //std::cout<<have_index<<endl;
-    
-    IvfflatIndex * ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
-    if (ivf_idx->distance_name() != vec_order_rules.type) have_index = false;
+    IvfflatIndex * ivf_idx = nullptr;    
+    if (nullptr!= idx){
+      ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
+      if (ivf_idx->distance_name() != vec_order_rules.type) have_index = false;
+    }
 
     if (have_index) {
       // use ann search

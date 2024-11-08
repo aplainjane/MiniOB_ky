@@ -269,7 +269,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   if (order_rules.size() > 0)
   {
-     std::cout<<"5"<<endl;
+     //std::cout<<"5"<<endl;
     // 获得排序列的索引与标识
     std::vector<int> order_index;
     std::vector<OrderOp> order_op;
@@ -424,11 +424,11 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       }
     }
 
-    std::cout<<have_index<<endl;
+    //std::cout<<have_index<<endl;
 
     if (have_index) {
       // use ann search
-      std::cout<<"1"<<endl;
+      //std::cout<<"1"<<endl;
 
       std::vector<RID> vec_result;
       IvfflatIndex * ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
@@ -518,7 +518,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
     } else {
 
-      std::cout<<"2"<<endl;
+      //std::cout<<"2"<<endl;
       // search with function result
       // 取出全部Tuple
       Value cmp_value = vec_order_rules.value;
@@ -768,7 +768,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   }
   else {
-    std::cout<<"3"<<endl;
+    //std::cout<<"3"<<endl;
 
     while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
       assert(tuple != nullptr);

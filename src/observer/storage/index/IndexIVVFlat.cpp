@@ -69,13 +69,31 @@ void IndexIVFFlat::search(int n, const float* x, int k, float* distances, int64_
         for (int j = 0; j < nprobe_; ++j) {
             nearest_lists[j] = j; // Simplified: should be the nearest clusters
         }
+
+        // 确保 invertedLists_ 已经初始化
+        if (invertedLists_.size() < nprobe_) {
+            return;
+        }
+
         for (int list_id : nearest_lists) {
-            for (const auto& entry : invertedLists_[list_id]) {
-                float dist = distance(query, entry.second);
-                results.push_back({dist, entry.first});
+            // 检查 list_id 是否在有效范围内
+            if (list_id >= 0 && list_id < static_cast<int>(invertedLists_.size())) {
+                for (const auto& entry : invertedLists_[list_id]) {
+                    float dist = distance(query, entry.second);
+                    results.push_back({dist, entry.first});
+                }
+            } else {
+                return;
             }
         }
+
         std::sort(results.begin(), results.end());
+
+        // 确保 results 的大小足够
+        if (results.size() < k) {
+            k = results.size();
+        }
+
         for (int j = 0; j < k; ++j) {
             distances[i * k + j] = results[j].first;
             indices[i * k + j] = results[j].second;

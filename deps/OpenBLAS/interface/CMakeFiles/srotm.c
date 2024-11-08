@@ -4,4 +4,4 @@
 #define CNAME srotm
 #define CHAR_NAME "srotm_"
 #define CHAR_CNAME "srotm"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"

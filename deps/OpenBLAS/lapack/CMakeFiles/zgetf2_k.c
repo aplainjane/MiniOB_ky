@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zgetf2_k"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getf2/zgetf2_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getf2/zgetf2_k.c"

@@ -4,4 +4,4 @@
 #define CNAME snrm2
 #define CHAR_NAME "snrm2_"
 #define CHAR_CNAME "snrm2"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/nrm2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/nrm2.c"

@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtpsv_NLU_"
 #define CHAR_CNAME "dtpsv_NLU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"

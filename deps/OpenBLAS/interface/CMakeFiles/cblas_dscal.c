@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dscal_"
 #define CHAR_CNAME "cblas_dscal"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/scal.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/scal.c"

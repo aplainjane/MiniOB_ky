@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_csyrk_"
 #define CHAR_CNAME "cblas_csyrk"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"

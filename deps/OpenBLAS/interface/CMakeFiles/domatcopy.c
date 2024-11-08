@@ -5,4 +5,4 @@
 #define CHAR_NAME "domatcopy_"
 #define CHAR_CNAME "domatcopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/omatcopy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/omatcopy.c"

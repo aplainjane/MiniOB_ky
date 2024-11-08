@@ -4,4 +4,4 @@
 #define CNAME sgemm_kernel
 #define CHAR_NAME "sgemm_kernel_"
 #define CHAR_CNAME "sgemm_kernel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_kernel_8x4_haswell_2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_kernel_8x4_haswell_2.c"

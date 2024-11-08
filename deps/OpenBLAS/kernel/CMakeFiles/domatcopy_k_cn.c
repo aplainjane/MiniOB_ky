@@ -5,4 +5,4 @@
 #define CHAR_NAME "domatcopy_k_cn_"
 #define CHAR_CNAME "domatcopy_k_cn"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/omatcopy_cn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/omatcopy_cn.c"

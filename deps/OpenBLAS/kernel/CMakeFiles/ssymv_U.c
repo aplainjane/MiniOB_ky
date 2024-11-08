@@ -4,4 +4,4 @@
 #define CNAME ssymv_U
 #define CHAR_NAME "ssymv_U_"
 #define CHAR_CNAME "ssymv_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/symv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/symv_k.c"

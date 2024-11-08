@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zcopy"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/copy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/copy.c"

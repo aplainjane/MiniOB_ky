@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_csbmv_"
 #define CHAR_CNAME "cblas_csbmv"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zsbmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zsbmv.c"

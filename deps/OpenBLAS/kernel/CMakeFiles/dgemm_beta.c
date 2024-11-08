@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgemm_beta_"
 #define CHAR_CNAME "dgemm_beta"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_beta_skylakex.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_beta_skylakex.c"

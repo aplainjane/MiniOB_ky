@@ -5,4 +5,4 @@
 #define CHAR_NAME "dsymm_"
 #define CHAR_CNAME "dsymm"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/symm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/symm.c"

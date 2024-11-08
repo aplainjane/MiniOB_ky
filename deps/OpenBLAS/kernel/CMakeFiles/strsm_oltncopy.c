@@ -6,4 +6,4 @@
 #define CNAME strsm_oltncopy
 #define CHAR_NAME "strsm_oltncopy_"
 #define CHAR_CNAME "strsm_oltncopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_ltcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_ltcopy_4.c"

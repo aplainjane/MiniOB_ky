@@ -7,4 +7,4 @@
 #define CHAR_NAME "cblas_cgerc_"
 #define CHAR_CNAME "cblas_cgerc"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zger.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zger.c"

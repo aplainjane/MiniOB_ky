@@ -7,4 +7,4 @@
 #define CNAME strsm_kernel_RN
 #define CHAR_NAME "strsm_kernel_RN_"
 #define CHAR_CNAME "strsm_kernel_RN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/strsm_kernel_8x4_haswell_RN.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/strsm_kernel_8x4_haswell_RN.c"

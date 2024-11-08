@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_cimatcopy_"
 #define CHAR_CNAME "cblas_cimatcopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zimatcopy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zimatcopy.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "csrot_"
 #define CHAR_CNAME "csrot"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zrot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zrot.c"

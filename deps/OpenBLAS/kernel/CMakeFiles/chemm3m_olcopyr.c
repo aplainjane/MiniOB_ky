@@ -7,4 +7,4 @@
 #define CHAR_NAME "chemm3m_olcopyr_"
 #define CHAR_CNAME "chemm3m_olcopyr"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm3m_lcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm3m_lcopy_8.c"

@@ -4,4 +4,4 @@
 #define CNAME slaswp
 #define CHAR_NAME "slaswp_"
 #define CHAR_CNAME "slaswp"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/laswp.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/laswp.c"

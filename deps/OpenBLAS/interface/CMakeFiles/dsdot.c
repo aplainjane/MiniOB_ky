@@ -4,4 +4,4 @@
 #define CNAME dsdot
 #define CHAR_NAME "dsdot_"
 #define CHAR_CNAME "dsdot"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/dsdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/dsdot.c"

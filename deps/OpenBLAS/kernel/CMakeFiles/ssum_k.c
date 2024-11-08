@@ -4,4 +4,4 @@
 #define CNAME ssum_k
 #define CHAR_NAME "ssum_k_"
 #define CHAR_CNAME "ssum_k"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/sum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/sum.c"

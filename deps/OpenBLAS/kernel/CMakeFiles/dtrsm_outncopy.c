@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrsm_outncopy_"
 #define CHAR_CNAME "dtrsm_outncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_8.c"

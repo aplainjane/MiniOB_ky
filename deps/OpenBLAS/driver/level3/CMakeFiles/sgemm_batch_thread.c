@@ -4,4 +4,4 @@
 #define CNAME sgemm_batch_thread
 #define CHAR_NAME "sgemm_batch_thread_"
 #define CHAR_CNAME "sgemm_batch_thread"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_batch_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_batch_thread.c"

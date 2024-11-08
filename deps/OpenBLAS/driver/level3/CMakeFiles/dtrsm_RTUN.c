@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrsm_RTUN_"
 #define CHAR_CNAME "dtrsm_RTUN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"

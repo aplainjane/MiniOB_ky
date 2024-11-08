@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgemm3m_itcopyb_"
 #define CHAR_CNAME "cgemm3m_itcopyb"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zgemm3m_tcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zgemm3m_tcopy_8.c"

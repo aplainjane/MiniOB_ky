@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctbmv_thread_NLN_"
 #define CHAR_CNAME "ctbmv_thread_NLN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"

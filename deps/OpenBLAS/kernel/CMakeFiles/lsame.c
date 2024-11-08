@@ -5,4 +5,4 @@
 #define CNAME lsame
 #define CHAR_NAME "lsame_"
 #define CHAR_CNAME "lsame"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/lsame.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/lsame.c"

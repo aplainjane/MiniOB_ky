@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrmm_kernel_LN_"
 #define CHAR_CNAME "dtrmm_kernel_LN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dtrmm_kernel_4x8_haswell.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dtrmm_kernel_4x8_haswell.c"

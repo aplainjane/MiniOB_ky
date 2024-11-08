@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zlauu2_U"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/zlauu2_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/zlauu2_U.c"

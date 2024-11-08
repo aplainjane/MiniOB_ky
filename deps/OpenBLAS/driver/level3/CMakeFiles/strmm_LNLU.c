@@ -5,4 +5,4 @@
 #define CNAME strmm_LNLU
 #define CHAR_NAME "strmm_LNLU_"
 #define CHAR_CNAME "strmm_LNLU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"

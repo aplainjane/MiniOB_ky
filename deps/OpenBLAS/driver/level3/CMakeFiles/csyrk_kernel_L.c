@@ -6,4 +6,4 @@
 #define CHAR_NAME "csyrk_kernel_L_"
 #define CHAR_CNAME "csyrk_kernel_L"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_kernel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_kernel.c"

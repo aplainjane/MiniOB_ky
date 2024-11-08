@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_cgemm_batch_"
 #define CHAR_CNAME "cblas_cgemm_batch"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemm_batch.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemm_batch.c"

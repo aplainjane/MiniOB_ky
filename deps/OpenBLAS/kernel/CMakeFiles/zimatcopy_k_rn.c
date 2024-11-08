@@ -7,4 +7,4 @@
 #define CHAR_CNAME "zimatcopy_k_rn"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_rn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_rn.c"

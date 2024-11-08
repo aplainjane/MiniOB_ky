@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrmv_CUN_"
 #define CHAR_CNAME "ctrmv_CUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrmv_L.c"

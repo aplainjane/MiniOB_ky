@@ -6,4 +6,4 @@
 #define CHAR_NAME "dmin_k_"
 #define CHAR_CNAME "dmin_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse2.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse2.S"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "crotg_"
 #define CHAR_CNAME "crotg"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zrotg.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zrotg.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "cpotf2_"
 #define CHAR_CNAME "cpotf2"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/zpotf2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/zpotf2.c"

@@ -4,4 +4,4 @@
 #define CNAME ssyrk
 #define CHAR_NAME "ssyrk_"
 #define CHAR_CNAME "ssyrk"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"

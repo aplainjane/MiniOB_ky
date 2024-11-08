@@ -6,4 +6,4 @@
 #define CNAME sgemm_thread_tn
 #define CHAR_NAME "sgemm_thread_tn_"
 #define CHAR_CNAME "sgemm_thread_tn"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"

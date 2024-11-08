@@ -4,4 +4,4 @@
 #define CNAME openblas_get_config
 #define CHAR_NAME "openblas_get_config_"
 #define CHAR_CNAME "openblas_get_config"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/others/openblas_get_config.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/others/openblas_get_config.c"

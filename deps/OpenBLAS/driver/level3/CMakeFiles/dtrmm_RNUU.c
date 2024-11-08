@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrmm_RNUU_"
 #define CHAR_CNAME "dtrmm_RNUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"

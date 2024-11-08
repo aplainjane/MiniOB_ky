@@ -5,4 +5,4 @@
 #define CHAR_NAME "dtrmm_LNLN_"
 #define CHAR_CNAME "dtrmm_LNLN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"

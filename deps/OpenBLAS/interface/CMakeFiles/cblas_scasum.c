@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_scasum_"
 #define CHAR_CNAME "cblas_scasum"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/asum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/asum.c"

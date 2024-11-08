@@ -5,4 +5,4 @@
 #define CHAR_NAME "dsyrk_kernel_U_"
 #define CHAR_CNAME "dsyrk_kernel_U"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_kernel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_kernel.c"

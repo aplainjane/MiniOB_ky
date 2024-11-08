@@ -6,4 +6,4 @@
 #define CHAR_NAME "dgetrf_single_"
 #define CHAR_CNAME "dgetrf_single"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"

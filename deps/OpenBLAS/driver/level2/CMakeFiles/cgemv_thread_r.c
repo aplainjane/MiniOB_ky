@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgemv_thread_r_"
 #define CHAR_CNAME "cgemv_thread_r"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/gemv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/gemv_thread.c"

@@ -7,4 +7,4 @@
 #define CNAME ssymm_thread_LL
 #define CHAR_NAME "ssymm_thread_LL_"
 #define CHAR_CNAME "ssymm_thread_LL"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"

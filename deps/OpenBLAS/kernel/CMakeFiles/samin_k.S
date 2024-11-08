@@ -6,4 +6,4 @@
 #define CNAME samin_k
 #define CHAR_NAME "samin_k_"
 #define CHAR_CNAME "samin_k"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse.S"

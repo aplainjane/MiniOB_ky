@@ -4,4 +4,4 @@
 #define CNAME slauu2_U
 #define CHAR_NAME "slauu2_U_"
 #define CHAR_CNAME "slauu2_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/lauu2_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/lauu2_U.c"

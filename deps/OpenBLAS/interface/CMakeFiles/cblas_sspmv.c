@@ -5,4 +5,4 @@
 #define CNAME cblas_sspmv
 #define CHAR_NAME "cblas_sspmv_"
 #define CHAR_CNAME "cblas_sspmv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/spmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/spmv.c"

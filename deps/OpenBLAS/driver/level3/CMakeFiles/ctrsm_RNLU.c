@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrsm_RNLU_"
 #define CHAR_CNAME "ctrsm_RNLU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"

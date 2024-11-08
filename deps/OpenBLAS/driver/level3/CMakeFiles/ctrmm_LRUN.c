@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrmm_LRUN_"
 #define CHAR_CNAME "ctrmm_LRUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"

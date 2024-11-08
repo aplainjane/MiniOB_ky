@@ -4,4 +4,4 @@
 #define CNAME sdsdot
 #define CHAR_NAME "sdsdot_"
 #define CHAR_CNAME "sdsdot"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/sdsdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/sdsdot.c"

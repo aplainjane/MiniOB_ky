@@ -7,4 +7,4 @@
 #define CHAR_CNAME "cblas_izmax"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imax.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imax.c"

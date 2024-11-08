@@ -7,4 +7,4 @@
 #define CHAR_CNAME "cblas_zsyr"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zsyr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zsyr.c"

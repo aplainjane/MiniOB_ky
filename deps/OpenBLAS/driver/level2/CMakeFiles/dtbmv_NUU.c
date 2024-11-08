@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtbmv_NUU_"
 #define CHAR_CNAME "dtbmv_NUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_U.c"

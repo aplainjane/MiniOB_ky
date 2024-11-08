@@ -6,4 +6,4 @@
 #define CHAR_NAME "csyr2_L_"
 #define CHAR_CNAME "csyr2_L"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/zsyr2_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/zsyr2_k.c"

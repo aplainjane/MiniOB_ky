@@ -7,4 +7,4 @@
 #define CHAR_NAME "cgemv_s_"
 #define CHAR_CNAME "cgemv_s"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/cgemv_n_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/cgemv_n_4.c"

@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrsv_TUU_"
 #define CHAR_CNAME "dtrsv_TUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_L.c"

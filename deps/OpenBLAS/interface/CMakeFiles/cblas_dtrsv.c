@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dtrsv_"
 #define CHAR_CNAME "cblas_dtrsv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/trsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/trsv.c"

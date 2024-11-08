@@ -5,4 +5,4 @@
 #define CNAME cblas_xerbla
 #define CHAR_NAME "cblas_xerbla_"
 #define CHAR_CNAME "cblas_xerbla"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/xerbla.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/xerbla.c"

@@ -7,4 +7,4 @@
 #define CHAR_NAME "csymm_oltcopy_"
 #define CHAR_CNAME "csymm_oltcopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm_lcopy_2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm_lcopy_2.c"

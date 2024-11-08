@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgemm_nr_"
 #define CHAR_CNAME "cgemm_nr"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"

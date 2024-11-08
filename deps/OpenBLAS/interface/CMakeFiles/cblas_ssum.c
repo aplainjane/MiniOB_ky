@@ -5,4 +5,4 @@
 #define CNAME cblas_ssum
 #define CHAR_NAME "cblas_ssum_"
 #define CHAR_CNAME "cblas_ssum"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/sum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/sum.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dneg_tcopy_"
 #define CHAR_CNAME "dneg_tcopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/neg_tcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/neg_tcopy_4.c"

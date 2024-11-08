@@ -6,4 +6,4 @@
 #define CHAR_NAME "csymv_L_"
 #define CHAR_CNAME "csymv_L"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymv_k.c"

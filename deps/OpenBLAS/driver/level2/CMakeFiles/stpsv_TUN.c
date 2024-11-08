@@ -5,4 +5,4 @@
 #define CNAME stpsv_TUN
 #define CHAR_NAME "stpsv_TUN_"
 #define CHAR_CNAME "stpsv_TUN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"

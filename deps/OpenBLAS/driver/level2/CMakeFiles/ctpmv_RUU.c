@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctpmv_RUU_"
 #define CHAR_CNAME "ctpmv_RUU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpmv_U.c"

@@ -6,4 +6,4 @@
 #define CNAME strmm_ounucopy
 #define CHAR_NAME "strmm_ounucopy_"
 #define CHAR_CNAME "strmm_ounucopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_uncopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_uncopy_4.c"

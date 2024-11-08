@@ -6,4 +6,4 @@
 #define CHAR_NAME "cherk_UN_"
 #define CHAR_CNAME "cherk_UN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/zherk_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/zherk_k.c"

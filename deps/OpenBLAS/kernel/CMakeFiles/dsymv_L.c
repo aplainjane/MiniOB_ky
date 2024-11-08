@@ -6,4 +6,4 @@
 #define CHAR_NAME "dsymv_L_"
 #define CHAR_CNAME "dsymv_L"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/symv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/symv_k.c"

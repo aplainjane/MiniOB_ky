@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrsm_LTUN_"
 #define CHAR_CNAME "ctrsm_LTUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"

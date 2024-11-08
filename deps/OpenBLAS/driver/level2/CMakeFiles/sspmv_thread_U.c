@@ -4,4 +4,4 @@
 #define CNAME sspmv_thread_U
 #define CHAR_NAME "sspmv_thread_U_"
 #define CHAR_CNAME "sspmv_thread_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_thread.c"

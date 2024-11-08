@@ -7,4 +7,4 @@
 #define CHAR_NAME "dsyrk_thread_UT_"
 #define CHAR_CNAME "dsyrk_thread_UT"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dtpsv_NUN_"
 #define CHAR_CNAME "dtpsv_NUN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_U.c"

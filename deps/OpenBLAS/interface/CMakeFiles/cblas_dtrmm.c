@@ -7,4 +7,4 @@
 #define CHAR_NAME "cblas_dtrmm_"
 #define CHAR_CNAME "cblas_dtrmm"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"

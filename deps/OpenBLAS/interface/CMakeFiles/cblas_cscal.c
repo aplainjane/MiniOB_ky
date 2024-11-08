@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_cscal_"
 #define CHAR_CNAME "cblas_cscal"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zscal.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zscal.c"

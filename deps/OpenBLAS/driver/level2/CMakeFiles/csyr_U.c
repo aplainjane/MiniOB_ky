@@ -5,4 +5,4 @@
 #define CHAR_NAME "csyr_U_"
 #define CHAR_CNAME "csyr_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/zsyr_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/zsyr_k.c"

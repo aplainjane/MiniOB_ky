@@ -5,4 +5,4 @@
 #define CHAR_NAME "dscal_k_"
 #define CHAR_CNAME "dscal_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dscal.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dscal.c"

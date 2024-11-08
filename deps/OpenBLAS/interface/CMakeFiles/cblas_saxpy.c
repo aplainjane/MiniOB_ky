@@ -5,4 +5,4 @@
 #define CNAME cblas_saxpy
 #define CHAR_NAME "cblas_saxpy_"
 #define CHAR_CNAME "cblas_saxpy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/axpy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/axpy.c"

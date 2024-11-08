@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrsm_ounncopy_"
 #define CHAR_CNAME "dtrsm_ounncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_uncopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_uncopy_8.c"

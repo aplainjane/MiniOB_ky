@@ -4,4 +4,4 @@
 #define CNAME slauum_L_parallel
 #define CHAR_NAME "slauum_L_parallel_"
 #define CHAR_CNAME "slauum_L_parallel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_L_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_L_parallel.c"

@@ -5,4 +5,4 @@
 #define CNAME ssymm_iltcopy
 #define CHAR_NAME "ssymm_iltcopy_"
 #define CHAR_CNAME "ssymm_iltcopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_lcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_lcopy_8.c"

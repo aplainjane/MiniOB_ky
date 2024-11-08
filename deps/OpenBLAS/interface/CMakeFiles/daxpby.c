@@ -5,4 +5,4 @@
 #define CHAR_NAME "daxpby_"
 #define CHAR_CNAME "daxpby"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/axpby.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/axpby.c"

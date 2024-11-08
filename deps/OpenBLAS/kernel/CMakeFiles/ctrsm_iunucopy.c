@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrsm_iunucopy_"
 #define CHAR_CNAME "ctrsm_iunucopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrsm_uncopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrsm_uncopy_8.c"

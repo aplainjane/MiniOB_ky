@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgetf2_k_"
 #define CHAR_CNAME "cgetf2_k"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getf2/zgetf2_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getf2/zgetf2_k.c"

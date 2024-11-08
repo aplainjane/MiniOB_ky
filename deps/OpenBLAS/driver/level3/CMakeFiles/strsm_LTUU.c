@@ -7,4 +7,4 @@
 #define CNAME strsm_LTUU
 #define CHAR_NAME "strsm_LTUU_"
 #define CHAR_CNAME "strsm_LTUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"

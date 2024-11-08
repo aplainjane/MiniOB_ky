@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/yonf/DB/MiniOB_ky/build_debug/bin/openblas_utest_ext"
-  "/home/yonf/DB/MiniOB_ky/build_debug/bin/openblas_utest_ext.pdb"
+  "/home/link-eye/git/miniob_re/MiniOB_ky/build_debug/bin/openblas_utest_ext"
+  "/home/link-eye/git/miniob_re/MiniOB_ky/build_debug/bin/openblas_utest_ext.pdb"
   "CMakeFiles/openblas_utest_ext.dir/test_extensions/common.c.o"
   "CMakeFiles/openblas_utest_ext.dir/test_extensions/common.c.o.d"
   "CMakeFiles/openblas_utest_ext.dir/test_extensions/test_caxpby.c.o"

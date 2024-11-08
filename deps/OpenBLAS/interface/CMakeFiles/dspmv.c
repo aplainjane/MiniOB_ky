@@ -5,4 +5,4 @@
 #define CHAR_NAME "dspmv_"
 #define CHAR_CNAME "dspmv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/spmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/spmv.c"

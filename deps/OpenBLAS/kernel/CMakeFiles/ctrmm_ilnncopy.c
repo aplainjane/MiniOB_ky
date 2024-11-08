@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrmm_ilnncopy_"
 #define CHAR_CNAME "ctrmm_ilnncopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_lncopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_lncopy_8.c"

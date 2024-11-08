@@ -5,4 +5,4 @@
 #define CHAR_NAME "chemm_iutcopy_"
 #define CHAR_CNAME "chemm_iutcopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm_utcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm_utcopy_8.c"

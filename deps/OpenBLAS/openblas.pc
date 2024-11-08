@@ -10,4 +10,4 @@ Description: OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD v
 Version: 0.3.28.dev
 URL: https://github.com/OpenMathLib/OpenBLAS
 Libs: -L${libdir} -l${libnameprefix}openblas${libnamesuffix}${libsuffix} 
-Cflags: -I${includedir}  
+Cflags: -I${includedir} -fopenmp 

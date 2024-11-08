@@ -5,4 +5,4 @@
 #define CHAR_NAME "comatcopy_k_cn_"
 #define CHAR_CNAME "comatcopy_k_cn"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/zomatcopy_cn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/zomatcopy_cn.c"

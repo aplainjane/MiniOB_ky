@@ -6,4 +6,4 @@
 #define CHAR_NAME "cimatcopy_k_ctc_"
 #define CHAR_CNAME "cimatcopy_k_ctc"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_ctc.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_ctc.c"

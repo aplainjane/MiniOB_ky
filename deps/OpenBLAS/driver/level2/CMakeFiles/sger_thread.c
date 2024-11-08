@@ -4,4 +4,4 @@
 #define CNAME sger_thread
 #define CHAR_NAME "sger_thread_"
 #define CHAR_CNAME "sger_thread"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ger_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ger_thread.c"

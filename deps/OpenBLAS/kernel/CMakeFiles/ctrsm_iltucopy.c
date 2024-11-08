@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrsm_iltucopy_"
 #define CHAR_CNAME "ctrsm_iltucopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrsm_ltcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrsm_ltcopy_8.c"

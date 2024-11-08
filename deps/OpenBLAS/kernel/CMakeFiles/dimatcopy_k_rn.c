@@ -6,4 +6,4 @@
 #define CHAR_NAME "dimatcopy_k_rn_"
 #define CHAR_CNAME "dimatcopy_k_rn"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/imatcopy_rn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/imatcopy_rn.c"

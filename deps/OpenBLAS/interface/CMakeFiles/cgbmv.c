@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgbmv_"
 #define CHAR_CNAME "cgbmv"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zgbmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zgbmv.c"

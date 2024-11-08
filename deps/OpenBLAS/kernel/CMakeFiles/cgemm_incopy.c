@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgemm_incopy_"
 #define CHAR_CNAME "cgemm_incopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zgemm_ncopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zgemm_ncopy_8.c"

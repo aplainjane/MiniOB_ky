@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrmm_LTLU_"
 #define CHAR_CNAME "ctrmm_LTLU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_L.c"

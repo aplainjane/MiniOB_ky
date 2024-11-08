@@ -6,4 +6,4 @@
 #define CHAR_NAME "csymm3m_iucopyr_"
 #define CHAR_CNAME "csymm3m_iucopyr"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm3m_ucopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm3m_ucopy_8.c"

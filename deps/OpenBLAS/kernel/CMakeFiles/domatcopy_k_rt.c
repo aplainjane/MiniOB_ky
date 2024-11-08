@@ -6,4 +6,4 @@
 #define CHAR_NAME "domatcopy_k_rt_"
 #define CHAR_CNAME "domatcopy_k_rt"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/omatcopy_rt.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/omatcopy_rt.c"

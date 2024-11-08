@@ -5,4 +5,4 @@
 #define CHAR_NAME "cpotrf_L_single_"
 #define CHAR_CNAME "cpotrf_L_single"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/potrf/potrf_L_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/potrf/potrf_L_single.c"

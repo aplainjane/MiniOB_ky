@@ -6,4 +6,4 @@
 #define CHAR_NAME "ccopy_k_"
 #define CHAR_CNAME "ccopy_k"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zcopy_sse.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zcopy_sse.S"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgemm_small_matrix_permit_"
 #define CHAR_CNAME "dgemm_small_matrix_permit"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/gemm_small_matrix_permit.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/gemm_small_matrix_permit.c"

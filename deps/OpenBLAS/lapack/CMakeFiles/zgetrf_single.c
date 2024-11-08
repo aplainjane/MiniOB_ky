@@ -7,4 +7,4 @@
 #define CHAR_CNAME "zgetrf_single"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"

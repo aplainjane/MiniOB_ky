@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgemv_"
 #define CHAR_CNAME "dgemv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemv.c"

@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrtri_UU_single_"
 #define CHAR_CNAME "ctrtri_UU_single"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"

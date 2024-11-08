@@ -7,4 +7,4 @@
 #define CHAR_CNAME "cblas_zomatcopy"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zomatcopy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zomatcopy.c"

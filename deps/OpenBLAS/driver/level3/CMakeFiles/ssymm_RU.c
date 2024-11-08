@@ -6,4 +6,4 @@
 #define CNAME ssymm_RU
 #define CHAR_NAME "ssymm_RU_"
 #define CHAR_CNAME "ssymm_RU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"

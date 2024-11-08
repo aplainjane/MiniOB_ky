@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrsv_TUU_"
 #define CHAR_CNAME "ctrsv_TUU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrsv_L.c"

@@ -4,4 +4,4 @@
 #define CNAME stpsv_NLN
 #define CHAR_NAME "stpsv_NLN_"
 #define CHAR_CNAME "stpsv_NLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"

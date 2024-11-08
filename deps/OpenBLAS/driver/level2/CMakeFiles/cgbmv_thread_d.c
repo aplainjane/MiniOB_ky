@@ -8,4 +8,4 @@
 #define CHAR_NAME "cgbmv_thread_d_"
 #define CHAR_CNAME "cgbmv_thread_d"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"

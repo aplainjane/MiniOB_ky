@@ -8,4 +8,4 @@
 #define CHAR_CNAME "zsymm3m_oucopyi"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm3m_ucopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm3m_ucopy_4.c"

@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrsm_kernel_RT_"
 #define CHAR_CNAME "dtrsm_kernel_RT"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/trsm_kernel_RT.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/trsm_kernel_RT.c"

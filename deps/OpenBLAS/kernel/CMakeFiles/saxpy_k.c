@@ -4,4 +4,4 @@
 #define CNAME saxpy_k
 #define CHAR_NAME "saxpy_k_"
 #define CHAR_CNAME "saxpy_k"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/saxpy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/saxpy.c"

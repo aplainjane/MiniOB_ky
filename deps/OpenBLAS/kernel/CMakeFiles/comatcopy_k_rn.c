@@ -6,4 +6,4 @@
 #define CHAR_NAME "comatcopy_k_rn_"
 #define CHAR_CNAME "comatcopy_k_rn"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/zomatcopy_rn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../arm/zomatcopy_rn.c"

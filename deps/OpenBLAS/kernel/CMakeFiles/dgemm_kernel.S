@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgemm_kernel_"
 #define CHAR_CNAME "dgemm_kernel"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_kernel_4x8_haswell.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_kernel_4x8_haswell.S"

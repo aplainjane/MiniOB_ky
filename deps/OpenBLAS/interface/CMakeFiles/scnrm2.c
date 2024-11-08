@@ -5,4 +5,4 @@
 #define CHAR_NAME "scnrm2_"
 #define CHAR_CNAME "scnrm2"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/nrm2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/nrm2.c"

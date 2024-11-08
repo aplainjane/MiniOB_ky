@@ -5,4 +5,4 @@
 #define CHAR_NAME "cspr2_"
 #define CHAR_CNAME "cspr2"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zspr2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zspr2.c"

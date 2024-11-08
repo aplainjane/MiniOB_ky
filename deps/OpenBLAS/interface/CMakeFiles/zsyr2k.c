@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zsyr2k"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syr2k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syr2k.c"

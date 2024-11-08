@@ -5,4 +5,4 @@
 #define CHAR_NAME "ctrsv_"
 #define CHAR_CNAME "ctrsv"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/ztrsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/ztrsv.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dswap_"
 #define CHAR_CNAME "dswap"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/swap.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/swap.c"

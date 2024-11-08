@@ -6,4 +6,4 @@
 #define CNAME stpsv_TUU
 #define CHAR_NAME "stpsv_TUU_"
 #define CHAR_CNAME "stpsv_TUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpsv_L.c"

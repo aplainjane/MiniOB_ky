@@ -7,4 +7,4 @@
 #define CHAR_NAME "camin_"
 #define CHAR_CNAME "camin"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/max.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/max.c"

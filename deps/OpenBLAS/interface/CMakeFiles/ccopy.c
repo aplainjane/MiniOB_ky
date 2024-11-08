@@ -5,4 +5,4 @@
 #define CHAR_NAME "ccopy_"
 #define CHAR_CNAME "ccopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/copy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/copy.c"

@@ -4,4 +4,4 @@
 #define CNAME stpsv
 #define CHAR_NAME "stpsv_"
 #define CHAR_CNAME "stpsv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/tpsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/tpsv.c"

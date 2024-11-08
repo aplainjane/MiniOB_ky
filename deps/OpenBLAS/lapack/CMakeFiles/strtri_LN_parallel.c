@@ -4,4 +4,4 @@
 #define CNAME strtri_LN_parallel
 #define CHAR_NAME "strtri_LN_parallel_"
 #define CHAR_CNAME "strtri_LN_parallel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_L_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_L_parallel.c"

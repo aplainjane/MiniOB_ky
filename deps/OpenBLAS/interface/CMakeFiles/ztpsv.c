@@ -6,4 +6,4 @@
 #define CHAR_CNAME "ztpsv"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/ztpsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/ztpsv.c"

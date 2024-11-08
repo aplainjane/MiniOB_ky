@@ -4,4 +4,4 @@
 #define CNAME gemm_thread_variable
 #define CHAR_NAME "gemm_thread_variable_"
 #define CHAR_CNAME "gemm_thread_variable"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_thread_variable.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_thread_variable.c"

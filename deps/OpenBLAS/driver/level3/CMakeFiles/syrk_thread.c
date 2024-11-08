@@ -4,4 +4,4 @@
 #define CNAME syrk_thread
 #define CHAR_NAME "syrk_thread_"
 #define CHAR_CNAME "syrk_thread"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_thread.c"

@@ -4,4 +4,4 @@
 #define CNAME sgesv
 #define CHAR_NAME "sgesv_"
 #define CHAR_CNAME "sgesv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/gesv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/gesv.c"

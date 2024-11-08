@@ -5,4 +5,4 @@
 #define CNAME slaswp_minus
 #define CHAR_NAME "slaswp_minus_"
 #define CHAR_CNAME "slaswp_minus"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/laswp/generic/laswp_k_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/laswp/generic/laswp_k_4.c"

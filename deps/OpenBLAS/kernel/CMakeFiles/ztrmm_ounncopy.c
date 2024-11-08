@@ -7,4 +7,4 @@
 #define CHAR_CNAME "ztrmm_ounncopy"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_uncopy_2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_uncopy_2.c"

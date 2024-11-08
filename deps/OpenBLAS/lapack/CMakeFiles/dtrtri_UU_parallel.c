@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrtri_UU_parallel_"
 #define CHAR_CNAME "dtrtri_UU_parallel"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_parallel.c"

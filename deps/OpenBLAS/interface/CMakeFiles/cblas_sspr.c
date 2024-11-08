@@ -5,4 +5,4 @@
 #define CNAME cblas_sspr
 #define CHAR_NAME "cblas_sspr_"
 #define CHAR_CNAME "cblas_sspr"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/spr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/spr.c"

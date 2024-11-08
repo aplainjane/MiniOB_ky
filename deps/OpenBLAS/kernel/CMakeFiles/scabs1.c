@@ -6,4 +6,4 @@
 #define CNAME scabs1
 #define CHAR_NAME "scabs1_"
 #define CHAR_CNAME "scabs1"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/cabs.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/cabs.c"

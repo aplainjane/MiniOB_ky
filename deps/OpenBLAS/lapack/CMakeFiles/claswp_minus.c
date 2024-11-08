@@ -6,4 +6,4 @@
 #define CHAR_NAME "claswp_minus_"
 #define CHAR_CNAME "claswp_minus"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/laswp/generic/zlaswp_k_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/laswp/generic/zlaswp_k_4.c"

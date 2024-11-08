@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/yonf/DB/MiniOB_ky/build_debug/bin/xzcblat3"
-  "/home/yonf/DB/MiniOB_ky/build_debug/bin/xzcblat3.pdb"
+  "/home/link-eye/git/miniob_re/MiniOB_ky/build_debug/bin/xzcblat3"
+  "/home/link-eye/git/miniob_re/MiniOB_ky/build_debug/bin/xzcblat3.pdb"
   "CMakeFiles/xzcblat3.dir/auxiliary.c.o"
   "CMakeFiles/xzcblat3.dir/auxiliary.c.o.d"
   "CMakeFiles/xzcblat3.dir/c_xerbla.c.o"

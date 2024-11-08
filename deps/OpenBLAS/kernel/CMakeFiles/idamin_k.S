@@ -7,4 +7,4 @@
 #define CHAR_NAME "idamin_k_"
 #define CHAR_CNAME "idamin_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/iamax_sse2.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/iamax_sse2.S"

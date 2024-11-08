@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctbmv_NLU_"
 #define CHAR_CNAME "ctbmv_NLU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbmv_L.c"

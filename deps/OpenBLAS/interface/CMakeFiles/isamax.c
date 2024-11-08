@@ -5,4 +5,4 @@
 #define CNAME isamax
 #define CHAR_NAME "isamax_"
 #define CHAR_CNAME "isamax"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imax.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imax.c"

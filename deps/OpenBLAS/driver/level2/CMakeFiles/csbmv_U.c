@@ -5,4 +5,4 @@
 #define CHAR_NAME "csbmv_U_"
 #define CHAR_CNAME "csbmv_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/zsbmv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/zsbmv_k.c"

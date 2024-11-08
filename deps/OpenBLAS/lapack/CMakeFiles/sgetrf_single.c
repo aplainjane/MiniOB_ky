@@ -5,4 +5,4 @@
 #define CNAME sgetrf_single
 #define CHAR_NAME "sgetrf_single_"
 #define CHAR_CNAME "sgetrf_single"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_single.c"

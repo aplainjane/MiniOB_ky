@@ -5,4 +5,4 @@
 #define CHAR_NAME "dspr_"
 #define CHAR_CNAME "dspr"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/spr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/spr.c"

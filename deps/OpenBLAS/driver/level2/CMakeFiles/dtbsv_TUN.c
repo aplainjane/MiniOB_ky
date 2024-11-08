@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtbsv_TUN_"
 #define CHAR_CNAME "dtbsv_TUN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_L.c"

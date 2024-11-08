@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgeadd_"
 #define CHAR_CNAME "dgeadd"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/geadd.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/geadd.c"

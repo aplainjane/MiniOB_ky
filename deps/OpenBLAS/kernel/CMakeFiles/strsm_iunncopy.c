@@ -4,4 +4,4 @@
 #define CNAME strsm_iunncopy
 #define CHAR_NAME "strsm_iunncopy_"
 #define CHAR_CNAME "strsm_iunncopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_uncopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_uncopy_8.c"

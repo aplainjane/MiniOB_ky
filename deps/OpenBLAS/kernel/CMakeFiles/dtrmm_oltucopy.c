@@ -8,4 +8,4 @@
 #define CHAR_NAME "dtrmm_oltucopy_"
 #define CHAR_CNAME "dtrmm_oltucopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_ltcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_ltcopy_8.c"

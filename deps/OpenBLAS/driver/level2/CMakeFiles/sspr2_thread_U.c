@@ -4,4 +4,4 @@
 #define CNAME sspr2_thread_U
 #define CHAR_NAME "sspr2_thread_U_"
 #define CHAR_CNAME "sspr2_thread_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spr2_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spr2_thread.c"

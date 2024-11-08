@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtpmv_TUU_"
 #define CHAR_CNAME "dtpmv_TUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_L.c"

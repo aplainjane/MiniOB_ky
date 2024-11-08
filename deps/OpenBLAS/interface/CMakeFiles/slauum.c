@@ -4,4 +4,4 @@
 #define CNAME slauum
 #define CHAR_NAME "slauum_"
 #define CHAR_CNAME "slauum"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/lauum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/lauum.c"

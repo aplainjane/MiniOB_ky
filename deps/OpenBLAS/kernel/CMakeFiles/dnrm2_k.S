@@ -5,4 +5,4 @@
 #define CHAR_NAME "dnrm2_k_"
 #define CHAR_CNAME "dnrm2_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/nrm2.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/nrm2.S"

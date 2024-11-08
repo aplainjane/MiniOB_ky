@@ -7,4 +7,4 @@
 #define CHAR_NAME "cblas_cdotu_sub_"
 #define CHAR_CNAME "cblas_cdotu_sub"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"

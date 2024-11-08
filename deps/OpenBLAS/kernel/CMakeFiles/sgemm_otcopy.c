@@ -5,4 +5,4 @@
 #define CNAME sgemm_otcopy
 #define CHAR_NAME "sgemm_otcopy_"
 #define CHAR_CNAME "sgemm_otcopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/gemm_tcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/gemm_tcopy_4.c"

@@ -4,4 +4,4 @@
 #define CNAME sgemm_direct
 #define CHAR_NAME "sgemm_direct_"
 #define CHAR_CNAME "sgemm_direct"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_direct_skylakex.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_direct_skylakex.c"

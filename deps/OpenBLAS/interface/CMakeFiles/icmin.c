@@ -6,4 +6,4 @@
 #define CHAR_NAME "icmin_"
 #define CHAR_CNAME "icmin"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imax.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imax.c"

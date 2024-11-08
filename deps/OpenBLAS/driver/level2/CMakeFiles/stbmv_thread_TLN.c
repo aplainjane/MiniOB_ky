@@ -6,4 +6,4 @@
 #define CNAME stbmv_thread_TLN
 #define CHAR_NAME "stbmv_thread_TLN_"
 #define CHAR_CNAME "stbmv_thread_TLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"

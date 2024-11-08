@@ -7,4 +7,4 @@
 #define CHAR_NAME "cblas_ctrmm_"
 #define CHAR_CNAME "cblas_ctrmm"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"

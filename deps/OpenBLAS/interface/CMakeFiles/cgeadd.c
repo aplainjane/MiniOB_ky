@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgeadd_"
 #define CHAR_CNAME "cgeadd"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zgeadd.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zgeadd.c"

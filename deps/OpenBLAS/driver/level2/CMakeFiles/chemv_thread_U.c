@@ -6,4 +6,4 @@
 #define CHAR_NAME "chemv_thread_U_"
 #define CHAR_CNAME "chemv_thread_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/symv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/symv_thread.c"

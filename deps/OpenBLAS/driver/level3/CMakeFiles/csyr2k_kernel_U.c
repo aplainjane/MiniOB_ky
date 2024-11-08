@@ -5,4 +5,4 @@
 #define CHAR_NAME "csyr2k_kernel_U_"
 #define CHAR_CNAME "csyr2k_kernel_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"

@@ -7,4 +7,4 @@
 #define CHAR_NAME "cher2_M_"
 #define CHAR_CNAME "cher2_M"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/zher2_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/zher2_k.c"

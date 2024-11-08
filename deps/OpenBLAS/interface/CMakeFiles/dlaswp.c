@@ -5,4 +5,4 @@
 #define CHAR_NAME "dlaswp_"
 #define CHAR_CNAME "dlaswp"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/laswp.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/laswp.c"

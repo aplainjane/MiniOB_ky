@@ -5,4 +5,4 @@
 #define CHAR_NAME "dtpsv_"
 #define CHAR_CNAME "dtpsv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/tpsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/tpsv.c"

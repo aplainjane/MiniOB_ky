@@ -7,4 +7,4 @@
 #define CNAME strmv_thread_TLU
 #define CHAR_NAME "strmv_thread_TLU_"
 #define CHAR_CNAME "strmv_thread_TLU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_thread.c"

@@ -5,4 +5,4 @@
 #define CNAME ssymm_LU
 #define CHAR_NAME "ssymm_LU_"
 #define CHAR_CNAME "ssymm_LU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"

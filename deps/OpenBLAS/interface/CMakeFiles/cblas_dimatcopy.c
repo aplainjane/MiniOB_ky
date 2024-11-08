@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dimatcopy_"
 #define CHAR_CNAME "cblas_dimatcopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imatcopy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imatcopy.c"

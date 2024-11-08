@@ -6,4 +6,4 @@
 #define CHAR_NAME "dsymm_iltcopy_"
 #define CHAR_CNAME "dsymm_iltcopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_lcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_lcopy_4.c"

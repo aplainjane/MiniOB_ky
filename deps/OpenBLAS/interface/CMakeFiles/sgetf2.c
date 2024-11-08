@@ -4,4 +4,4 @@
 #define CNAME sgetf2
 #define CHAR_NAME "sgetf2_"
 #define CHAR_CNAME "sgetf2"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/getf2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/getf2.c"

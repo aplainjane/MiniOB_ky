@@ -6,4 +6,4 @@
 #define CNAME stbmv_TUU
 #define CHAR_NAME "stbmv_TUU_"
 #define CHAR_CNAME "stbmv_TUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_L.c"

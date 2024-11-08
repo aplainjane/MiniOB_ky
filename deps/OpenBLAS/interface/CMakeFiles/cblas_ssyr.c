@@ -5,4 +5,4 @@
 #define CNAME cblas_ssyr
 #define CHAR_NAME "cblas_ssyr_"
 #define CHAR_CNAME "cblas_ssyr"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syr.c"

@@ -9,4 +9,4 @@
 #define CHAR_CNAME "zsyrk_thread_LT"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"

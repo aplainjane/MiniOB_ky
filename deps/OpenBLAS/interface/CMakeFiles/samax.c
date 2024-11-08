@@ -5,4 +5,4 @@
 #define CNAME samax
 #define CHAR_NAME "samax_"
 #define CHAR_CNAME "samax"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/max.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/max.c"

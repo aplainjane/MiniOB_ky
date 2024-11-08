@@ -5,4 +5,4 @@
 #define CNAME cblas_smax
 #define CHAR_NAME "cblas_smax_"
 #define CHAR_CNAME "cblas_smax"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/max.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/max.c"

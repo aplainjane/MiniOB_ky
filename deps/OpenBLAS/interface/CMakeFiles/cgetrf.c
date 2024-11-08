@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgetrf_"
 #define CHAR_CNAME "cgetrf"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/zgetrf.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/zgetrf.c"

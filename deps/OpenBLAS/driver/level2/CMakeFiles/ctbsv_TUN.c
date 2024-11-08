@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctbsv_TUN_"
 #define CHAR_CNAME "ctbsv_TUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbsv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbsv_L.c"

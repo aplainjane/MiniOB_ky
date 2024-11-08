@@ -4,4 +4,4 @@
 #define CNAME sgetrs_N_single
 #define CHAR_NAME "sgetrs_N_single_"
 #define CHAR_CNAME "sgetrs_N_single"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrs/getrs_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrs/getrs_single.c"

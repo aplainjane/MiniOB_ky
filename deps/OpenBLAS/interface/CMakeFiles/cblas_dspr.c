@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dspr_"
 #define CHAR_CNAME "cblas_dspr"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/spr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/spr.c"

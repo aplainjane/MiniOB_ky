@@ -4,4 +4,4 @@
 #define CNAME sspr_U
 #define CHAR_NAME "sspr_U_"
 #define CHAR_CNAME "sspr_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spr_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spr_k.c"

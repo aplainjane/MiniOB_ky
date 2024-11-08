@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_ccopy_"
 #define CHAR_CNAME "cblas_ccopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/copy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/copy.c"

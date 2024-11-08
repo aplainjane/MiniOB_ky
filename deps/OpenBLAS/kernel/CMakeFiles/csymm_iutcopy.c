@@ -5,4 +5,4 @@
 #define CHAR_NAME "csymm_iutcopy_"
 #define CHAR_CNAME "csymm_iutcopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm_ucopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymm_ucopy_8.c"

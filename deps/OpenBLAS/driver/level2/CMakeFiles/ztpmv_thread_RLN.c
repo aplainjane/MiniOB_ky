@@ -8,4 +8,4 @@
 #define CHAR_CNAME "ztpmv_thread_RLN"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_thread.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dsum_"
 #define CHAR_CNAME "dsum"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/sum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/sum.c"

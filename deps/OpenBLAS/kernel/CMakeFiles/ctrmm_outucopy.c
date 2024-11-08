@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrmm_outucopy_"
 #define CHAR_CNAME "ctrmm_outucopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_utcopy_2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ztrmm_utcopy_2.c"

@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgemm3m_kernel_"
 #define CHAR_CNAME "cgemm3m_kernel"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/cgemm3m_kernel_8x4_haswell.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/cgemm3m_kernel_8x4_haswell.c"

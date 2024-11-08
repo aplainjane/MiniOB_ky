@@ -5,4 +5,4 @@
 #define CNAME cblas_sgemv
 #define CHAR_NAME "cblas_sgemv_"
 #define CHAR_CNAME "cblas_sgemv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemv.c"

@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctrmv_CLU_"
 #define CHAR_CNAME "ctrmv_CLU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrmv_U.c"

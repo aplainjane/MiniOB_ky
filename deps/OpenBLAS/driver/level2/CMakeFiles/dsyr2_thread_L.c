@@ -6,4 +6,4 @@
 #define CHAR_NAME "dsyr2_thread_L_"
 #define CHAR_CNAME "dsyr2_thread_L"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/syr2_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/syr2_thread.c"

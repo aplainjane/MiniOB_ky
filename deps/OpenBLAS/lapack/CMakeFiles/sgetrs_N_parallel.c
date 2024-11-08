@@ -4,4 +4,4 @@
 #define CNAME sgetrs_N_parallel
 #define CHAR_NAME "sgetrs_N_parallel_"
 #define CHAR_CNAME "sgetrs_N_parallel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrs/getrs_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrs/getrs_parallel.c"

@@ -5,4 +5,4 @@
 #define CNAME cblas_srotmg
 #define CHAR_NAME "cblas_srotmg_"
 #define CHAR_CNAME "cblas_srotmg"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/rotmg.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/rotmg.c"

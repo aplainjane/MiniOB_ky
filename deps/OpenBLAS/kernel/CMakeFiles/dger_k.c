@@ -5,4 +5,4 @@
 #define CHAR_NAME "dger_k_"
 #define CHAR_CNAME "dger_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/ger.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/ger.c"

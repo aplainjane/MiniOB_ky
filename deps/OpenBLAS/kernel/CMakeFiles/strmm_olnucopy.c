@@ -7,4 +7,4 @@
 #define CNAME strmm_olnucopy
 #define CHAR_NAME "strmm_olnucopy_"
 #define CHAR_CNAME "strmm_olnucopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_lncopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_lncopy_4.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgemm_beta_"
 #define CHAR_CNAME "cgemm_beta"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zgemm_beta.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zgemm_beta.S"

@@ -5,4 +5,4 @@
 #define CNAME strmv_thread_NLN
 #define CHAR_NAME "strmv_thread_NLN_"
 #define CHAR_CNAME "strmv_thread_NLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_thread.c"

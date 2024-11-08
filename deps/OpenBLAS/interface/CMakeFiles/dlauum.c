@@ -5,4 +5,4 @@
 #define CHAR_NAME "dlauum_"
 #define CHAR_CNAME "dlauum"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/lauum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/lauum.c"

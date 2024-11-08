@@ -108,7 +108,28 @@ function do_init
     ${MAKE_COMMAND} && \
     ${MAKE_COMMAND} install
 
+   # build faiss
+  cd ${TOPDIR}/deps/3rd/faiss && \
+    mkdir -p build && \
+    cd build && \
+    ${CMAKE_COMMAND} .. -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF && \  # 根据需要修改选项
+    ${MAKE_COMMAND} -j4 && \
+    ${MAKE_COMMAND} install
+
+
   cd $current_dir
+}
+
+function do_musl_init
+{
+  git clone https://github.com/ronchaine/libexecinfo deps/3rd/libexecinfo || return
+  current_dir=$PWD
+
+  MAKE_COMMAND="make --silent"
+  cd ${TOPDIR}/deps/3rd/libexecinfo && \
+    ${MAKE_COMMAND} install && \
+    ${MAKE_COMMAND} clean && rm ${TOPDIR}/deps/3rd/libexecinfo/libexecinfo.so.* && \
+    cd ${current_dir}
 }
 
 function prepare_build_dir
@@ -160,6 +181,9 @@ function main
       ;;
     init)
       do_init
+      ;;
+    musl)
+      do_musl_init
       ;;
     clean)
       do_clean

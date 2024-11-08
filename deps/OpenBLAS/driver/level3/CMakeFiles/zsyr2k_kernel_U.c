@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zsyr2k_kernel_U"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"

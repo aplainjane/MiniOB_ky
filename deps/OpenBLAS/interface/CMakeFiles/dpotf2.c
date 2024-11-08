@@ -5,4 +5,4 @@
 #define CHAR_NAME "dpotf2_"
 #define CHAR_CNAME "dpotf2"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/potf2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/potf2.c"

@@ -5,4 +5,4 @@
 #define CNAME stbsv_TLN
 #define CHAR_NAME "stbsv_TLN_"
 #define CHAR_CNAME "stbsv_TLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_U.c"

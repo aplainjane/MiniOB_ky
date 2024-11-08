@@ -10,4 +10,4 @@
 #define CHAR_CNAME "ztrmm_kernel_LR"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zgemm_kernel_4x2_haswell.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/zgemm_kernel_4x2_haswell.S"

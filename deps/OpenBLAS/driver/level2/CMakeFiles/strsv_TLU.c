@@ -6,4 +6,4 @@
 #define CNAME strsv_TLU
 #define CHAR_NAME "strsv_TLU_"
 #define CHAR_CNAME "strsv_TLU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_U.c"

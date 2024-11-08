@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctrsv_NUN_"
 #define CHAR_CNAME "ctrsv_NUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztrsv_U.c"

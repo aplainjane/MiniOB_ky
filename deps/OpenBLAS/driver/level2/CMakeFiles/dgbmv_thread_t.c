@@ -6,4 +6,4 @@
 #define CHAR_NAME "dgbmv_thread_t_"
 #define CHAR_CNAME "dgbmv_thread_t"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"

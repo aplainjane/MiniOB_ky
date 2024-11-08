@@ -6,4 +6,4 @@
 #define CHAR_NAME "cspr_thread_L_"
 #define CHAR_CNAME "cspr_thread_L"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spr_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spr_thread.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "ctrtri_LN_single_"
 #define CHAR_CNAME "ctrtri_LN_single"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_L_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_L_single.c"

@@ -5,4 +5,4 @@
 #define CNAME cblas_ssymv
 #define CHAR_NAME "cblas_ssymv_"
 #define CHAR_CNAME "cblas_ssymv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/symv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/symv.c"

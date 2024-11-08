@@ -6,4 +6,4 @@
 #define CHAR_NAME "dgemv_t_"
 #define CHAR_CNAME "dgemv_t"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemv_t_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemv_t_4.c"

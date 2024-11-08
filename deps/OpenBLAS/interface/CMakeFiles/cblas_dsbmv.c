@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dsbmv_"
 #define CHAR_CNAME "cblas_dsbmv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/sbmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/sbmv.c"

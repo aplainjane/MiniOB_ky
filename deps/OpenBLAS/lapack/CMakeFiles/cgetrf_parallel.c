@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgetrf_parallel_"
 #define CHAR_CNAME "cgetrf_parallel"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_parallel.c"

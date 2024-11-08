@@ -8,4 +8,4 @@
 #define CHAR_NAME "cblas_cdotc_sub_"
 #define CHAR_CNAME "cblas_cdotc_sub"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"

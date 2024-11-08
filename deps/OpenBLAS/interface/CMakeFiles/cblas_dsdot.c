@@ -5,4 +5,4 @@
 #define CNAME cblas_dsdot
 #define CHAR_NAME "cblas_dsdot_"
 #define CHAR_CNAME "cblas_dsdot"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/dsdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/dsdot.c"

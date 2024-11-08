@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctpsv_RUN_"
 #define CHAR_CNAME "ctpsv_RUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpsv_U.c"

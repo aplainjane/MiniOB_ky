@@ -5,4 +5,4 @@
 #define CNAME sgbmv_thread_t
 #define CHAR_NAME "sgbmv_thread_t_"
 #define CHAR_CNAME "sgbmv_thread_t"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/gbmv_thread.c"

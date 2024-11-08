@@ -5,4 +5,4 @@
 #define CHAR_NAME "dger_thread_"
 #define CHAR_CNAME "dger_thread"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ger_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ger_thread.c"

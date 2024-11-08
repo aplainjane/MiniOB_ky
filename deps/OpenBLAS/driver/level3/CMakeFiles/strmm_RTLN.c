@@ -5,4 +5,4 @@
 #define CNAME strmm_RTLN
 #define CHAR_NAME "strmm_RTLN_"
 #define CHAR_CNAME "strmm_RTLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"

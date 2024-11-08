@@ -5,4 +5,4 @@
 #define CHAR_NAME "dlauu2_L_"
 #define CHAR_CNAME "dlauu2_L"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/lauu2_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/lauu2_L.c"

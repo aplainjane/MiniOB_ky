@@ -5,4 +5,4 @@
 #define CNAME sgetrf_parallel
 #define CHAR_NAME "sgetrf_parallel_"
 #define CHAR_CNAME "sgetrf_parallel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrf/getrf_parallel.c"

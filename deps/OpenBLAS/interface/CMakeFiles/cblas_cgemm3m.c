@@ -7,4 +7,4 @@
 #define CHAR_NAME "cblas_cgemm3m_"
 #define CHAR_CNAME "cblas_cgemm3m"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemm.c"

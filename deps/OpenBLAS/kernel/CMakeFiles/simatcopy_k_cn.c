@@ -4,4 +4,4 @@
 #define CNAME simatcopy_k_cn
 #define CHAR_NAME "simatcopy_k_cn_"
 #define CHAR_CNAME "simatcopy_k_cn"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/imatcopy_cn.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/imatcopy_cn.c"

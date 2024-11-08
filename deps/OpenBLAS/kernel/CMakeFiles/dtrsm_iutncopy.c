@@ -5,4 +5,4 @@
 #define CHAR_NAME "dtrsm_iutncopy_"
 #define CHAR_CNAME "dtrsm_iutncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_4.c"

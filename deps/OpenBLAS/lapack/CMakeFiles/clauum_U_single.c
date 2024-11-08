@@ -5,4 +5,4 @@
 #define CHAR_NAME "clauum_U_single_"
 #define CHAR_CNAME "clauum_U_single"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_U_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_U_single.c"

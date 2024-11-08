@@ -9,4 +9,4 @@
 #define CHAR_NAME "csymm_thread_RL_"
 #define CHAR_CNAME "csymm_thread_RL"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"

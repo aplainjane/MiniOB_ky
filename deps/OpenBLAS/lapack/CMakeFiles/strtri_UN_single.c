@@ -4,4 +4,4 @@
 #define CNAME strtri_UN_single
 #define CHAR_NAME "strtri_UN_single_"
 #define CHAR_CNAME "strtri_UN_single"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"

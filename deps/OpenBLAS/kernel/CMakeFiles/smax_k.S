@@ -4,4 +4,4 @@
 #define CNAME smax_k
 #define CHAR_NAME "smax_k_"
 #define CHAR_CNAME "smax_k"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/amax_sse.S"

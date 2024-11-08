@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_cmax_"
 #define CHAR_CNAME "cblas_cmax"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/max.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/max.c"

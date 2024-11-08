@@ -6,4 +6,4 @@
 #define CNAME strsm_RTLU
 #define CHAR_NAME "strsm_RTLU_"
 #define CHAR_CNAME "strsm_RTLU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"

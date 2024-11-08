@@ -5,4 +5,4 @@
 #define CHAR_NAME "csymv_U_"
 #define CHAR_CNAME "csymv_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zsymv_k.c"

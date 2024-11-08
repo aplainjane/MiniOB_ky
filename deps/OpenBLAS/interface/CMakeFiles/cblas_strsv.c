@@ -5,4 +5,4 @@
 #define CNAME cblas_strsv
 #define CHAR_NAME "cblas_strsv_"
 #define CHAR_CNAME "cblas_strsv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/trsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/trsv.c"

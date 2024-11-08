@@ -4,4 +4,4 @@
 #define CNAME sasum
 #define CHAR_NAME "sasum_"
 #define CHAR_CNAME "sasum"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/asum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/asum.c"

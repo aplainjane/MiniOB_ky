@@ -6,4 +6,4 @@
 #define CHAR_CNAME "zpotf2"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/zpotf2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/zpotf2.c"

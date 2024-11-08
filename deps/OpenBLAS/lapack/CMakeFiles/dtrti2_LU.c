@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrti2_LU_"
 #define CHAR_CNAME "dtrti2_LU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trti2/trti2_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trti2/trti2_L.c"

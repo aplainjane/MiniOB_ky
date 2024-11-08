@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtbmv_thread_TUU_"
 #define CHAR_CNAME "dtbmv_thread_TUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_thread.c"

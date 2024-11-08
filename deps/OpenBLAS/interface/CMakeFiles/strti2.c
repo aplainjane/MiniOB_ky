@@ -4,4 +4,4 @@
 #define CNAME strti2
 #define CHAR_NAME "strti2_"
 #define CHAR_CNAME "strti2"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/trti2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/trti2.c"

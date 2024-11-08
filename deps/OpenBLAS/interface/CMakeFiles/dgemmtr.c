@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgemmtr_"
 #define CHAR_CNAME "dgemmtr"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemm.c"

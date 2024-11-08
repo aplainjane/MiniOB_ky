@@ -5,4 +5,4 @@
 #define CNAME strmm
 #define CHAR_NAME "strmm_"
 #define CHAR_CNAME "strmm"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/trsm.c"

@@ -4,4 +4,4 @@
 #define CNAME sspmv_U
 #define CHAR_NAME "sspmv_U_"
 #define CHAR_CNAME "sspmv_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_k.c"

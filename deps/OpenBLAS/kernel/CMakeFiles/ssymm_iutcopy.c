@@ -4,4 +4,4 @@
 #define CNAME ssymm_iutcopy
 #define CHAR_NAME "ssymm_iutcopy_"
 #define CHAR_CNAME "ssymm_iutcopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_ucopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/symm_ucopy_8.c"

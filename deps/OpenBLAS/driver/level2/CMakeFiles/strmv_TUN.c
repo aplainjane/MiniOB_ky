@@ -5,4 +5,4 @@
 #define CNAME strmv_TUN
 #define CHAR_NAME "strmv_TUN_"
 #define CHAR_CNAME "strmv_TUN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_L.c"

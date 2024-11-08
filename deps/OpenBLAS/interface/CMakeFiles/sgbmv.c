@@ -4,4 +4,4 @@
 #define CNAME sgbmv
 #define CHAR_NAME "sgbmv_"
 #define CHAR_CNAME "sgbmv"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gbmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gbmv.c"

@@ -6,4 +6,4 @@
 #define CNAME strmm_kernel_LN
 #define CHAR_NAME "strmm_kernel_LN_"
 #define CHAR_CNAME "strmm_kernel_LN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_kernel_8x4_haswell.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/sgemm_kernel_8x4_haswell.c"

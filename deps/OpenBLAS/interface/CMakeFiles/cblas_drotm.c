@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_drotm_"
 #define CHAR_CNAME "cblas_drotm"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"

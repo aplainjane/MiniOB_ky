@@ -6,4 +6,4 @@
 #define CHAR_NAME "cspmv_thread_L_"
 #define CHAR_CNAME "cspmv_thread_L"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/spmv_thread.c"

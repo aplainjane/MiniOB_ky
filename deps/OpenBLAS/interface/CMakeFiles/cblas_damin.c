@@ -8,4 +8,4 @@
 #define CHAR_NAME "cblas_damin_"
 #define CHAR_CNAME "cblas_damin"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/max.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/max.c"

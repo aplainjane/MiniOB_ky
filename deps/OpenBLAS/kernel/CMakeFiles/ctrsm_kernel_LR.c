@@ -9,4 +9,4 @@
 #define CHAR_NAME "ctrsm_kernel_LR_"
 #define CHAR_CNAME "ctrsm_kernel_LR"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/trsm_kernel_LN.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/trsm_kernel_LN.c"

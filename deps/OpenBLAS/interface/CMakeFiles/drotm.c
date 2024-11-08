@@ -5,4 +5,4 @@
 #define CHAR_NAME "drotm_"
 #define CHAR_CNAME "drotm"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/rotm.c"

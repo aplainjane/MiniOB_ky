@@ -4,4 +4,4 @@
 #define CNAME stpmv_NUN
 #define CHAR_NAME "stpmv_NUN_"
 #define CHAR_CNAME "stpmv_NUN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_U.c"

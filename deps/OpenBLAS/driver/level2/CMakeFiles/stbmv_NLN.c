@@ -4,4 +4,4 @@
 #define CNAME stbmv_NLN
 #define CHAR_NAME "stbmv_NLN_"
 #define CHAR_CNAME "stbmv_NLN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbmv_L.c"

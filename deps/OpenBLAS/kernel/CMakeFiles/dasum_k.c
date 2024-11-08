@@ -5,4 +5,4 @@
 #define CHAR_NAME "dasum_k_"
 #define CHAR_CNAME "dasum_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dasum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dasum.c"

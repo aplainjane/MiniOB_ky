@@ -9,4 +9,4 @@
 #define CHAR_NAME "dsymm_thread_RL_"
 #define CHAR_CNAME "dsymm_thread_RL"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/symm_k.c"

@@ -5,4 +5,4 @@
 #define CNAME strti2_LU
 #define CHAR_NAME "strti2_LU_"
 #define CHAR_CNAME "strti2_LU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trti2/trti2_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trti2/trti2_L.c"

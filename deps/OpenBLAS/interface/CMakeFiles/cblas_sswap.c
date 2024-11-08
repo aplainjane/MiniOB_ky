@@ -5,4 +5,4 @@
 #define CNAME cblas_sswap
 #define CHAR_NAME "cblas_sswap_"
 #define CHAR_CNAME "cblas_sswap"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/swap.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/swap.c"

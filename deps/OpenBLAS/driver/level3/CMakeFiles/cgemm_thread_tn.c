@@ -7,4 +7,4 @@
 #define CHAR_NAME "cgemm_thread_tn_"
 #define CHAR_CNAME "cgemm_thread_tn"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"

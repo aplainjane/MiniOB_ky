@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_dtpmv_"
 #define CHAR_CNAME "cblas_dtpmv"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/tpmv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/tpmv.c"

@@ -4,4 +4,4 @@
 #define CNAME c_abs
 #define CHAR_NAME "c_abs_"
 #define CHAR_CNAME "c_abs"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/others/abs.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/others/abs.c"

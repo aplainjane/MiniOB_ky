@@ -5,4 +5,4 @@
 #define CHAR_NAME "clauum_L_parallel_"
 #define CHAR_CNAME "clauum_L_parallel"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_L_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauum/lauum_L_parallel.c"

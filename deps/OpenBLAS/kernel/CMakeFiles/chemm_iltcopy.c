@@ -6,4 +6,4 @@
 #define CHAR_NAME "chemm_iltcopy_"
 #define CHAR_CNAME "chemm_iltcopy"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm_ltcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/zhemm_ltcopy_8.c"

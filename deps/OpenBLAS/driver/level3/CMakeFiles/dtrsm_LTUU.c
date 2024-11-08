@@ -8,4 +8,4 @@
 #define CHAR_NAME "dtrsm_LTUU_"
 #define CHAR_CNAME "dtrsm_LTUU"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"

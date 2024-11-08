@@ -6,4 +6,4 @@
 #define CHAR_NAME "dgemm_oncopy_"
 #define CHAR_CNAME "dgemm_oncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_ncopy_8_skylakex.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/dgemm_ncopy_8_skylakex.c"

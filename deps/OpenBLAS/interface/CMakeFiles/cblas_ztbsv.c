@@ -7,4 +7,4 @@
 #define CHAR_CNAME "cblas_ztbsv"
 #define DOUBLE
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/ztbsv.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/ztbsv.c"

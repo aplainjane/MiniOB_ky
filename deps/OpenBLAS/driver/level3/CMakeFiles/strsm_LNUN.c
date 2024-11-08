@@ -5,4 +5,4 @@
 #define CNAME strsm_LNUN
 #define CHAR_NAME "strsm_LNUN_"
 #define CHAR_CNAME "strsm_LNUN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_L.c"

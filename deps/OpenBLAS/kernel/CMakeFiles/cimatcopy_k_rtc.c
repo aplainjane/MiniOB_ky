@@ -7,4 +7,4 @@
 #define CHAR_NAME "cimatcopy_k_rtc_"
 #define CHAR_CNAME "cimatcopy_k_rtc"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_rtc.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/../generic/zimatcopy_rtc.c"

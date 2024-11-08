@@ -7,4 +7,4 @@
 #define CNAME cblas_isamin
 #define CHAR_NAME "cblas_isamin_"
 #define CHAR_CNAME "cblas_isamin"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imax.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imax.c"

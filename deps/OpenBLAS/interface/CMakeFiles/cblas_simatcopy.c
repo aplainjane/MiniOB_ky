@@ -5,4 +5,4 @@
 #define CNAME cblas_simatcopy
 #define CHAR_NAME "cblas_simatcopy_"
 #define CHAR_CNAME "cblas_simatcopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/imatcopy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/imatcopy.c"

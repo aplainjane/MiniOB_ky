@@ -5,4 +5,4 @@
 #define CNAME strsm_iutucopy
 #define CHAR_NAME "strsm_iutucopy_"
 #define CHAR_CNAME "strsm_iutucopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_utcopy_8.c"

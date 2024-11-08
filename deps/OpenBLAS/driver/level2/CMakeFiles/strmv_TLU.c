@@ -6,4 +6,4 @@
 #define CNAME strmv_TLU
 #define CHAR_NAME "strmv_TLU_"
 #define CHAR_CNAME "strmv_TLU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_U.c"

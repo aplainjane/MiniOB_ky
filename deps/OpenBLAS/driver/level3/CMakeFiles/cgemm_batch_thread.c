@@ -5,4 +5,4 @@
 #define CHAR_NAME "cgemm_batch_thread_"
 #define CHAR_CNAME "cgemm_batch_thread"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_batch_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm_batch_thread.c"

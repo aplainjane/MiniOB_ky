@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctbsv_NUU_"
 #define CHAR_CNAME "ctbsv_NUU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztbsv_U.c"

@@ -5,4 +5,4 @@
 #define CHAR_NAME "dsyr2_"
 #define CHAR_CNAME "dsyr2"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syr2.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syr2.c"

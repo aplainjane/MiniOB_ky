@@ -5,4 +5,4 @@
 #define CHAR_NAME "clauu2_U_"
 #define CHAR_CNAME "clauu2_U"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/zlauu2_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/lauu2/zlauu2_U.c"

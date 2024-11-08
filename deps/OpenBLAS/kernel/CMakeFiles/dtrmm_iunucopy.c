@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrmm_iunucopy_"
 #define CHAR_CNAME "dtrmm_iunucopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_uncopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_uncopy_4.c"

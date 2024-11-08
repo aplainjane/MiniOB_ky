@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrmm_ilnncopy_"
 #define CHAR_CNAME "dtrmm_ilnncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_lncopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_lncopy_4.c"

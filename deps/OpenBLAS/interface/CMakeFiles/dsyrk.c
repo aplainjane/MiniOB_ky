@@ -5,4 +5,4 @@
 #define CHAR_NAME "dsyrk_"
 #define CHAR_CNAME "dsyrk"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/syrk.c"

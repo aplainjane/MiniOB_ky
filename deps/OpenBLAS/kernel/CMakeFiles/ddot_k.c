@@ -5,4 +5,4 @@
 #define CHAR_NAME "ddot_k_"
 #define CHAR_CNAME "ddot_k"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/ddot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/ddot.c"

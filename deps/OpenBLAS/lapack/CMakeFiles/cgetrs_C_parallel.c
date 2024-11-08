@@ -6,4 +6,4 @@
 #define CHAR_NAME "cgetrs_C_parallel_"
 #define CHAR_CNAME "cgetrs_C_parallel"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/getrs/zgetrs_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/getrs/zgetrs_parallel.c"

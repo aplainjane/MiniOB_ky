@@ -5,4 +5,4 @@
 #define CNAME cblas_sscal
 #define CHAR_NAME "cblas_sscal_"
 #define CHAR_CNAME "cblas_sscal"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/scal.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/scal.c"

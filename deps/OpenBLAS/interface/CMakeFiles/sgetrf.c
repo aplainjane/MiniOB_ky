@@ -4,4 +4,4 @@
 #define CNAME sgetrf
 #define CHAR_NAME "sgetrf_"
 #define CHAR_CNAME "sgetrf"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrf.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrf.c"

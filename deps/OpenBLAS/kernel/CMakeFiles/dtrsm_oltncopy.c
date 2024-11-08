@@ -7,4 +7,4 @@
 #define CHAR_NAME "dtrsm_oltncopy_"
 #define CHAR_CNAME "dtrsm_oltncopy"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_ltcopy_8.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trsm_ltcopy_8.c"

@@ -5,4 +5,4 @@
 #define CNAME strmm_outncopy
 #define CHAR_NAME "strmm_outncopy_"
 #define CHAR_CNAME "strmm_outncopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_utcopy_4.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/generic/trmm_utcopy_4.c"

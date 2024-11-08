@@ -5,4 +5,4 @@
 #define CNAME ssyr2k_kernel_L
 #define CHAR_NAME "ssyr2k_kernel_L_"
 #define CHAR_CNAME "ssyr2k_kernel_L"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syr2k_kernel.c"

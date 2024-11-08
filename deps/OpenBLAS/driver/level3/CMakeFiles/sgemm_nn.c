@@ -5,4 +5,4 @@
 #define CNAME sgemm_nn
 #define CHAR_NAME "sgemm_nn_"
 #define CHAR_CNAME "sgemm_nn"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/gemm.c"

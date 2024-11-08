@@ -4,4 +4,4 @@
 #define CNAME spotf2_U
 #define CHAR_NAME "spotf2_U_"
 #define CHAR_CNAME "spotf2_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/potf2/potf2_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/potf2/potf2_U.c"

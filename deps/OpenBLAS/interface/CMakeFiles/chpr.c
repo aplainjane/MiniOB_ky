@@ -5,4 +5,4 @@
 #define CHAR_NAME "chpr_"
 #define CHAR_CNAME "chpr"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zhpr.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zhpr.c"

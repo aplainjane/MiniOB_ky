@@ -5,4 +5,4 @@
 #define CNAME strmv_NUU
 #define CHAR_NAME "strmv_NUU_"
 #define CHAR_CNAME "strmv_NUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trmv_U.c"

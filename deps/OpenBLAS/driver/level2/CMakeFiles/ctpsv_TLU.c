@@ -7,4 +7,4 @@
 #define CHAR_NAME "ctpsv_TLU_"
 #define CHAR_CNAME "ctpsv_TLU"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/ztpsv_U.c"

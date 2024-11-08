@@ -5,4 +5,4 @@
 #define CNAME cblas_sasum
 #define CHAR_NAME "cblas_sasum_"
 #define CHAR_CNAME "cblas_sasum"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/asum.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/asum.c"

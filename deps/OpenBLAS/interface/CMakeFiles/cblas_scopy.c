@@ -5,4 +5,4 @@
 #define CNAME cblas_scopy
 #define CHAR_NAME "cblas_scopy_"
 #define CHAR_CNAME "cblas_scopy"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/copy.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/copy.c"

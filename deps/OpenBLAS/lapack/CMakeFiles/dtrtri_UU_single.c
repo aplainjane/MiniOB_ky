@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrtri_UU_single_"
 #define CHAR_CNAME "dtrtri_UU_single"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_single.c"

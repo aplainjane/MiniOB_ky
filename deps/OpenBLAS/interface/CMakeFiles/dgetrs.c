@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgetrs_"
 #define CHAR_CNAME "dgetrs"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrs.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrs.c"

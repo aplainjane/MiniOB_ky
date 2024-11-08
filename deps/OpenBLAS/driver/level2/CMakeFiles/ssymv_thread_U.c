@@ -4,4 +4,4 @@
 #define CNAME ssymv_thread_U
 #define CHAR_NAME "ssymv_thread_U_"
 #define CHAR_CNAME "ssymv_thread_U"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/symv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/symv_thread.c"

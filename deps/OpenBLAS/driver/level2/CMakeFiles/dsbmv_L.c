@@ -6,4 +6,4 @@
 #define CHAR_NAME "dsbmv_L_"
 #define CHAR_CNAME "dsbmv_L"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/sbmv_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/sbmv_k.c"

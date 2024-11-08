@@ -4,4 +4,4 @@
 #define CNAME stbsv_NUN
 #define CHAR_NAME "stbsv_NUN_"
 #define CHAR_CNAME "stbsv_NUN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tbsv_U.c"

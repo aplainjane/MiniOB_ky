@@ -5,4 +5,4 @@
 #define CNAME strtri_UU_parallel
 #define CHAR_NAME "strtri_UU_parallel_"
 #define CHAR_CNAME "strtri_UU_parallel"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_parallel.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/lapack/trtri/trtri_U_parallel.c"

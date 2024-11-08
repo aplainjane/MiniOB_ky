@@ -6,4 +6,4 @@
 #define CHAR_NAME "cblas_cdot_"
 #define CHAR_CNAME "cblas_cdot"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/zdot.c"

@@ -5,4 +5,4 @@
 #define CNAME scopy_k
 #define CHAR_NAME "scopy_k_"
 #define CHAR_CNAME "scopy_k"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/copy_sse.S"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/kernel/x86_64/copy_sse.S"

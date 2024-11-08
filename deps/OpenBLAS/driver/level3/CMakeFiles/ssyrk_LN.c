@@ -5,4 +5,4 @@
 #define CNAME ssyrk_LN
 #define CHAR_NAME "ssyrk_LN_"
 #define CHAR_CNAME "ssyrk_LN"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/syrk_k.c"

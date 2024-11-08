@@ -5,4 +5,4 @@
 #define CNAME cblas_sgemm_batch
 #define CHAR_NAME "cblas_sgemm_batch_"
 #define CHAR_CNAME "cblas_sgemm_batch"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/gemm_batch.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/gemm_batch.c"

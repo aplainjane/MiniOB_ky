@@ -7,4 +7,4 @@
 #define CNAME strmm_RTUU
 #define CHAR_NAME "strmm_RTUU_"
 #define CHAR_CNAME "strmm_RTUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trmm_R.c"

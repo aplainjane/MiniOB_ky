@@ -6,4 +6,4 @@
 #define CHAR_NAME "ctpmv_thread_NUN_"
 #define CHAR_CNAME "ctpmv_thread_NUN"
 #define COMPLEX
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_thread.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/tpmv_thread.c"

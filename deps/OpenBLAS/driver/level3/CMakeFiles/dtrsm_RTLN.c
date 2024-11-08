@@ -6,4 +6,4 @@
 #define CHAR_NAME "dtrsm_RTLN_"
 #define CHAR_CNAME "dtrsm_RTLN"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level3/trsm_R.c"

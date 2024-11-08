@@ -5,4 +5,4 @@
 #define CHAR_NAME "dgetrf_"
 #define CHAR_CNAME "dgetrf"
 #define DOUBLE
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrf.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/lapack/getrf.c"

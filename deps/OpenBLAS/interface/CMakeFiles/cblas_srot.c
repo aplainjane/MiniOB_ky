@@ -5,4 +5,4 @@
 #define CNAME cblas_srot
 #define CHAR_NAME "cblas_srot_"
 #define CHAR_CNAME "cblas_srot"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/rot.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/rot.c"

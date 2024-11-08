@@ -4,4 +4,4 @@
 #define CNAME sgeadd
 #define CHAR_NAME "sgeadd_"
 #define CHAR_CNAME "sgeadd"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/interface/geadd.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/interface/geadd.c"

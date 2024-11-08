@@ -5,4 +5,4 @@
 #define CNAME strsv_NUU
 #define CHAR_NAME "strsv_NUU_"
 #define CHAR_CNAME "strsv_NUU"
-#include "/home/yonf/DB/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_U.c"
+#include "/home/link-eye/git/miniob_re/MiniOB_ky/deps/OpenBLAS/driver/level2/trsv_U.c"

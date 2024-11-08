@@ -41,6 +41,8 @@ public:
 
   RC sync() override { return RC::UNIMPLEMENTED; };
 
+  FuncOp distance_name() const { return distance_name_; }
+
   IndexScanner *create_scanner(const char *left_key, int left_len, bool left_inclusive, const char *right_key,
       int right_len, bool right_inclusive) override { return nullptr; }
 

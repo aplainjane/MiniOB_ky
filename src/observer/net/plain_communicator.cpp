@@ -388,7 +388,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   else if (vec_order_rules.type != NO_Func)
   {
     // 获得排序列的索引与标识
-    int order_index;
+    int order_index = -1;
     FuncOp order_op;
 
     order_op = vec_order_rules.type;

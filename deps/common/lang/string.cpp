@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include <ctype.h>
 #include <errno.h>
 #include <string.h>
-
+#include <cmath>
 #include <iomanip>
 
 #include "common/log/log.h"
@@ -267,18 +267,23 @@ char *substr(const char *s, int n1, int n2)
  * @param v
  * @return
  */
-string double_to_str(double v)
-{
-  char buf[256];
-  snprintf(buf, sizeof(buf), "%.2f", v);
-  size_t len = strlen(buf);
-  while (buf[len - 1] == '0') {
-    len--;
-  }
-  if (buf[len - 1] == '.') {
-    len--;
-  }
+std::string double_to_str(double v) {
+    // 四舍五入到两位小数
+    v = std::round(v * 100) / 100;
 
-  return string(buf, len);
+    char buf[256];
+    snprintf(buf, sizeof(buf), "%.2f", v);
+    size_t len = strlen(buf);
+    
+    // 去除末尾的零
+    while (len > 0 && buf[len - 1] == '0') {
+        len--;
+    }
+    // 去掉小数点
+    if (len > 0 && buf[len - 1] == '.') {
+        len--;
+    }
+
+    return std::string(buf, len);
 }
 }  // namespace common

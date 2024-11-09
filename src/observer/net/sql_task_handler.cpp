@@ -81,6 +81,7 @@ RC SqlTaskHandler::handle_sql(SQLStageEvent *sql_event)
   }
 
   sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
+  sql_result->get_vec_explain_rules() = (*(sql_event->sql_node())).vec_explain;
 
   rc = optimize_stage_.handle_request(sql_event);
   if (rc != RC::UNIMPLEMENTED && rc != RC::SUCCESS) {

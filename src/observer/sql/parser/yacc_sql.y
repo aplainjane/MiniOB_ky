@@ -231,6 +231,7 @@ UnboundAggregateExpr *create_aggregate_expression(const char *aggregate_name,
 %type <sql_node>            rollback_stmt
 %type <sql_node>            load_data_stmt
 %type <sql_node>            explain_stmt
+%type <sql_node>            explain_vec_stmt
 %type <sql_node>            set_variable_stmt
 %type <sql_node>            help_stmt
 %type <sql_node>            exit_stmt
@@ -269,6 +270,7 @@ command_wrapper:
   | rollback_stmt
   | load_data_stmt
   | explain_stmt
+  | explain_vec_stmt
   | set_variable_stmt
   | help_stmt
   | exit_stmt
@@ -1451,12 +1453,21 @@ load_data_stmt:
     ;
 
 explain_stmt:
-    EXPLAIN command_wrapper
+    EXPLAIN ID
     {
       $$ = new ParsedSqlNode(SCF_EXPLAIN);
-      $$->explain.sql_node = std::unique_ptr<ParsedSqlNode>($2);
     }
     ;
+
+explain_vec_stmt:
+    EXPLAIN SELECT expression_list FROM ID where vec_order_by
+    {
+      $$ = new ParsedSqlNode(SCF_VEC_EXPLAIN);
+      $$->vec_explain.table_name = $5;
+      free($5);
+    }
+    ;
+
 
 set_variable_stmt:
     SET ID EQ value

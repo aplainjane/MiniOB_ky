@@ -94,6 +94,12 @@ struct VecOrderByNode
   //std::vector<std::string,std::string>    vector_table_name;           ///< limit clause  
 };
 
+struct VecExplainNode
+{
+  std::string table_name;
+};
+
+
 /**
  * @brief 表示一个条件比较
  * @ingroup SQLParser
@@ -367,6 +373,7 @@ enum SqlCommandFlag
   SCF_HELP,
   SCF_EXIT,
   SCF_EXPLAIN,
+  SCF_VEC_EXPLAIN,
   SCF_SET_VARIABLE,  ///< 设置变量
 };
 /**
@@ -391,6 +398,7 @@ public:
   DescTableSqlNode    desc_table;
   LoadDataSqlNode     load_data;
   ExplainSqlNode      explain;
+  VecExplainNode      vec_explain;
   SetVariableSqlNode  set_variable;
 
 public:

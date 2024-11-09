@@ -245,6 +245,20 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     }
   }
 
+  bool need_zero = false;
+
+  //handle expression zero
+  if(cell_num > 0)
+  {
+    const TupleCellSpec &spec = schema.cell_at(0);
+    string alias = spec.alias();
+    if(cell_num - bit_map_null - sql_result->get_having_stmt().size() == 1 && (alias.find("count")!= string::npos||alias.find("COUNT")!= string::npos))
+    {
+      need_zero = true;
+    }
+  }
+  
+
   if (cell_num > 0) {
     char newline = '\n';
     rc = writer_->writen(&newline, 1);
@@ -382,10 +396,12 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   }
   else {
 
+    bool have_tuple = false;
     while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
       assert(tuple != nullptr);
 
       int cell_num = tuple->cell_num();
+      have_tuple = true;
       for (int i = 0; i < cell_num; i++) {
         bool need_ignore = false;
         for (int t = 0; t < ignored_index.size(); t++) {
@@ -430,6 +446,16 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
         return rc;
       }
     }
+
+
+    if(need_zero&&!have_tuple)
+    {
+      const char *delim = "0";
+      rc = writer_->writen(delim, strlen(delim));
+      char newline = '\n';
+      rc = writer_->writen(&newline, 1);
+    }
+
 
   }
 

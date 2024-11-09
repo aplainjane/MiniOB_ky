@@ -180,83 +180,84 @@
   137         | ORDER BY rel_attr order_op order_by_list
 
   138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
 
-  139 order_by_list: ε
-  140              | COMMA rel_attr order_op order_by_list
+  140 order_by_list: ε
+  141              | COMMA rel_attr order_op order_by_list
 
-  141 order_op: DESC
-  142         | ASC
-  143         | ε
+  142 order_op: DESC
+  143         | ASC
+  144         | ε
 
-  144 where: ε
-  145      | WHERE condition_list
+  145 where: ε
+  146      | WHERE condition_list
 
-  146 condition_list: ε
-  147               | condition
-  148               | condition AND condition_list
-  149               | condition OR condition_list
+  147 condition_list: ε
+  148               | condition
+  149               | condition AND condition_list
+  150               | condition OR condition_list
 
-  150 condition: arith_expr comp_op value
-  151          | arith_expr comp_op rel_attr
-  152          | value comp_op arith_expr
-  153          | rel_attr comp_op arith_expr
-  154          | arith_expr comp_op arith_expr
-  155          | rel_attr comp_op value
-  156          | value comp_op value
-  157          | rel_attr comp_op rel_attr
-  158          | value comp_op rel_attr
-  159          | rel_attr comp_op SUB_QUERY
-  160          | SUB_QUERY comp_op rel_attr
-  161          | SUB_QUERY comp_op SUB_QUERY
-  162          | value comp_op LBRACE value value_list RBRACE
-  163          | rel_attr comp_op LBRACE value value_list RBRACE
-  164          | SUB_QUERY comp_op LBRACE value value_list RBRACE
-  165          | LBRACE value value_list RBRACE comp_op value
-  166          | LBRACE value value_list RBRACE comp_op rel_attr
-  167          | LBRACE value value_list RBRACE comp_op SUB_QUERY
-  168          | LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE
-  169          | aggr_expr comp_op value
-  170          | aggr_expr comp_op rel_attr
-  171          | aggr_expr comp_op aggr_expr
-  172          | value is_null_choice
-  173          | rel_attr is_null_choice
+  151 condition: arith_expr comp_op value
+  152          | arith_expr comp_op rel_attr
+  153          | value comp_op arith_expr
+  154          | rel_attr comp_op arith_expr
+  155          | arith_expr comp_op arith_expr
+  156          | rel_attr comp_op value
+  157          | value comp_op value
+  158          | rel_attr comp_op rel_attr
+  159          | value comp_op rel_attr
+  160          | rel_attr comp_op SUB_QUERY
+  161          | SUB_QUERY comp_op rel_attr
+  162          | SUB_QUERY comp_op SUB_QUERY
+  163          | value comp_op LBRACE value value_list RBRACE
+  164          | rel_attr comp_op LBRACE value value_list RBRACE
+  165          | SUB_QUERY comp_op LBRACE value value_list RBRACE
+  166          | LBRACE value value_list RBRACE comp_op value
+  167          | LBRACE value value_list RBRACE comp_op rel_attr
+  168          | LBRACE value value_list RBRACE comp_op SUB_QUERY
+  169          | LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE
+  170          | aggr_expr comp_op value
+  171          | aggr_expr comp_op rel_attr
+  172          | aggr_expr comp_op aggr_expr
+  173          | value is_null_choice
+  174          | rel_attr is_null_choice
 
-  174 is_null_choice: IS NULL_KY
-  175               | IS NOT NULL_KY
+  175 is_null_choice: IS NULL_KY
+  176               | IS NOT NULL_KY
 
-  176 comp_op: EQ
-  177        | LT
-  178        | GT
-  179        | LE
-  180        | GE
-  181        | NE
-  182        | LIKE
-  183        | NOT LIKE
-  184        | IN
-  185        | NOT IN
-  186        | EXIST
-  187        | NOT EXIST
+  177 comp_op: EQ
+  178        | LT
+  179        | GT
+  180        | LE
+  181        | GE
+  182        | NE
+  183        | LIKE
+  184        | NOT LIKE
+  185        | IN
+  186        | NOT IN
+  187        | EXIST
+  188        | NOT EXIST
 
-  188 func_op: I2_DISTANCE_T
-  189        | COSINE_DISTANCE_T
-  190        | INNER_PRODUCT_T
+  189 func_op: I2_DISTANCE_T
+  190        | COSINE_DISTANCE_T
+  191        | INNER_PRODUCT_T
 
-  191 group_by: ε
-  192         | GROUP BY expression_list
+  192 group_by: ε
+  193         | GROUP BY expression_list
 
-  193 having: ε
-  194       | HAVING condition_list
+  194 having: ε
+  195       | HAVING condition_list
 
-  195 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID
+  196 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID
 
-  196 explain_stmt: EXPLAIN ID
+  197 explain_stmt: EXPLAIN ID
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where vec_order_by
 
-  198 set_variable_stmt: SET ID EQ value
+  199 set_variable_stmt: SET ID EQ value
 
-  199 opt_semicolon: ε
-  200              | SEMICOLON
+  200 opt_semicolon: ε
+  201              | SEMICOLON
 
 
 终结语词，附有它们出现处的规则
@@ -267,28 +268,28 @@
     '-' (45) 80 86 94 98 101 102 104 108 112 116
     '/' (47) 82 96 100 106 110 114 118
     error (256)
-    SEMICOLON (258) 200
-    BY (259) 137 138 192
+    SEMICOLON (258) 201
+    BY (259) 137 138 139 193
     CREATE (260) 33 34 35 37 38 39
     DROP (261) 30 36
-    GROUP (262) 192
-    ORDER (263) 137 138
-    TABLE (264) 30 37 38 39 195
+    GROUP (262) 193
+    ORDER (263) 137 138 139
+    TABLE (264) 30 37 38 39 196
     TABLES (265) 31
     UNIQUE (266) 34
     INDEX (267) 33 34 35 36
     CALC (268) 75
-    SELECT (269) 72 73 74 197
-    ASC (270) 142
-    DESC (271) 32 141
+    SELECT (269) 72 73 74 198
+    ASC (270) 143
+    DESC (271) 32 142
     SHOW (272) 31
     SYNC (273) 26
     INSERT (274) 56
     DELETE (275) 66
     UPDATE (276) 67
-    LBRACE (277) 33 34 35 37 38 44 56 78 88 89 92 93 94 95 96 97 98 99 100 119 120 121 122 123 124 125 126 127 128 138 162 163 164 165 166 167 168
-    RBRACE (278) 33 34 35 37 38 44 56 78 88 89 92 93 94 95 96 97 98 99 100 119 120 121 122 123 124 125 126 127 128 138 162 163 164 165 166 167 168
-    COMMA (279) 35 43 58 69 77 132 138 140
+    LBRACE (277) 33 34 35 37 38 44 56 78 88 89 92 93 94 95 96 97 98 99 100 119 120 121 122 123 124 125 126 127 128 138 139 163 164 165 166 167 168 169
+    RBRACE (278) 33 34 35 37 38 44 56 78 88 89 92 93 94 95 96 97 98 99 100 119 120 121 122 123 124 125 126 127 128 138 139 163 164 165 166 167 168 169
+    COMMA (279) 35 43 58 69 77 132 138 139 141
     TRX_BEGIN (280) 27
     TRX_COMMIT (281) 28
     TRX_ROLLBACK (282) 29
@@ -301,45 +302,45 @@
     HELP (289) 25
     EXIT (290) 24
     DOT (291) 130
-    INTO (292) 56 195
+    INTO (292) 56 196
     VALUES (293) 56
-    FROM (294) 66 73 74 197
-    WHERE (295) 145
-    HAVING (296) 194
-    AND (297) 148
-    OR (298) 149
-    SET (299) 67 198
+    FROM (294) 66 73 74 198
+    WHERE (295) 146
+    HAVING (296) 195
+    AND (297) 149
+    OR (298) 150
+    SET (299) 67 199
     ON (300) 33 34 35 36 135
-    LOAD (301) 195
-    DATA (302) 195
-    INFILE (303) 195
-    EXPLAIN (304) 196 197
+    LOAD (301) 196
+    DATA (302) 196
+    INFILE (303) 196
+    EXPLAIN (304) 197 198
     STORAGE (305) 65
     FORMAT (306) 65
-    NOT (307) 48 175 183 185 187
-    LIKE (308) 182 183
-    IN (309) 184 185
-    IS (310) 174 175
-    EXIST (311) 186 187
-    NULL_KY (312) 47 48 63 174 175
+    NOT (307) 48 176 184 186 188
+    LIKE (308) 183 184
+    IN (309) 185 186
+    IS (310) 175 176
+    EXIST (311) 187 188
+    NULL_KY (312) 47 48 63 175 176
     INNER (313) 134
     JOIN (314) 135
     AS (315) 41
-    EQ (316) 35 65 70 71 176 198
-    LT (317) 177
-    GT (318) 178
-    LE (319) 179
-    GE (320) 180
-    NE (321) 181
-    I2_DISTANCE_T (322) 188
-    COSINE_DISTANCE_T (323) 189
-    INNER_PRODUCT_T (324) 190
+    EQ (316) 35 65 70 71 177 199
+    LT (317) 178
+    GT (318) 179
+    LE (319) 180
+    GE (320) 181
+    NE (321) 182
+    I2_DISTANCE_T (322) 189
+    COSINE_DISTANCE_T (323) 190
+    INNER_PRODUCT_T (324) 191
     WITH (325) 35
     DISTANCE (326) 35
     TYPE (327) 35
     LISTS (328) 35
     PROBES (329) 35
-    LIMIT (330) 138
+    LIMIT (330) 138 139
     SUM (331) 119 124
     AVG (332) 120 125
     COUNT (333) 123 128
@@ -347,9 +348,9 @@
     MIN (335) 122 126
     NUMBER <number> (336) 35 49 59
     FLOAT <floats> (337) 60
-    ID <string> (338) 30 32 33 34 35 36 37 38 39 44 45 56 65 66 67 70 71 73 74 129 130 132 135 195 196 197 198
-    SSS <string> (339) 61 195
-    SUB_QUERY <string> (340) 71 159 160 161 164 167
+    ID <string> (338) 30 32 33 34 35 36 37 38 39 44 45 56 65 66 67 70 71 73 74 129 130 132 135 196 197 198 199
+    SSS <string> (339) 61 196
+    SUB_QUERY <string> (340) 71 160 161 162 165 168
     VECTOR_LIST <string> (341) 62
     UMINUS (342)
 
@@ -417,7 +418,7 @@
         on right: 44 45
     number <number> (112)
         on left: 49
-        on right: 44 138
+        on right: 44 138 139
     type <number> (113)
         on left: 50 51 52 53 54 55
         on right: 44 45
@@ -426,10 +427,10 @@
         on right: 4
     value_list <value_list> (115)
         on left: 57 58
-        on right: 56 58 162 163 164 165 166 167 168
+        on right: 56 58 163 164 165 166 167 168 169
     value <value> (116)
         on left: 59 60 61 62 63
-        on right: 56 58 70 83 90 138 150 152 155 156 158 162 163 164 165 166 167 168 169 172 198
+        on right: 56 58 70 83 90 138 139 151 153 156 157 159 163 164 165 166 167 168 169 170 173 199
     storage_format <string> (117)
         on left: 64 65
         on right: 37
@@ -453,7 +454,7 @@
         on right: 2
     expression_list <expression_list> (124)
         on left: 76 77
-        on right: 72 73 74 75 77 88 119 120 121 122 123 192 197
+        on right: 72 73 74 75 77 88 119 120 121 122 123 193 198
     expression <expression> (125)
         on left: 78 79 80 81 82 83 84 85 86 87 88 89
         on right: 76 77 78 79 80 81 82 86
@@ -462,13 +463,13 @@
         on right: 93 94 95 96 97 98 99 100 102 103 104 105 106 107 108 109 110 115 116 117 118
     arith_expr <expression> (127)
         on left: 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118
-        on right: 92 93 94 95 96 101 103 104 105 106 107 108 109 110 111 112 113 114 150 151 152 153 154
+        on right: 92 93 94 95 96 101 103 104 105 106 107 108 109 110 111 112 113 114 151 152 153 154 155
     aggr_expr <expression> (128)
         on left: 119 120 121 122 123 124 125 126 127 128
-        on right: 87 169 170 171
+        on right: 87 170 171 172
     rel_attr <rel_attr> (129)
         on left: 129 130
-        on right: 84 91 137 138 140 151 153 155 157 158 159 160 163 166 170 173
+        on right: 84 91 137 138 139 141 152 154 156 158 159 160 161 164 167 171 174
     rel_list <relation_list> (130)
         on left: 131 132
         on right: 33 34 73 74 132
@@ -479,52 +480,52 @@
         on left: 136 137
         on right: 73
     vec_order_by <vec_order_by> (133)
-        on left: 138
-        on right: 74 197
+        on left: 138 139
+        on right: 74 198
     order_by_list <order_by_list> (134)
-        on left: 139 140
-        on right: 137 140
+        on left: 140 141
+        on right: 137 141
     order_op <orderOp> (135)
-        on left: 141 142 143
-        on right: 137 140
+        on left: 142 143 144
+        on right: 137 141
     where <condition_list> (136)
-        on left: 144 145
-        on right: 66 67 73 74 197
+        on left: 145 146
+        on right: 66 67 73 74 198
     condition_list <condition_list> (137)
-        on left: 146 147 148 149
-        on right: 135 145 148 149 194
+        on left: 147 148 149 150
+        on right: 135 146 149 150 195
     condition <condition> (138)
-        on left: 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173
-        on right: 147 148 149
+        on left: 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174
+        on right: 148 149 150
     is_null_choice <comp> (139)
-        on left: 174 175
-        on right: 172 173
+        on left: 175 176
+        on right: 173 174
     comp_op <comp> (140)
-        on left: 176 177 178 179 180 181 182 183 184 185 186 187
-        on right: 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171
+        on left: 177 178 179 180 181 182 183 184 185 186 187 188
+        on right: 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172
     func_op <func> (141)
-        on left: 188 189 190
-        on right: 35 88 89 138
+        on left: 189 190 191
+        on right: 35 88 89 138 139
     group_by <expression_list> (142)
-        on left: 191 192
+        on left: 192 193
         on right: 73 74
     having <condition_list> (143)
-        on left: 193 194
+        on left: 194 195
         on right: 73 74
     load_data_stmt <sql_node> (144)
-        on left: 195
+        on left: 196
         on right: 18
     explain_stmt <sql_node> (145)
-        on left: 196
+        on left: 197
         on right: 19
     explain_vec_stmt <sql_node> (146)
-        on left: 197
+        on left: 198
         on right: 20
     set_variable_stmt <sql_node> (147)
-        on left: 198
+        on left: 199
         on right: 21
     opt_semicolon (148)
-        on left: 199 200
+        on left: 200 201
         on right: 1
 
 
@@ -742,22 +743,22 @@
 
 状态 16
 
-  198 set_variable_stmt: SET • ID EQ value
+  199 set_variable_stmt: SET • ID EQ value
 
     ID  偏移，并进入状态 78
 
 
 状态 17
 
-  195 load_data_stmt: LOAD • DATA INFILE SSS INTO TABLE ID
+  196 load_data_stmt: LOAD • DATA INFILE SSS INTO TABLE ID
 
     DATA  偏移，并进入状态 79
 
 
 状态 18
 
-  196 explain_stmt: EXPLAIN • ID
-  197 explain_vec_stmt: EXPLAIN • SELECT expression_list FROM ID where vec_order_by
+  197 explain_stmt: EXPLAIN • ID
+  198 explain_vec_stmt: EXPLAIN • SELECT expression_list FROM ID where vec_order_by
 
     SELECT  偏移，并进入状态 80
     ID      偏移，并进入状态 81
@@ -776,7 +777,7 @@
 
     SEMICOLON  偏移，并进入状态 83
 
-    $default  使用规则 199 以归约 (opt_semicolon)
+    $default  使用规则 200 以归约 (opt_semicolon)
 
     opt_semicolon  转到状态 84
 
@@ -1017,23 +1018,23 @@
 
 状态 51
 
-  188 func_op: I2_DISTANCE_T •
-
-    $default  使用规则 188 以归约 (func_op)
-
-
-状态 52
-
-  189 func_op: COSINE_DISTANCE_T •
+  189 func_op: I2_DISTANCE_T •
 
     $default  使用规则 189 以归约 (func_op)
 
 
-状态 53
+状态 52
 
-  190 func_op: INNER_PRODUCT_T •
+  190 func_op: COSINE_DISTANCE_T •
 
     $default  使用规则 190 以归约 (func_op)
+
+
+状态 53
+
+  191 func_op: INNER_PRODUCT_T •
+
+    $default  使用规则 191 以归约 (func_op)
 
 
 状态 54
@@ -1252,21 +1253,21 @@
 
 状态 78
 
-  198 set_variable_stmt: SET ID • EQ value
+  199 set_variable_stmt: SET ID • EQ value
 
     EQ  偏移，并进入状态 109
 
 
 状态 79
 
-  195 load_data_stmt: LOAD DATA • INFILE SSS INTO TABLE ID
+  196 load_data_stmt: LOAD DATA • INFILE SSS INTO TABLE ID
 
     INFILE  偏移，并进入状态 110
 
 
 状态 80
 
-  197 explain_vec_stmt: EXPLAIN SELECT • expression_list FROM ID where vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT • expression_list FROM ID where vec_order_by
 
     LBRACE             偏移，并进入状态 49
     NULL_KY            偏移，并进入状态 50
@@ -1296,9 +1297,9 @@
 
 状态 81
 
-  196 explain_stmt: EXPLAIN ID •
+  197 explain_stmt: EXPLAIN ID •
 
-    $default  使用规则 196 以归约 (explain_stmt)
+    $default  使用规则 197 以归约 (explain_stmt)
 
 
 状态 82
@@ -1310,9 +1311,9 @@
 
 状态 83
 
-  200 opt_semicolon: SEMICOLON •
+  201 opt_semicolon: SEMICOLON •
 
-    $default  使用规则 200 以归约 (opt_semicolon)
+    $default  使用规则 201 以归约 (opt_semicolon)
 
 
 状态 84
@@ -1763,7 +1764,7 @@
 
     WHERE  偏移，并进入状态 140
 
-    $default  使用规则 144 以归约 (where)
+    $default  使用规则 145 以归约 (where)
 
     where  转到状态 141
 
@@ -1780,7 +1781,7 @@
 
 状态 109
 
-  198 set_variable_stmt: SET ID EQ • value
+  199 set_variable_stmt: SET ID EQ • value
 
     NULL_KY      偏移，并进入状态 50
     NUMBER       偏移，并进入状态 59
@@ -1793,14 +1794,14 @@
 
 状态 110
 
-  195 load_data_stmt: LOAD DATA INFILE • SSS INTO TABLE ID
+  196 load_data_stmt: LOAD DATA INFILE • SSS INTO TABLE ID
 
     SSS  偏移，并进入状态 146
 
 
 状态 111
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list • FROM ID where vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list • FROM ID where vec_order_by
 
     FROM  偏移，并进入状态 147
 
@@ -2035,7 +2036,7 @@
 
 状态 140
 
-  145 where: WHERE • condition_list
+  146 where: WHERE • condition_list
 
     LBRACE       偏移，并进入状态 164
     NULL_KY      偏移，并进入状态 50
@@ -2052,7 +2053,7 @@
     VECTOR_LIST  偏移，并进入状态 63
     '-'          偏移，并进入状态 166
 
-    $default  使用规则 146 以归约 (condition_list)
+    $default  使用规则 147 以归约 (condition_list)
 
     value              转到状态 167
     simple_expression  转到状态 168
@@ -2086,7 +2087,7 @@
     COMMA  偏移，并进入状态 175
     WHERE  偏移，并进入状态 140
 
-    $default  使用规则 144 以归约 (where)
+    $default  使用规则 145 以归约 (where)
 
     where  转到状态 176
 
@@ -2100,21 +2101,21 @@
 
 状态 145
 
-  198 set_variable_stmt: SET ID EQ value •
+  199 set_variable_stmt: SET ID EQ value •
 
-    $default  使用规则 198 以归约 (set_variable_stmt)
+    $default  使用规则 199 以归约 (set_variable_stmt)
 
 
 状态 146
 
-  195 load_data_stmt: LOAD DATA INFILE SSS • INTO TABLE ID
+  196 load_data_stmt: LOAD DATA INFILE SSS • INTO TABLE ID
 
     INTO  偏移，并进入状态 177
 
 
 状态 147
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list FROM • ID where vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list FROM • ID where vec_order_by
 
     ID  偏移，并进入状态 178
 
@@ -2259,10 +2260,10 @@
 状态 164
 
    92 arith_expr: LBRACE • arith_expr RBRACE
-  165 condition: LBRACE • value value_list RBRACE comp_op value
-  166          | LBRACE • value value_list RBRACE comp_op rel_attr
-  167          | LBRACE • value value_list RBRACE comp_op SUB_QUERY
-  168          | LBRACE • value value_list RBRACE comp_op LBRACE value value_list RBRACE
+  166 condition: LBRACE • value value_list RBRACE comp_op value
+  167          | LBRACE • value value_list RBRACE comp_op rel_attr
+  168          | LBRACE • value value_list RBRACE comp_op SUB_QUERY
+  169          | LBRACE • value value_list RBRACE comp_op LBRACE value value_list RBRACE
 
     LBRACE       偏移，并进入状态 196
     NULL_KY      偏移，并进入状态 50
@@ -2281,9 +2282,9 @@
 
 状态 165
 
-  160 condition: SUB_QUERY • comp_op rel_attr
-  161          | SUB_QUERY • comp_op SUB_QUERY
-  164          | SUB_QUERY • comp_op LBRACE value value_list RBRACE
+  161 condition: SUB_QUERY • comp_op rel_attr
+  162          | SUB_QUERY • comp_op SUB_QUERY
+  165          | SUB_QUERY • comp_op LBRACE value value_list RBRACE
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -2322,11 +2323,11 @@
 状态 167
 
    90 simple_expression: value •
-  152 condition: value • comp_op arith_expr
-  156          | value • comp_op value
-  158          | value • comp_op rel_attr
-  162          | value • comp_op LBRACE value value_list RBRACE
-  172          | value • is_null_choice
+  153 condition: value • comp_op arith_expr
+  157          | value • comp_op value
+  159          | value • comp_op rel_attr
+  163          | value • comp_op LBRACE value value_list RBRACE
+  173          | value • is_null_choice
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -2381,9 +2382,9 @@
   112           | arith_expr • '-' arith_expr
   113           | arith_expr • '*' arith_expr
   114           | arith_expr • '/' arith_expr
-  150 condition: arith_expr • comp_op value
-  151          | arith_expr • comp_op rel_attr
-  154          | arith_expr • comp_op arith_expr
+  151 condition: arith_expr • comp_op value
+  152          | arith_expr • comp_op rel_attr
+  155          | arith_expr • comp_op arith_expr
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -2405,9 +2406,9 @@
 
 状态 170
 
-  169 condition: aggr_expr • comp_op value
-  170          | aggr_expr • comp_op rel_attr
-  171          | aggr_expr • comp_op aggr_expr
+  170 condition: aggr_expr • comp_op value
+  171          | aggr_expr • comp_op rel_attr
+  172          | aggr_expr • comp_op aggr_expr
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -2426,12 +2427,12 @@
 状态 171
 
    91 simple_expression: rel_attr •
-  153 condition: rel_attr • comp_op arith_expr
-  155          | rel_attr • comp_op value
-  157          | rel_attr • comp_op rel_attr
-  159          | rel_attr • comp_op SUB_QUERY
-  163          | rel_attr • comp_op LBRACE value value_list RBRACE
-  173          | rel_attr • is_null_choice
+  154 condition: rel_attr • comp_op arith_expr
+  156          | rel_attr • comp_op value
+  158          | rel_attr • comp_op rel_attr
+  160          | rel_attr • comp_op SUB_QUERY
+  164          | rel_attr • comp_op LBRACE value value_list RBRACE
+  174          | rel_attr • is_null_choice
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -2453,21 +2454,21 @@
 
 状态 172
 
-  145 where: WHERE condition_list •
+  146 where: WHERE condition_list •
 
-    $default  使用规则 145 以归约 (where)
+    $default  使用规则 146 以归约 (where)
 
 
 状态 173
 
-  147 condition_list: condition •
-  148               | condition • AND condition_list
-  149               | condition • OR condition_list
+  148 condition_list: condition •
+  149               | condition • AND condition_list
+  150               | condition • OR condition_list
 
     AND  偏移，并进入状态 229
     OR   偏移，并进入状态 230
 
-    $default  使用规则 147 以归约 (condition_list)
+    $default  使用规则 148 以归约 (condition_list)
 
 
 状态 174
@@ -2503,18 +2504,18 @@
 
 状态 177
 
-  195 load_data_stmt: LOAD DATA INFILE SSS INTO • TABLE ID
+  196 load_data_stmt: LOAD DATA INFILE SSS INTO • TABLE ID
 
     TABLE  偏移，并进入状态 234
 
 
 状态 178
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID • where vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID • where vec_order_by
 
     WHERE  偏移，并进入状态 140
 
-    $default  使用规则 144 以归约 (where)
+    $default  使用规则 145 以归约 (where)
 
     where  转到状态 235
 
@@ -2650,7 +2651,7 @@
 
     WHERE  偏移，并进入状态 140
 
-    $default  使用规则 144 以归约 (where)
+    $default  使用规则 145 以归约 (where)
 
     where  转到状态 248
 
@@ -2688,10 +2689,10 @@
 状态 197
 
    90 simple_expression: value •
-  165 condition: LBRACE value • value_list RBRACE comp_op value
-  166          | LBRACE value • value_list RBRACE comp_op rel_attr
-  167          | LBRACE value • value_list RBRACE comp_op SUB_QUERY
-  168          | LBRACE value • value_list RBRACE comp_op LBRACE value value_list RBRACE
+  166 condition: LBRACE value • value_list RBRACE comp_op value
+  167          | LBRACE value • value_list RBRACE comp_op rel_attr
+  168          | LBRACE value • value_list RBRACE comp_op SUB_QUERY
+  169          | LBRACE value • value_list RBRACE comp_op LBRACE value value_list RBRACE
 
     COMMA  偏移，并进入状态 249
 
@@ -2733,9 +2734,9 @@
 
 状态 200
 
-  183 comp_op: NOT • LIKE
-  185        | NOT • IN
-  187        | NOT • EXIST
+  184 comp_op: NOT • LIKE
+  186        | NOT • IN
+  188        | NOT • EXIST
 
     LIKE   偏移，并进入状态 253
     IN     偏移，并进入状态 254
@@ -2744,72 +2745,72 @@
 
 状态 201
 
-  182 comp_op: LIKE •
+  183 comp_op: LIKE •
 
-    $default  使用规则 182 以归约 (comp_op)
+    $default  使用规则 183 以归约 (comp_op)
 
 
 状态 202
 
-  184 comp_op: IN •
+  185 comp_op: IN •
 
-    $default  使用规则 184 以归约 (comp_op)
+    $default  使用规则 185 以归约 (comp_op)
 
 
 状态 203
 
-  186 comp_op: EXIST •
+  187 comp_op: EXIST •
 
-    $default  使用规则 186 以归约 (comp_op)
+    $default  使用规则 187 以归约 (comp_op)
 
 
 状态 204
 
-  176 comp_op: EQ •
-
-    $default  使用规则 176 以归约 (comp_op)
-
-
-状态 205
-
-  177 comp_op: LT •
+  177 comp_op: EQ •
 
     $default  使用规则 177 以归约 (comp_op)
 
 
-状态 206
+状态 205
 
-  178 comp_op: GT •
+  178 comp_op: LT •
 
     $default  使用规则 178 以归约 (comp_op)
 
 
-状态 207
+状态 206
 
-  179 comp_op: LE •
+  179 comp_op: GT •
 
     $default  使用规则 179 以归约 (comp_op)
 
 
-状态 208
+状态 207
 
-  180 comp_op: GE •
+  180 comp_op: LE •
 
     $default  使用规则 180 以归约 (comp_op)
 
 
-状态 209
+状态 208
 
-  181 comp_op: NE •
+  181 comp_op: GE •
 
     $default  使用规则 181 以归约 (comp_op)
 
 
+状态 209
+
+  182 comp_op: NE •
+
+    $default  使用规则 182 以归约 (comp_op)
+
+
 状态 210
 
-  160 condition: SUB_QUERY comp_op • rel_attr
-  161          | SUB_QUERY comp_op • SUB_QUERY
-  164          | SUB_QUERY comp_op • LBRACE value value_list RBRACE
+  161 condition: SUB_QUERY comp_op • rel_attr
+  162          | SUB_QUERY comp_op • SUB_QUERY
+  165          | SUB_QUERY comp_op • LBRACE value value_list RBRACE
 
     LBRACE     偏移，并进入状态 256
     ID         偏移，并进入状态 61
@@ -2871,8 +2872,8 @@
 
 状态 214
 
-  174 is_null_choice: IS • NULL_KY
-  175               | IS • NOT NULL_KY
+  175 is_null_choice: IS • NULL_KY
+  176               | IS • NOT NULL_KY
 
     NOT      偏移，并进入状态 259
     NULL_KY  偏移，并进入状态 260
@@ -2880,17 +2881,17 @@
 
 状态 215
 
-  172 condition: value is_null_choice •
+  173 condition: value is_null_choice •
 
-    $default  使用规则 172 以归约 (condition)
+    $default  使用规则 173 以归约 (condition)
 
 
 状态 216
 
-  152 condition: value comp_op • arith_expr
-  156          | value comp_op • value
-  158          | value comp_op • rel_attr
-  162          | value comp_op • LBRACE value value_list RBRACE
+  153 condition: value comp_op • arith_expr
+  157          | value comp_op • value
+  159          | value comp_op • rel_attr
+  163          | value comp_op • LBRACE value value_list RBRACE
 
     LBRACE       偏移，并进入状态 261
     NULL_KY      偏移，并进入状态 50
@@ -3077,9 +3078,9 @@
 
 状态 225
 
-  150 condition: arith_expr comp_op • value
-  151          | arith_expr comp_op • rel_attr
-  154          | arith_expr comp_op • arith_expr
+  151 condition: arith_expr comp_op • value
+  152          | arith_expr comp_op • rel_attr
+  155          | arith_expr comp_op • arith_expr
 
     LBRACE       偏移，并进入状态 196
     NULL_KY      偏移，并进入状态 50
@@ -3098,9 +3099,9 @@
 
 状态 226
 
-  169 condition: aggr_expr comp_op • value
-  170          | aggr_expr comp_op • rel_attr
-  171          | aggr_expr comp_op • aggr_expr
+  170 condition: aggr_expr comp_op • value
+  171          | aggr_expr comp_op • rel_attr
+  172          | aggr_expr comp_op • aggr_expr
 
     NULL_KY      偏移，并进入状态 50
     SUM          偏移，并进入状态 54
@@ -3121,18 +3122,18 @@
 
 状态 227
 
-  173 condition: rel_attr is_null_choice •
+  174 condition: rel_attr is_null_choice •
 
-    $default  使用规则 173 以归约 (condition)
+    $default  使用规则 174 以归约 (condition)
 
 
 状态 228
 
-  153 condition: rel_attr comp_op • arith_expr
-  155          | rel_attr comp_op • value
-  157          | rel_attr comp_op • rel_attr
-  159          | rel_attr comp_op • SUB_QUERY
-  163          | rel_attr comp_op • LBRACE value value_list RBRACE
+  154 condition: rel_attr comp_op • arith_expr
+  156          | rel_attr comp_op • value
+  158          | rel_attr comp_op • rel_attr
+  160          | rel_attr comp_op • SUB_QUERY
+  164          | rel_attr comp_op • LBRACE value value_list RBRACE
 
     LBRACE       偏移，并进入状态 295
     NULL_KY      偏移，并进入状态 50
@@ -3152,7 +3153,7 @@
 
 状态 229
 
-  148 condition_list: condition AND • condition_list
+  149 condition_list: condition AND • condition_list
 
     LBRACE       偏移，并进入状态 164
     NULL_KY      偏移，并进入状态 50
@@ -3169,7 +3170,7 @@
     VECTOR_LIST  偏移，并进入状态 63
     '-'          偏移，并进入状态 166
 
-    $default  使用规则 146 以归约 (condition_list)
+    $default  使用规则 147 以归约 (condition_list)
 
     value              转到状态 167
     simple_expression  转到状态 168
@@ -3182,7 +3183,7 @@
 
 状态 230
 
-  149 condition_list: condition OR • condition_list
+  150 condition_list: condition OR • condition_list
 
     LBRACE       偏移，并进入状态 164
     NULL_KY      偏移，并进入状态 50
@@ -3199,7 +3200,7 @@
     VECTOR_LIST  偏移，并进入状态 63
     '-'          偏移，并进入状态 166
 
-    $default  使用规则 146 以归约 (condition_list)
+    $default  使用规则 147 以归约 (condition_list)
 
     value              转到状态 167
     simple_expression  转到状态 168
@@ -3233,14 +3234,14 @@
 
 状态 234
 
-  195 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE • ID
+  196 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE • ID
 
     ID  偏移，并进入状态 302
 
 
 状态 235
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where • vec_order_by
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where • vec_order_by
 
     ORDER  偏移，并进入状态 303
 
@@ -3356,7 +3357,7 @@
 
     GROUP  偏移，并进入状态 316
 
-    $default  使用规则 191 以归约 (group_by)
+    $default  使用规则 192 以归约 (group_by)
 
     group_by  转到状态 317
 
@@ -3383,10 +3384,10 @@
 
 状态 251
 
-  165 condition: LBRACE value value_list • RBRACE comp_op value
-  166          | LBRACE value value_list • RBRACE comp_op rel_attr
-  167          | LBRACE value value_list • RBRACE comp_op SUB_QUERY
-  168          | LBRACE value value_list • RBRACE comp_op LBRACE value value_list RBRACE
+  166 condition: LBRACE value value_list • RBRACE comp_op value
+  167          | LBRACE value value_list • RBRACE comp_op rel_attr
+  168          | LBRACE value value_list • RBRACE comp_op SUB_QUERY
+  169          | LBRACE value value_list • RBRACE comp_op LBRACE value value_list RBRACE
 
     RBRACE  偏移，并进入状态 320
 
@@ -3400,28 +3401,28 @@
 
 状态 253
 
-  183 comp_op: NOT LIKE •
+  184 comp_op: NOT LIKE •
 
-    $default  使用规则 183 以归约 (comp_op)
+    $default  使用规则 184 以归约 (comp_op)
 
 
 状态 254
 
-  185 comp_op: NOT IN •
+  186 comp_op: NOT IN •
 
-    $default  使用规则 185 以归约 (comp_op)
+    $default  使用规则 186 以归约 (comp_op)
 
 
 状态 255
 
-  187 comp_op: NOT EXIST •
+  188 comp_op: NOT EXIST •
 
-    $default  使用规则 187 以归约 (comp_op)
+    $default  使用规则 188 以归约 (comp_op)
 
 
 状态 256
 
-  164 condition: SUB_QUERY comp_op LBRACE • value value_list RBRACE
+  165 condition: SUB_QUERY comp_op LBRACE • value value_list RBRACE
 
     NULL_KY      偏移，并进入状态 50
     NUMBER       偏移，并进入状态 59
@@ -3434,36 +3435,36 @@
 
 状态 257
 
-  161 condition: SUB_QUERY comp_op SUB_QUERY •
+  162 condition: SUB_QUERY comp_op SUB_QUERY •
 
-    $default  使用规则 161 以归约 (condition)
+    $default  使用规则 162 以归约 (condition)
 
 
 状态 258
 
-  160 condition: SUB_QUERY comp_op rel_attr •
+  161 condition: SUB_QUERY comp_op rel_attr •
 
-    $default  使用规则 160 以归约 (condition)
+    $default  使用规则 161 以归约 (condition)
 
 
 状态 259
 
-  175 is_null_choice: IS NOT • NULL_KY
+  176 is_null_choice: IS NOT • NULL_KY
 
     NULL_KY  偏移，并进入状态 322
 
 
 状态 260
 
-  174 is_null_choice: IS NULL_KY •
+  175 is_null_choice: IS NULL_KY •
 
-    $default  使用规则 174 以归约 (is_null_choice)
+    $default  使用规则 175 以归约 (is_null_choice)
 
 
 状态 261
 
    92 arith_expr: LBRACE • arith_expr RBRACE
-  162 condition: value comp_op LBRACE • value value_list RBRACE
+  163 condition: value comp_op LBRACE • value value_list RBRACE
 
     LBRACE       偏移，并进入状态 196
     NULL_KY      偏移，并进入状态 50
@@ -3483,13 +3484,13 @@
 状态 262
 
    90 simple_expression: value •
-  156 condition: value comp_op value •
+  157 condition: value comp_op value •
 
     '+'       使用规则 90 以归约 (simple_expression)
     '-'       使用规则 90 以归约 (simple_expression)
     '*'       使用规则 90 以归约 (simple_expression)
     '/'       使用规则 90 以归约 (simple_expression)
-    $default  使用规则 156 以归约 (condition)
+    $default  使用规则 157 以归约 (condition)
 
 
 状态 263
@@ -3506,26 +3507,26 @@
   112           | arith_expr • '-' arith_expr
   113           | arith_expr • '*' arith_expr
   114           | arith_expr • '/' arith_expr
-  152 condition: value comp_op arith_expr •
+  153 condition: value comp_op arith_expr •
 
     '+'  偏移，并进入状态 221
     '-'  偏移，并进入状态 222
     '*'  偏移，并进入状态 223
     '/'  偏移，并进入状态 224
 
-    $default  使用规则 152 以归约 (condition)
+    $default  使用规则 153 以归约 (condition)
 
 
 状态 264
 
    91 simple_expression: rel_attr •
-  158 condition: value comp_op rel_attr •
+  159 condition: value comp_op rel_attr •
 
     '+'       使用规则 91 以归约 (simple_expression)
     '-'       使用规则 91 以归约 (simple_expression)
     '*'       使用规则 91 以归约 (simple_expression)
     '/'       使用规则 91 以归约 (simple_expression)
-    $default  使用规则 158 以归约 (condition)
+    $default  使用规则 159 以归约 (condition)
 
 
 状态 265
@@ -4019,13 +4020,13 @@
 状态 289
 
    90 simple_expression: value •
-  150 condition: arith_expr comp_op value •
+  151 condition: arith_expr comp_op value •
 
     '+'       使用规则 90 以归约 (simple_expression)
     '-'       使用规则 90 以归约 (simple_expression)
     '*'       使用规则 90 以归约 (simple_expression)
     '/'       使用规则 90 以归约 (simple_expression)
-    $default  使用规则 150 以归约 (condition)
+    $default  使用规则 151 以归约 (condition)
 
 
 状态 290
@@ -4042,53 +4043,53 @@
   112           | arith_expr • '-' arith_expr
   113           | arith_expr • '*' arith_expr
   114           | arith_expr • '/' arith_expr
-  154 condition: arith_expr comp_op arith_expr •
+  155 condition: arith_expr comp_op arith_expr •
 
     '+'  偏移，并进入状态 221
     '-'  偏移，并进入状态 222
     '*'  偏移，并进入状态 223
     '/'  偏移，并进入状态 224
 
-    $default  使用规则 154 以归约 (condition)
+    $default  使用规则 155 以归约 (condition)
 
 
 状态 291
 
    91 simple_expression: rel_attr •
-  151 condition: arith_expr comp_op rel_attr •
+  152 condition: arith_expr comp_op rel_attr •
 
     '+'       使用规则 91 以归约 (simple_expression)
     '-'       使用规则 91 以归约 (simple_expression)
     '*'       使用规则 91 以归约 (simple_expression)
     '/'       使用规则 91 以归约 (simple_expression)
-    $default  使用规则 151 以归约 (condition)
+    $default  使用规则 152 以归约 (condition)
 
 
 状态 292
 
-  169 condition: aggr_expr comp_op value •
+  170 condition: aggr_expr comp_op value •
 
-    $default  使用规则 169 以归约 (condition)
+    $default  使用规则 170 以归约 (condition)
 
 
 状态 293
 
-  171 condition: aggr_expr comp_op aggr_expr •
+  172 condition: aggr_expr comp_op aggr_expr •
 
-    $default  使用规则 171 以归约 (condition)
+    $default  使用规则 172 以归约 (condition)
 
 
 状态 294
 
-  170 condition: aggr_expr comp_op rel_attr •
+  171 condition: aggr_expr comp_op rel_attr •
 
-    $default  使用规则 170 以归约 (condition)
+    $default  使用规则 171 以归约 (condition)
 
 
 状态 295
 
    92 arith_expr: LBRACE • arith_expr RBRACE
-  163 condition: rel_attr comp_op LBRACE • value value_list RBRACE
+  164 condition: rel_attr comp_op LBRACE • value value_list RBRACE
 
     LBRACE       偏移，并进入状态 196
     NULL_KY      偏移，并进入状态 50
@@ -4107,21 +4108,21 @@
 
 状态 296
 
-  159 condition: rel_attr comp_op SUB_QUERY •
+  160 condition: rel_attr comp_op SUB_QUERY •
 
-    $default  使用规则 159 以归约 (condition)
+    $default  使用规则 160 以归约 (condition)
 
 
 状态 297
 
    90 simple_expression: value •
-  155 condition: rel_attr comp_op value •
+  156 condition: rel_attr comp_op value •
 
     '+'       使用规则 90 以归约 (simple_expression)
     '-'       使用规则 90 以归约 (simple_expression)
     '*'       使用规则 90 以归约 (simple_expression)
     '/'       使用规则 90 以归约 (simple_expression)
-    $default  使用规则 155 以归约 (condition)
+    $default  使用规则 156 以归约 (condition)
 
 
 状态 298
@@ -4138,61 +4139,62 @@
   112           | arith_expr • '-' arith_expr
   113           | arith_expr • '*' arith_expr
   114           | arith_expr • '/' arith_expr
-  153 condition: rel_attr comp_op arith_expr •
+  154 condition: rel_attr comp_op arith_expr •
 
     '+'  偏移，并进入状态 221
     '-'  偏移，并进入状态 222
     '*'  偏移，并进入状态 223
     '/'  偏移，并进入状态 224
 
-    $default  使用规则 153 以归约 (condition)
+    $default  使用规则 154 以归约 (condition)
 
 
 状态 299
 
    91 simple_expression: rel_attr •
-  157 condition: rel_attr comp_op rel_attr •
+  158 condition: rel_attr comp_op rel_attr •
 
     '+'       使用规则 91 以归约 (simple_expression)
     '-'       使用规则 91 以归约 (simple_expression)
     '*'       使用规则 91 以归约 (simple_expression)
     '/'       使用规则 91 以归约 (simple_expression)
-    $default  使用规则 157 以归约 (condition)
+    $default  使用规则 158 以归约 (condition)
 
 
 状态 300
 
-  148 condition_list: condition AND condition_list •
-
-    $default  使用规则 148 以归约 (condition_list)
-
-
-状态 301
-
-  149 condition_list: condition OR condition_list •
+  149 condition_list: condition AND condition_list •
 
     $default  使用规则 149 以归约 (condition_list)
 
 
+状态 301
+
+  150 condition_list: condition OR condition_list •
+
+    $default  使用规则 150 以归约 (condition_list)
+
+
 状态 302
 
-  195 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID •
+  196 load_data_stmt: LOAD DATA INFILE SSS INTO TABLE ID •
 
-    $default  使用规则 195 以归约 (load_data_stmt)
+    $default  使用规则 196 以归约 (load_data_stmt)
 
 
 状态 303
 
   138 vec_order_by: ORDER • BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER • BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
 
     BY  偏移，并进入状态 333
 
 
 状态 304
 
-  197 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where vec_order_by •
+  198 explain_vec_stmt: EXPLAIN SELECT expression_list FROM ID where vec_order_by •
 
-    $default  使用规则 197 以归约 (explain_vec_stmt)
+    $default  使用规则 198 以归约 (explain_vec_stmt)
 
 
 状态 305
@@ -4290,7 +4292,7 @@
     VECTOR_LIST  偏移，并进入状态 63
     '-'          偏移，并进入状态 166
 
-    $default  使用规则 146 以归约 (condition_list)
+    $default  使用规则 147 以归约 (condition_list)
 
     value              转到状态 167
     simple_expression  转到状态 168
@@ -4303,7 +4305,7 @@
 
 状态 316
 
-  192 group_by: GROUP • BY expression_list
+  193 group_by: GROUP • BY expression_list
 
     BY  偏移，并进入状态 341
 
@@ -4315,7 +4317,7 @@
 
     HAVING  偏移，并进入状态 342
 
-    $default  使用规则 193 以归约 (having)
+    $default  使用规则 194 以归约 (having)
 
     having  转到状态 343
 
@@ -4340,10 +4342,10 @@
 
 状态 320
 
-  165 condition: LBRACE value value_list RBRACE • comp_op value
-  166          | LBRACE value value_list RBRACE • comp_op rel_attr
-  167          | LBRACE value value_list RBRACE • comp_op SUB_QUERY
-  168          | LBRACE value value_list RBRACE • comp_op LBRACE value value_list RBRACE
+  166 condition: LBRACE value value_list RBRACE • comp_op value
+  167          | LBRACE value value_list RBRACE • comp_op rel_attr
+  168          | LBRACE value value_list RBRACE • comp_op SUB_QUERY
+  169          | LBRACE value value_list RBRACE • comp_op LBRACE value value_list RBRACE
 
     NOT    偏移，并进入状态 200
     LIKE   偏移，并进入状态 201
@@ -4361,7 +4363,7 @@
 
 状态 321
 
-  164 condition: SUB_QUERY comp_op LBRACE value • value_list RBRACE
+  165 condition: SUB_QUERY comp_op LBRACE value • value_list RBRACE
 
     COMMA  偏移，并进入状态 249
 
@@ -4372,15 +4374,15 @@
 
 状态 322
 
-  175 is_null_choice: IS NOT NULL_KY •
+  176 is_null_choice: IS NOT NULL_KY •
 
-    $default  使用规则 175 以归约 (is_null_choice)
+    $default  使用规则 176 以归约 (is_null_choice)
 
 
 状态 323
 
    90 simple_expression: value •
-  162 condition: value comp_op LBRACE value • value_list RBRACE
+  163 condition: value comp_op LBRACE value • value_list RBRACE
 
     COMMA  偏移，并进入状态 249
 
@@ -4577,7 +4579,7 @@
 状态 332
 
    90 simple_expression: value •
-  163 condition: rel_attr comp_op LBRACE value • value_list RBRACE
+  164 condition: rel_attr comp_op LBRACE value • value_list RBRACE
 
     COMMA  偏移，并进入状态 249
 
@@ -4590,6 +4592,7 @@
 状态 333
 
   138 vec_order_by: ORDER BY • func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER BY • func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
 
     I2_DISTANCE_T      偏移，并进入状态 51
     COSINE_DISTANCE_T  偏移，并进入状态 52
@@ -4659,7 +4662,7 @@
 
 状态 341
 
-  192 group_by: GROUP BY • expression_list
+  193 group_by: GROUP BY • expression_list
 
     LBRACE             偏移，并进入状态 49
     NULL_KY            偏移，并进入状态 50
@@ -4689,7 +4692,7 @@
 
 状态 342
 
-  194 having: HAVING • condition_list
+  195 having: HAVING • condition_list
 
     LBRACE       偏移，并进入状态 164
     NULL_KY      偏移，并进入状态 50
@@ -4706,7 +4709,7 @@
     VECTOR_LIST  偏移，并进入状态 63
     '-'          偏移，并进入状态 166
 
-    $default  使用规则 146 以归约 (condition_list)
+    $default  使用规则 147 以归约 (condition_list)
 
     value              转到状态 167
     simple_expression  转到状态 168
@@ -4739,10 +4742,10 @@
 
 状态 345
 
-  165 condition: LBRACE value value_list RBRACE comp_op • value
-  166          | LBRACE value value_list RBRACE comp_op • rel_attr
-  167          | LBRACE value value_list RBRACE comp_op • SUB_QUERY
-  168          | LBRACE value value_list RBRACE comp_op • LBRACE value value_list RBRACE
+  166 condition: LBRACE value value_list RBRACE comp_op • value
+  167          | LBRACE value value_list RBRACE comp_op • rel_attr
+  168          | LBRACE value value_list RBRACE comp_op • SUB_QUERY
+  169          | LBRACE value value_list RBRACE comp_op • LBRACE value value_list RBRACE
 
     LBRACE       偏移，并进入状态 368
     NULL_KY      偏移，并进入状态 50
@@ -4759,14 +4762,14 @@
 
 状态 346
 
-  164 condition: SUB_QUERY comp_op LBRACE value value_list • RBRACE
+  165 condition: SUB_QUERY comp_op LBRACE value value_list • RBRACE
 
     RBRACE  偏移，并进入状态 372
 
 
 状态 347
 
-  162 condition: value comp_op LBRACE value value_list • RBRACE
+  163 condition: value comp_op LBRACE value value_list • RBRACE
 
     RBRACE  偏移，并进入状态 373
 
@@ -4829,7 +4832,7 @@
 
 状态 356
 
-  163 condition: rel_attr comp_op LBRACE value value_list • RBRACE
+  164 condition: rel_attr comp_op LBRACE value value_list • RBRACE
 
     RBRACE  偏移，并进入状态 374
 
@@ -4837,6 +4840,7 @@
 状态 357
 
   138 vec_order_by: ORDER BY func_op • LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER BY func_op • LBRACE value COMMA rel_attr RBRACE LIMIT number
 
     LBRACE  偏移，并进入状态 375
 
@@ -4878,22 +4882,23 @@
 
 状态 363
 
-  192 group_by: GROUP BY expression_list •
+  193 group_by: GROUP BY expression_list •
 
-    $default  使用规则 192 以归约 (group_by)
+    $default  使用规则 193 以归约 (group_by)
 
 
 状态 364
 
-  194 having: HAVING condition_list •
+  195 having: HAVING condition_list •
 
-    $default  使用规则 194 以归约 (having)
+    $default  使用规则 195 以归约 (having)
 
 
 状态 365
 
   137 order_by: ORDER • BY rel_attr order_op order_by_list
   138 vec_order_by: ORDER • BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER • BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
 
     BY  偏移，并进入状态 378
 
@@ -4914,7 +4919,7 @@
 
 状态 368
 
-  168 condition: LBRACE value value_list RBRACE comp_op LBRACE • value value_list RBRACE
+  169 condition: LBRACE value value_list RBRACE comp_op LBRACE • value value_list RBRACE
 
     NULL_KY      偏移，并进入状态 50
     NUMBER       偏移，并进入状态 59
@@ -4927,53 +4932,60 @@
 
 状态 369
 
-  167 condition: LBRACE value value_list RBRACE comp_op SUB_QUERY •
+  168 condition: LBRACE value value_list RBRACE comp_op SUB_QUERY •
 
-    $default  使用规则 167 以归约 (condition)
+    $default  使用规则 168 以归约 (condition)
 
 
 状态 370
 
-  165 condition: LBRACE value value_list RBRACE comp_op value •
-
-    $default  使用规则 165 以归约 (condition)
-
-
-状态 371
-
-  166 condition: LBRACE value value_list RBRACE comp_op rel_attr •
+  166 condition: LBRACE value value_list RBRACE comp_op value •
 
     $default  使用规则 166 以归约 (condition)
 
 
+状态 371
+
+  167 condition: LBRACE value value_list RBRACE comp_op rel_attr •
+
+    $default  使用规则 167 以归约 (condition)
+
+
 状态 372
 
-  164 condition: SUB_QUERY comp_op LBRACE value value_list RBRACE •
+  165 condition: SUB_QUERY comp_op LBRACE value value_list RBRACE •
 
-    $default  使用规则 164 以归约 (condition)
+    $default  使用规则 165 以归约 (condition)
 
 
 状态 373
 
-  162 condition: value comp_op LBRACE value value_list RBRACE •
+  163 condition: value comp_op LBRACE value value_list RBRACE •
 
-    $default  使用规则 162 以归约 (condition)
+    $default  使用规则 163 以归约 (condition)
 
 
 状态 374
 
-  163 condition: rel_attr comp_op LBRACE value value_list RBRACE •
+  164 condition: rel_attr comp_op LBRACE value value_list RBRACE •
 
-    $default  使用规则 163 以归约 (condition)
+    $default  使用规则 164 以归约 (condition)
 
 
 状态 375
 
   138 vec_order_by: ORDER BY func_op LBRACE • rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER BY func_op LBRACE • value COMMA rel_attr RBRACE LIMIT number
 
-    ID  偏移，并进入状态 61
+    NULL_KY      偏移，并进入状态 50
+    NUMBER       偏移，并进入状态 59
+    FLOAT        偏移，并进入状态 60
+    ID           偏移，并进入状态 61
+    SSS          偏移，并进入状态 62
+    VECTOR_LIST  偏移，并进入状态 63
 
-    rel_attr  转到状态 380
+    value     转到状态 380
+    rel_attr  转到状态 381
 
 
 状态 376
@@ -4987,68 +4999,85 @@
 
    35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE • TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    TYPE  偏移，并进入状态 381
+    TYPE  偏移，并进入状态 382
 
 
 状态 378
 
   137 order_by: ORDER BY • rel_attr order_op order_by_list
   138 vec_order_by: ORDER BY • func_op LBRACE rel_attr COMMA value RBRACE LIMIT number
+  139             | ORDER BY • func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
 
     I2_DISTANCE_T      偏移，并进入状态 51
     COSINE_DISTANCE_T  偏移，并进入状态 52
     INNER_PRODUCT_T    偏移，并进入状态 53
     ID                 偏移，并进入状态 61
 
-    rel_attr  转到状态 382
+    rel_attr  转到状态 383
     func_op   转到状态 357
 
 
 状态 379
 
-  168 condition: LBRACE value value_list RBRACE comp_op LBRACE value • value_list RBRACE
+  169 condition: LBRACE value value_list RBRACE comp_op LBRACE value • value_list RBRACE
 
     COMMA  偏移，并进入状态 249
 
     $default  使用规则 57 以归约 (value_list)
 
-    value_list  转到状态 383
+    value_list  转到状态 384
 
 
 状态 380
 
-  138 vec_order_by: ORDER BY func_op LBRACE rel_attr • COMMA value RBRACE LIMIT number
+  139 vec_order_by: ORDER BY func_op LBRACE value • COMMA rel_attr RBRACE LIMIT number
 
-    COMMA  偏移，并进入状态 384
+    COMMA  偏移，并进入状态 385
 
 
 状态 381
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE • EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
+  138 vec_order_by: ORDER BY func_op LBRACE rel_attr • COMMA value RBRACE LIMIT number
 
-    EQ  偏移，并进入状态 385
+    COMMA  偏移，并进入状态 386
 
 
 状态 382
 
-  137 order_by: ORDER BY rel_attr • order_op order_by_list
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE • EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    ASC   偏移，并进入状态 386
-    DESC  偏移，并进入状态 387
-
-    $default  使用规则 143 以归约 (order_op)
-
-    order_op  转到状态 388
+    EQ  偏移，并进入状态 387
 
 
 状态 383
 
-  168 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list • RBRACE
+  137 order_by: ORDER BY rel_attr • order_op order_by_list
 
-    RBRACE  偏移，并进入状态 389
+    ASC   偏移，并进入状态 388
+    DESC  偏移，并进入状态 389
+
+    $default  使用规则 144 以归约 (order_op)
+
+    order_op  转到状态 390
 
 
 状态 384
+
+  169 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list • RBRACE
+
+    RBRACE  偏移，并进入状态 391
+
+
+状态 385
+
+  139 vec_order_by: ORDER BY func_op LBRACE value COMMA • rel_attr RBRACE LIMIT number
+
+    ID  偏移，并进入状态 61
+
+    rel_attr  转到状态 392
+
+
+状态 386
 
   138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA • value RBRACE LIMIT number
 
@@ -5058,139 +5087,169 @@
     SSS          偏移，并进入状态 62
     VECTOR_LIST  偏移，并进入状态 63
 
-    value  转到状态 390
-
-
-状态 385
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ • ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
-
-    ID  偏移，并进入状态 391
-
-
-状态 386
-
-  142 order_op: ASC •
-
-    $default  使用规则 142 以归约 (order_op)
+    value  转到状态 393
 
 
 状态 387
 
-  141 order_op: DESC •
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ • ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    $default  使用规则 141 以归约 (order_op)
+    ID  偏移，并进入状态 394
 
 
 状态 388
 
-  137 order_by: ORDER BY rel_attr order_op • order_by_list
+  143 order_op: ASC •
 
-    COMMA  偏移，并进入状态 392
-
-    $default  使用规则 139 以归约 (order_by_list)
-
-    order_by_list  转到状态 393
+    $default  使用规则 143 以归约 (order_op)
 
 
 状态 389
 
-  168 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE •
+  142 order_op: DESC •
 
-    $default  使用规则 168 以归约 (condition)
+    $default  使用规则 142 以归约 (order_op)
 
 
 状态 390
 
-  138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value • RBRACE LIMIT number
+  137 order_by: ORDER BY rel_attr order_op • order_by_list
 
-    RBRACE  偏移，并进入状态 394
+    COMMA  偏移，并进入状态 395
+
+    $default  使用规则 140 以归约 (order_by_list)
+
+    order_by_list  转到状态 396
 
 
 状态 391
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID • COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
+  169 condition: LBRACE value value_list RBRACE comp_op LBRACE value value_list RBRACE •
 
-    COMMA  偏移，并进入状态 395
+    $default  使用规则 169 以归约 (condition)
 
 
 状态 392
 
-  140 order_by_list: COMMA • rel_attr order_op order_by_list
+  139 vec_order_by: ORDER BY func_op LBRACE value COMMA rel_attr • RBRACE LIMIT number
 
-    ID  偏移，并进入状态 61
-
-    rel_attr  转到状态 396
+    RBRACE  偏移，并进入状态 397
 
 
 状态 393
+
+  138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value • RBRACE LIMIT number
+
+    RBRACE  偏移，并进入状态 398
+
+
+状态 394
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID • COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
+
+    COMMA  偏移，并进入状态 399
+
+
+状态 395
+
+  141 order_by_list: COMMA • rel_attr order_op order_by_list
+
+    ID  偏移，并进入状态 61
+
+    rel_attr  转到状态 400
+
+
+状态 396
 
   137 order_by: ORDER BY rel_attr order_op order_by_list •
 
     $default  使用规则 137 以归约 (order_by)
 
 
-状态 394
+状态 397
+
+  139 vec_order_by: ORDER BY func_op LBRACE value COMMA rel_attr RBRACE • LIMIT number
+
+    LIMIT  偏移，并进入状态 401
+
+
+状态 398
 
   138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value RBRACE • LIMIT number
 
-    LIMIT  偏移，并进入状态 397
+    LIMIT  偏移，并进入状态 402
 
 
-状态 395
+状态 399
 
    35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA • DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    DISTANCE  偏移，并进入状态 398
+    DISTANCE  偏移，并进入状态 403
 
 
-状态 396
+状态 400
 
-  140 order_by_list: COMMA rel_attr • order_op order_by_list
+  141 order_by_list: COMMA rel_attr • order_op order_by_list
 
-    ASC   偏移，并进入状态 386
-    DESC  偏移，并进入状态 387
+    ASC   偏移，并进入状态 388
+    DESC  偏移，并进入状态 389
 
-    $default  使用规则 143 以归约 (order_op)
+    $default  使用规则 144 以归约 (order_op)
 
-    order_op  转到状态 399
+    order_op  转到状态 404
 
 
-状态 397
+状态 401
+
+  139 vec_order_by: ORDER BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT • number
+
+    NUMBER  偏移，并进入状态 305
+
+    number  转到状态 405
+
+
+状态 402
 
   138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT • number
 
     NUMBER  偏移，并进入状态 305
 
-    number  转到状态 400
+    number  转到状态 406
 
 
-状态 398
+状态 403
 
    35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE • EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    EQ  偏移，并进入状态 401
+    EQ  偏移，并进入状态 407
 
 
-状态 399
+状态 404
 
-  140 order_by_list: COMMA rel_attr order_op • order_by_list
+  141 order_by_list: COMMA rel_attr order_op • order_by_list
 
-    COMMA  偏移，并进入状态 392
+    COMMA  偏移，并进入状态 395
 
-    $default  使用规则 139 以归约 (order_by_list)
+    $default  使用规则 140 以归约 (order_by_list)
 
-    order_by_list  转到状态 402
+    order_by_list  转到状态 408
 
 
-状态 400
+状态 405
+
+  139 vec_order_by: ORDER BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number •
+
+    $default  使用规则 139 以归约 (vec_order_by)
+
+
+状态 406
 
   138 vec_order_by: ORDER BY func_op LBRACE rel_attr COMMA value RBRACE LIMIT number •
 
     $default  使用规则 138 以归约 (vec_order_by)
 
 
-状态 401
+状态 407
 
    35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ • func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
@@ -5198,80 +5257,80 @@
     COSINE_DISTANCE_T  偏移，并进入状态 52
     INNER_PRODUCT_T    偏移，并进入状态 53
 
-    func_op  转到状态 403
-
-
-状态 402
-
-  140 order_by_list: COMMA rel_attr order_op order_by_list •
-
-    $default  使用规则 140 以归约 (order_by_list)
-
-
-状态 403
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op • COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
-
-    COMMA  偏移，并进入状态 404
-
-
-状态 404
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA • LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
-
-    LISTS  偏移，并进入状态 405
-
-
-状态 405
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS • EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
-
-    EQ  偏移，并进入状态 406
-
-
-状态 406
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ • NUMBER COMMA PROBES EQ NUMBER RBRACE
-
-    NUMBER  偏移，并进入状态 407
-
-
-状态 407
-
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER • COMMA PROBES EQ NUMBER RBRACE
-
-    COMMA  偏移，并进入状态 408
+    func_op  转到状态 409
 
 
 状态 408
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA • PROBES EQ NUMBER RBRACE
+  141 order_by_list: COMMA rel_attr order_op order_by_list •
 
-    PROBES  偏移，并进入状态 409
+    $default  使用规则 141 以归约 (order_by_list)
 
 
 状态 409
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES • EQ NUMBER RBRACE
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op • COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    EQ  偏移，并进入状态 410
+    COMMA  偏移，并进入状态 410
 
 
 状态 410
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ • NUMBER RBRACE
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA • LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    NUMBER  偏移，并进入状态 411
+    LISTS  偏移，并进入状态 411
 
 
 状态 411
 
-   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER • RBRACE
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS • EQ NUMBER COMMA PROBES EQ NUMBER RBRACE
 
-    RBRACE  偏移，并进入状态 412
+    EQ  偏移，并进入状态 412
 
 
 状态 412
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ • NUMBER COMMA PROBES EQ NUMBER RBRACE
+
+    NUMBER  偏移，并进入状态 413
+
+
+状态 413
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER • COMMA PROBES EQ NUMBER RBRACE
+
+    COMMA  偏移，并进入状态 414
+
+
+状态 414
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA • PROBES EQ NUMBER RBRACE
+
+    PROBES  偏移，并进入状态 415
+
+
+状态 415
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES • EQ NUMBER RBRACE
+
+    EQ  偏移，并进入状态 416
+
+
+状态 416
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ • NUMBER RBRACE
+
+    NUMBER  偏移，并进入状态 417
+
+
+状态 417
+
+   35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER • RBRACE
+
+    RBRACE  偏移，并进入状态 418
+
+
+状态 418
 
    35 create_vec_index_stmt: CREATE VECTOR_T INDEX ID ON ID LBRACE ID RBRACE WITH LBRACE TYPE EQ ID COMMA DISTANCE EQ func_op COMMA LISTS EQ NUMBER COMMA PROBES EQ NUMBER RBRACE •
 

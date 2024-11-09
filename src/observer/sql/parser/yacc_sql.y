@@ -1058,6 +1058,14 @@ vec_order_by:
     $$->value = *$7;
     $$->limit = $10; 
   }
+  | ORDER BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
+  {
+    $$ = new VecOrderByNode;
+    $$->type = $3;
+    $$->first_attr = *$7;
+    $$->value = *$5;
+    $$->limit = $10;
+  }
   ;
 
 order_by_list:

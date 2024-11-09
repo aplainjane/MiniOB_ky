@@ -112,7 +112,11 @@ RC ExpressionBinder::bind_star_expression(
   }
 
   auto star_expr = static_cast<StarExpr *>(expr.get());
-
+  string alias=star_expr->alias();
+  if(alias!="")
+  {
+    return RC::INTERNAL;
+  }
   vector<Table *> tables_to_wildcard;
 
   const char *table_name = star_expr->table_name();

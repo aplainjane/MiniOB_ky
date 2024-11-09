@@ -1464,6 +1464,8 @@ explain_vec_stmt:
     {
       $$ = new ParsedSqlNode(SCF_VEC_EXPLAIN);
       $$->vec_explain.table_name = $5;
+      $$->vec_explain.inited = 1;
+      $$->vec_explain.vec_order_by = *$7;
       free($5);
     }
     ;

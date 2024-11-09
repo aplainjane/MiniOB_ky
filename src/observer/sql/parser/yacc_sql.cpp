@@ -715,8 +715,8 @@ static const yytype_int16 yyrline[] =
     1204,  1214,  1224,  1234,  1249,  1264,  1279,  1294,  1309,  1324,
     1344,  1353,  1362,  1370,  1382,  1397,  1398,  1402,  1403,  1404,
     1405,  1406,  1407,  1408,  1409,  1410,  1411,  1412,  1413,  1417,
-    1418,  1419,  1423,  1426,  1433,  1436,  1443,  1456,  1463,  1473,
-    1483,  1484
+    1418,  1419,  1423,  1426,  1433,  1436,  1443,  1456,  1463,  1475,
+    1485,  1486
 };
 #endif
 
@@ -3901,13 +3901,15 @@ yyreduce:
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_VEC_EXPLAIN);
       (yyval.sql_node)->vec_explain.table_name = (yyvsp[-2].string);
+      (yyval.sql_node)->vec_explain.inited = 1;
+      (yyval.sql_node)->vec_explain.vec_order_by = *(yyvsp[0].vec_order_by);
       free((yyvsp[-2].string));
     }
-#line 3907 "yacc_sql.cpp"
+#line 3909 "yacc_sql.cpp"
     break;
 
   case 199: /* set_variable_stmt: SET ID EQ value  */
-#line 1474 "yacc_sql.y"
+#line 1476 "yacc_sql.y"
     {
       (yyval.sql_node) = new ParsedSqlNode(SCF_SET_VARIABLE);
       (yyval.sql_node)->set_variable.name  = (yyvsp[-2].string);
@@ -3915,11 +3917,11 @@ yyreduce:
       free((yyvsp[-2].string));
       delete (yyvsp[0].value);
     }
-#line 3919 "yacc_sql.cpp"
+#line 3921 "yacc_sql.cpp"
     break;
 
 
-#line 3923 "yacc_sql.cpp"
+#line 3925 "yacc_sql.cpp"
 
       default: break;
     }
@@ -4148,7 +4150,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1486 "yacc_sql.y"
+#line 1488 "yacc_sql.y"
 
 //_____________________________________________________________________
 extern void scan_string(const char *str, yyscan_t scanner);

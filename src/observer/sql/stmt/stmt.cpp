@@ -111,6 +111,10 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt,SQLStageEvent 
       return ExitStmt::create(stmt);
     }
 
+    case SCF_VEC_EXPLAIN: {
+      return RC::SUCCESS;
+    }
+
     case SCF_SET_VARIABLE: {
       return SetVariableStmt::create(sql_node.set_variable, stmt);
     }

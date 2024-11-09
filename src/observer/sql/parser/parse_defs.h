@@ -97,6 +97,8 @@ struct VecOrderByNode
 struct VecExplainNode
 {
   std::string table_name = "";
+  VecOrderByNode vec_order_by; 
+  int inited = 0;
 };
 
 

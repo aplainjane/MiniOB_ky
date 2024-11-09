@@ -43,6 +43,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
   // collect tables in `from` statement
   vector<Table *>                tables;
   unordered_map<string, Table *> table_map=table_map1;
+  unordered_map<string, string> table_alias;
   std::unordered_set<std::string> table_alias_set;
   for (size_t i = 0; i < select_sql.relations.size(); i++) {
     const char *table_name;
@@ -68,6 +69,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
         return RC::INVALID_ARGUMENT;
       }
       table_alias_set.insert(alias);
+      table_alias.insert({alias, table_name});
       table_map.insert({alias, table});
     }
   }
@@ -77,7 +79,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
   ExpressionBinder expression_binder(binder_context);
   std::vector<std::string> expression_alias_set;
   for (int i = 0;i<(int)select_sql.expressions.size();i++) {
-    RC rc = expression_binder.bind_expression(select_sql.expressions[i], bound_expressions);
+    RC rc = expression_binder.bind_expression(select_sql.expressions[i], bound_expressions,table_alias);
     if (OB_FAIL(rc)) {
       LOG_INFO("bind expression failed. rc=%s", strrc(rc));
       return rc;

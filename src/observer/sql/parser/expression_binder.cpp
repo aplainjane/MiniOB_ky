@@ -45,7 +45,7 @@ static void wildcard_fields(Table *table, vector<unique_ptr<Expression>> &expres
   }
 }
 
-RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -57,11 +57,11 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
     } break;
 
     case ExprType::UNBOUND_FIELD: {
-      return bind_unbound_field_expression(expr, bound_expressions);
+      return bind_unbound_field_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::UNBOUND_AGGREGATION: {
-      return bind_aggregate_expression(expr, bound_expressions);
+      return bind_aggregate_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::FIELD: {
@@ -85,7 +85,7 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
     } break;
 
     case ExprType::ARITHMETIC: {
-      return bind_arithmetic_expression(expr, bound_expressions);
+      return bind_arithmetic_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::FUNCTION: {
@@ -137,7 +137,7 @@ RC ExpressionBinder::bind_star_expression(
 }
 
 RC ExpressionBinder::bind_unbound_field_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -146,6 +146,12 @@ RC ExpressionBinder::bind_unbound_field_expression(
   auto unbound_field_expr = static_cast<UnboundFieldExpr *>(expr.get());
 
   const char *table_name = unbound_field_expr->table_name();
+  for (const auto &alias_pair : table_alias) {
+    if (alias_pair.first == table_name) {
+      table_name = alias_pair.second.c_str();  // Update table_name to the corresponding alias
+      break;
+    }
+  }
   const char *field_name = unbound_field_expr->field_name();
 
   Table *table = nullptr;
@@ -314,7 +320,7 @@ RC ExpressionBinder::bind_conjunction_expression(
 }
 
 RC ExpressionBinder::bind_arithmetic_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -326,7 +332,7 @@ RC ExpressionBinder::bind_arithmetic_expression(
   unique_ptr<Expression>        &left_expr  = arithmetic_expr->left();
   unique_ptr<Expression>        &right_expr = arithmetic_expr->right();
 
-  RC rc = bind_expression(left_expr, child_bound_expressions);
+  RC rc = bind_expression(left_expr, child_bound_expressions,table_alias);
   if (OB_FAIL(rc)) {
     return rc;
   }
@@ -342,7 +348,7 @@ RC ExpressionBinder::bind_arithmetic_expression(
   }
 
   child_bound_expressions.clear();
-  rc = bind_expression(right_expr, child_bound_expressions);
+  rc = bind_expression(right_expr, child_bound_expressions,table_alias);
   if (OB_FAIL(rc)) {
     return rc;
   }
@@ -406,7 +412,7 @@ RC check_aggregate_expression(AggregateExpr &expression)
 }
 
 RC ExpressionBinder::bind_aggregate_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -431,7 +437,7 @@ RC ExpressionBinder::bind_aggregate_expression(
     ValueExpr *value_expr = new ValueExpr(Value(1));
     child_expr.reset(value_expr);
   } else {
-    rc = bind_expression(child_expr, child_bound_expressions);
+    rc = bind_expression(child_expr, child_bound_expressions,table_alias);
     if (OB_FAIL(rc)) {
       return rc;
     }

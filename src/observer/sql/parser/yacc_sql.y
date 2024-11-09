@@ -746,44 +746,6 @@ select_stmt:        /*  select 语句的语法解析树*/
         delete $11;
       }
     }
-    | SELECT expression_list FROM ID rel_list join_list where group_by having vec_order_by
-    {
-      $$ = new ParsedSqlNode(SCF_SELECT);
-      if ($2 != nullptr) {
-        $$->selection.expressions.swap(*$2);
-        delete $2;
-      }
-      if ($5 != nullptr) {
-        $$->selection.relations.swap(*$5);
-        delete $5;
-      }
-      $$->selection.relations.push_back($4);
-      std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
-
-      if ($7 != nullptr) {
-        $$->selection.conditions.swap(*$7);
-        delete $7;
-      }
-      free($4);
-      
-      if ($6 != nullptr) {
-        $$->selection.relations.insert($$->selection.relations.end(), $6->relations.begin(), $6->relations.end());
-        $$->selection.conditions.insert($$->selection.conditions.end(), $6->conditions.begin(), $6->conditions.end());
-        delete $6;
-      }
-      if ($8 != nullptr) {
-        $$->selection.group_by.swap(*$8);
-        delete $8;
-      }
-      if ($9 != nullptr) {
-        $$->selection.having_conditions.swap(*$9);
-        delete $9;
-      }
-      if ($10 != nullptr) {
-        $$->selection.vec_order_rules = *$10;
-        delete $10;
-      }
-    }
     ;
 calc_stmt:
     CALC expression_list
@@ -1089,7 +1051,7 @@ order_by:
   {
     $$ = nullptr;
   }
-  | ORDER BY rel_attr order_op order_by_list 
+  | ORDER BY rel_attr order_op order_by_list
   {
     $$ = new std::vector<std::pair<RelAttrSqlNode, OrderOp>>;
     $$->emplace_back(std::make_pair(*$3, $4));
@@ -1528,7 +1490,6 @@ explain_vec_stmt:
       free($5);
     }
     ;
-
 
 set_variable_stmt:
     SET ID EQ value

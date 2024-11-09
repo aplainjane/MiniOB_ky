@@ -208,7 +208,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     result = "PROJECT";
     rc = writer_->writen(result, strlen(result));
     rc = writer_->writen(&newline, 1);
-    string i = "└─VECTOR_INDEX_SCAN(" + name + " ON " + table_name + ")";
+    string i = "└─VECTOR_INDEX_SCAN(" + name + " ON " + table_name + ")" + "\n";
     result = i.c_str();
     rc = writer_->writen(result, strlen(result));
     rc = writer_->writen(&newline, 1);
@@ -219,7 +219,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       return rc;
     }
 
-    return RC::SUCCESS;
+    return rc;
   }
 
   if (RC::SUCCESS != sql_result->return_code() || !sql_result->has_operator()) {

@@ -96,7 +96,7 @@ struct VecOrderByNode
 
 struct VecExplainNode
 {
-  std::string table_name;
+  std::string table_name = "";
 };
 
 

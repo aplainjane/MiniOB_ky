@@ -28,6 +28,7 @@ class ChunkFileScanner;
 class ConditionFilter;
 class DefaultConditionFilter;
 class Index;
+class IvfflatIndex;
 class IndexScanner;
 class RecordDeleter;
 class Trx;
@@ -87,6 +88,7 @@ public:
 
   // TODO refactor
   RC create_index(Trx *trx, std::vector<FieldMeta> field_metas, const char *index_name, bool unique);
+  RC create_vec_index(Trx *trx, const FieldMeta *field_meta, const char *index_name, FuncOp distance_name, int nlist, int probes);
 
   RC get_record_scanner(RecordFileScanner &scanner, Trx *trx, ReadWriteMode mode);
 
@@ -127,7 +129,9 @@ private:
 
 public:
   Index *find_index(const char *index_name) const;
+  Index *find_vec_index(const char *index_name) const;
   Index *find_index_by_fields(std::vector<const char *> fields) const;
+  Index *find_vec_index_by_fields(const char *field) const;
 
 private:
   Db                *db_ = nullptr;
@@ -137,4 +141,5 @@ private:
   DiskBufferPool    *text_buffer_pool_ = nullptr;   /// text文件关联的buffer pool
   RecordFileHandler *record_handler_   = nullptr;  /// 记录操作
   vector<Index *>    indexes_;
+  vector<Index *>    vec_indexes_;
 };

@@ -56,6 +56,15 @@ public:
     return having_stmts; 
   }
 
+  VecOrderByNode &get_vec_order_rules() { 
+    return vec_order_rules_; 
+  }
+
+  VecExplainNode &get_vec_explain_rules() { 
+    return vec_explain_rules; 
+  }
+
+
 
   RC open();
   RC close();
@@ -71,4 +80,6 @@ private:
   std::string                       state_string_;
   std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules_;
   std::vector<ConditionSqlNode>     having_stmts;
+  VecOrderByNode                    vec_order_rules_;
+  VecExplainNode                    vec_explain_rules;
 };

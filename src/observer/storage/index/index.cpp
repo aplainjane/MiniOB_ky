@@ -20,3 +20,10 @@ RC Index::init(const IndexMeta &index_meta, std::vector<FieldMeta> &field_metas)
   field_metas_ = field_metas;
   return RC::SUCCESS;
 }
+
+RC Index::init(const IndexMeta &index_meta, const FieldMeta &field_meta)
+{
+  index_meta_ = index_meta;
+  field_metas_.push_back(field_meta);
+  return RC::SUCCESS;
+}

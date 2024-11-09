@@ -42,6 +42,7 @@ public:
       std::span<const AttrInfoSqlNode> attributes, StorageFormat storage_format);
 
   RC add_index(const IndexMeta &index);
+  RC add_vec_index(const IndexMeta &index);
 
 public:
   int32_t             table_id() const { return table_id_; }
@@ -59,6 +60,7 @@ public:
 
   const IndexMeta *index(const char *name) const;
   const IndexMeta *find_index_by_fields(std::vector<const char *> fields) const;
+  const IndexMeta *find_vec_index_by_fields(const char *field) const;
   const IndexMeta *index(int i) const;
   int              index_num() const;
 
@@ -77,6 +79,7 @@ protected:
   std::vector<FieldMeta> trx_fields_;
   std::vector<FieldMeta> fields_;  // 包含sys_fields
   std::vector<IndexMeta> indexes_;
+  std::vector<IndexMeta> vec_indexes_;
   StorageFormat          storage_format_;
 
   int record_size_ = 0;

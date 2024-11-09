@@ -81,8 +81,26 @@ enum OrderOp
 enum FuncOp {
   I2_DISTANCE,
   COSINE_DISTANCE,
-  INNER_PRODUCT
+  INNER_PRODUCT,
+  NO_Func
 };
+
+struct VecOrderByNode
+{
+  FuncOp type = NO_Func;
+  Value  value;
+  RelAttrSqlNode first_attr;
+  int    limit;
+  //std::vector<std::string,std::string>    vector_table_name;           ///< limit clause  
+};
+
+struct VecExplainNode
+{
+  std::string table_name = "";
+  VecOrderByNode vec_order_by; 
+  int inited = 0;
+};
+
 
 /**
  * @brief 表示一个条件比较
@@ -133,6 +151,7 @@ struct SelectSqlNode
   std::vector<std::unique_ptr<Expression>> group_by;          ///< group by clause
   std::vector<ConditionSqlNode>            having_conditions; ///< groupby having
   std::vector<std::pair<RelAttrSqlNode, OrderOp>> order_rules; ///< order by clause
+  VecOrderByNode                           vec_order_rules;
 };
 
 /**
@@ -245,6 +264,22 @@ struct CreateIndexSqlNode
 };
 
 /**
+ * @brief 描述一个create vec index语句
+ * @ingroup SQLParser
+ */
+struct CreateVecIndexSqlNode
+{
+  std::string index_name;      ///< Index name
+  std::string relation_name;   ///< Relation name
+  std::string attribute_name;  ///< Attribute name
+  FuncOp distance_name;        ///< Distance name,can be inner_product or l2_distance or cosine_distance
+  std::string type_name;       ///< Type name,only support ivfflat
+  int nlist;                   ///< nlist
+  int probes;                  ///< probes  
+};
+
+
+/**
  * @brief 描述一个drop index语句
  * @ingroup SQLParser
  */
@@ -327,6 +362,7 @@ enum SqlCommandFlag
   SCF_CREATE_TABLE,
   SCF_DROP_TABLE,
   SCF_CREATE_INDEX,
+  SCF_CREATE_VEC_INDEX,
   SCF_DROP_INDEX,
   SCF_SYNC,
   SCF_SHOW_TABLES,
@@ -339,6 +375,7 @@ enum SqlCommandFlag
   SCF_HELP,
   SCF_EXIT,
   SCF_EXPLAIN,
+  SCF_VEC_EXPLAIN,
   SCF_SET_VARIABLE,  ///< 设置变量
 };
 /**
@@ -358,10 +395,12 @@ public:
   CreateTableSqlNode  create_table;
   DropTableSqlNode    drop_table;
   CreateIndexSqlNode  create_index;
+  CreateVecIndexSqlNode create_vec_index;
   DropIndexSqlNode    drop_index;
   DescTableSqlNode    desc_table;
   LoadDataSqlNode     load_data;
   ExplainSqlNode      explain;
+  VecExplainNode      vec_explain;
   SetVariableSqlNode  set_variable;
 
 public:

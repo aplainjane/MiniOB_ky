@@ -102,6 +102,9 @@ RC SessionStage::handle_sql(SQLStageEvent *sql_event)
     return rc;
   }
 
+  sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
+  sql_result->get_vec_explain_rules() = (*(sql_event->sql_node())).vec_explain;
+
   rc = optimize_stage_.handle_request(sql_event);
   if (rc != RC::UNIMPLEMENTED && rc != RC::SUCCESS) {
     LOG_TRACE("failed to do optimize. rc=%s", strrc(rc));

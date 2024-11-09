@@ -31,6 +31,7 @@ TableMeta::TableMeta(const TableMeta &other)
       name_(other.name_),
       fields_(other.fields_),
       indexes_(other.indexes_),
+      vec_indexes_(other.vec_indexes_),
       storage_format_(other.storage_format_),
       record_size_(other.record_size_)
 {}
@@ -40,6 +41,7 @@ void TableMeta::swap(TableMeta &other) noexcept
   name_.swap(other.name_);
   fields_.swap(other.fields_);
   indexes_.swap(other.indexes_);
+  vec_indexes_.swap(other.vec_indexes_);
   std::swap(record_size_, other.record_size_);
 }
 
@@ -107,6 +109,12 @@ RC TableMeta::init(int32_t table_id, const char *name, const std::vector<FieldMe
 RC TableMeta::add_index(const IndexMeta &index)
 {
   indexes_.push_back(index);
+  return RC::SUCCESS;
+}
+
+RC TableMeta::add_vec_index(const IndexMeta &index)
+{
+  vec_indexes_.push_back(index);
   return RC::SUCCESS;
 }
 
@@ -179,6 +187,17 @@ const IndexMeta *TableMeta::find_index_by_fields(std::vector<const char *> field
   }
   return nullptr;
 }
+
+const IndexMeta *TableMeta::find_vec_index_by_fields(const char *field) const 
+{
+  for (const IndexMeta &index : vec_indexes_) {
+    if (0 == strcmp(index.field(0), field)) {
+      return &index;
+    }
+  }
+  return nullptr;
+}
+
 
 const IndexMeta *TableMeta::index(int i) const { return &indexes_[i]; }
 

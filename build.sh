@@ -108,6 +108,8 @@ function do_init
     ${MAKE_COMMAND} && \
     ${MAKE_COMMAND} install
 
+
+
   cd $current_dir
 }
 

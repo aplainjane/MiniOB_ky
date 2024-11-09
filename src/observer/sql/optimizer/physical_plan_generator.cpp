@@ -186,6 +186,8 @@ RC PhysicalPlanGenerator::create_plan(TableGetLogicalOperator &table_get_oper, u
 
   index = table->find_index_by_fields(fields);
 
+  // index = table->find_vec_index_by_fields(field);
+
   if (index != nullptr) {
     ASSERT(value_expr != nullptr, "got an index but value expr is null ?");
 

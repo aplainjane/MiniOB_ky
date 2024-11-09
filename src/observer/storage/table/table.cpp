@@ -27,6 +27,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/meta_util.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/index/index.h"
+#include "storage/index/ivfflat_index.h"
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
 #include "storage/trx/trx.h"
@@ -54,6 +55,12 @@ Table::~Table()
     delete index;
   }
   indexes_.clear();
+
+  for (vector<Index *>::iterator it = vec_indexes_.begin(); it != vec_indexes_.end(); ++it) {
+    Index *index = *it;
+    delete index;
+  }
+  vec_indexes_.clear();
 
   LOG_INFO("Table has been closed: %s", name());
 }
@@ -181,6 +188,12 @@ RC Table::drop(const char *path)
     delete index;
     index=nullptr;
   }
+
+  for(auto &index : vec_indexes_){
+    index->destroy();
+    delete index;
+    index=nullptr;
+  }
   return RC::SUCCESS;
 }
 RC Table::open(Db *db, const char *meta_file, const char *base_dir)
@@ -242,6 +255,7 @@ RC Table::open(Db *db, const char *meta_file, const char *base_dir)
     string          index_file = table_index_file(base_dir, name(), index_meta->name());
 
     rc = index->open(this, index_file.c_str(), *index_meta, field_metas);
+    // uncompleted:vec_index open
     if (rc != RC::SUCCESS) {
       delete index;
       LOG_ERROR("Failed to open index. table=%s, index=%s, file=%s, rc=%s",
@@ -642,6 +656,62 @@ RC Table::create_index(Trx *trx, std::vector<FieldMeta> field_metas, const char 
   return rc;
 }
 
+RC Table::create_vec_index(Trx *trx, const FieldMeta *field_meta, const char *index_name, FuncOp distance_name, int nlist, int probes)
+{
+  if (common::is_blank(index_name)) {
+    LOG_INFO("Invalid input arguments, index_name is blank.");
+    return RC::INVALID_ARGUMENT;
+  }
+
+  IndexMeta new_index_meta;
+  RC rc = new_index_meta.init(index_name, field_meta);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  vector<RID> rids;
+
+  // 遍历当前的所有数据，初始化索引
+  RecordFileScanner scanner;
+  rc = get_record_scanner(scanner, trx, ReadWriteMode::READ_ONLY/*readonly*/);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to create scanner while creating index. table=%s, index=%s, rc=%s", 
+             name(), index_name, strrc(rc));
+    return rc;
+  }
+
+  Record record;
+  while (OB_SUCC(rc = scanner.next(record))) {
+    rids.push_back(record.rid());     
+  }
+  scanner.close_scan();
+  LOG_INFO("choice all records into new index. table=%s, index=%s", name(), index_name);
+
+  IvfflatIndex *index = new IvfflatIndex(distance_name, nlist, probes, rids);
+  rc = index->create(this, new_index_meta, *field_meta);
+  if (rc != RC::SUCCESS) {
+    delete index;
+    LOG_ERROR("Failed to create vec index.");
+    return rc;
+  }
+
+  vec_indexes_.push_back(index);
+  
+  /// 接下来将这个索引放到表的元数据中
+  TableMeta new_table_meta(table_meta_);
+  rc = new_table_meta.add_vec_index(new_index_meta);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to add index (%s) on table (%s). error=%d:%s", index_name, name(), rc, strrc(rc));
+    return rc;
+  }
+
+  table_meta_.swap(new_table_meta);
+
+  LOG_INFO("Successfully added a new index (%s) on the table (%s)", index_name, name());
+  return rc;
+}
+
+
 RC Table::delete_record(const RID &rid)
 {
   RC     rc = RC::SUCCESS;
@@ -702,12 +772,32 @@ Index *Table::find_index(const char *index_name) const
   }
   return nullptr;
 }
+Index *Table::find_vec_index(const char *index_name) const
+{
+  // vec_index must not appear with common index
+  for (Index *index : vec_indexes_) {
+    if (0 == strcmp(index->index_meta().name(), index_name)) {
+      return index;
+    }
+  }
+  return nullptr;
+}
 Index *Table::find_index_by_fields(std::vector<const char *> fields) const
 {
   const TableMeta &table_meta = this->table_meta();
   const IndexMeta *index_meta = table_meta.find_index_by_fields(fields);
   if (index_meta != nullptr) {
     return this->find_index(index_meta->name());
+  }
+  return nullptr;
+}
+
+Index *Table::find_vec_index_by_fields(const char *field) const
+{
+  const TableMeta &table_meta = this->table_meta();
+  const IndexMeta *index_meta = table_meta.find_vec_index_by_fields(field);
+  if (index_meta != nullptr) {
+    return this->find_vec_index(index_meta->name());
   }
   return nullptr;
 }

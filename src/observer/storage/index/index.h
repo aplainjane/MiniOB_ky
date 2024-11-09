@@ -97,6 +97,7 @@ public:
 
 protected:
   RC init(const IndexMeta &index_meta, std::vector<FieldMeta> &field_meta);
+  RC init(const IndexMeta &index_meta, const FieldMeta &vec_field_meta);
 
 protected:
   IndexMeta index_meta_;  ///< 索引的元数据

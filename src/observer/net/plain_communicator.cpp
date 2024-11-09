@@ -194,7 +194,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     rc = writer_->writen(result, strlen(result));
     char newline = '\n';
     rc = writer_->writen(&newline, 1);
-    result = "OPERATOR(ORDER_BY_VEC)";
+    result = "OPERATOR(NAME)";
     rc = writer_->writen(result, strlen(result));
     rc = writer_->writen(&newline, 1);
     Table * table = nullptr;

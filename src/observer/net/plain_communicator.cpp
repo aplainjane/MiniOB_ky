@@ -438,88 +438,90 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       std::vector<Value> vec_result;
       vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
       
-      // std::vector<Record *> record_set;
-      // for (int i = 0; i < vec_result.size(); i++) {
-      //   Record *record = nullptr;
-      //   rc = table->get_record(vec_result[i], *record);
-      //   if (rc != RC::SUCCESS) {
-      //     LOG_WARN("Failed to get record from table. (vec index)");
-      //     return RC::INTERNAL;
-      //   }
-      //   record_set.push_back(record);
-      // }
+      std::vector<std::vector<Value>> tuple_set;
+      std::vector<int> havepush(vec_result.size(), 0);
+      int current_tuple = 0;
+      for(size_t g = 0; g < vec_result.size(); g++){
+        current_tuple = 0;
+        while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+          std::vector<Value> temp;
+          int num_cell = tuple->cell_num();
+          bool find = false;
+          for(int i = 0; i < num_cell; i++){
+            Value cell;
+            tuple->cell_at(i, cell);
+            temp.push_back(cell);
+            if(i == order_index){
+              if(cell.compare(vec_result[g]) == 0 && havepush[current_tuple] == 0){
+                havepush[current_tuple] = 1;
+                find = true;
+              }
+            }
+          }
+          if(find)
+          {
+            tuple_set.push_back(temp);
+            break;  
+          }
+          current_tuple += 1;   
+        }
+      }
 
-      // //need be finished lky:output by record
-      // std::vector<std::vector<Value>> tuple_set;
-      // Record *record = record_set.back();
-      // while (record) {
-      //   RowTuple *new_tuple = new RowTuple();
-      //   new_tuple->set_record(record);
-      //   std::vector<Value> temp;
-      //   int num_cell = new_tuple->cell_num();
-      //   for(int i = 0; i < num_cell; i++){
-      //     Value cell;
-      //     new_tuple->cell_at(i, cell);
-      //     temp.push_back(cell);
-      //   }
-      //   tuple_set.push_back(temp);    
-      // }
+      if(rc==RC::INTERNAL)
+      {
+        sql_result->set_return_code(RC::INTERNAL);
+        sql_result->close();
+        rc = writer_->clear();
+        return write_state(event, need_disconnect);
+      }
 
-      // if(rc==RC::INTERNAL)
-      // {
-      //   sql_result->set_return_code(RC::INTERNAL);
-      //   sql_result->close();
-      //   rc = writer_->clear();
-      //   return write_state(event, need_disconnect);
-      // }
+      int min_size = (tuple_set.size() > vec_order_rules.limit) ? vec_order_rules.limit : tuple_set.size();
+      // 输出
+      for(int i = 0; i < min_size; i++){
+        for(int j = 0; j < tuple_set[i].size(); j++)
+        {
 
-      // int min_size = (tuple_set.size() > vec_order_rules.limit) ? vec_order_rules.limit : tuple_set.size();
-
-      // // 输出
-      // for(int i = 0; i < min_size; i++){
-      //   for(int j = 0; j < tuple_set[i].size(); j++)
-      //   {
-
-      //     // 忽略bitmap列
-      //     bool need_ignore = false;
-      //     for (int t = 0; t < ignored_index.size(); t++) {
-      //       if (j == ignored_index[t]) {
-      //         need_ignore = true;
-      //         break;
-      //       }
-      //     }
-      //     if(need_ignore)
-      //       continue;
+          // 忽略bitmap列
+          bool need_ignore = false;
+          for (int t = 0; t < ignored_index.size(); t++) {
+            if (j == ignored_index[t]) {
+              need_ignore = true;
+              break;
+            }
+          }
+          if(need_ignore)
+            continue;
 
 
-      //     if (j != 0) {
-      //       const char *delim = " | ";
-      //       rc = writer_->writen(delim, strlen(delim));
-      //       if (OB_FAIL(rc)) {
-      //         LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-      //         sql_result->close();
-      //         return rc;
-      //       }
-      //     }
+          if (j != 0) {
+            const char *delim = " | ";
+            rc = writer_->writen(delim, strlen(delim));
+            if (OB_FAIL(rc)) {
+              LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+              sql_result->close();
+              return rc;
+            }
+          }
 
-      //     std::string cell_str = tuple_set[i][j].to_string();
-      //     rc = writer_->writen(cell_str.data(), cell_str.size());
-      //     if (OB_FAIL(rc)) {
-      //       LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-      //       sql_result->close();
-      //       return rc;
-      //     }
-      //   }
+          std::string cell_str = tuple_set[i][j].to_string();
+          rc = writer_->writen(cell_str.data(), cell_str.size());
+          if (OB_FAIL(rc)) {
+            LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+            sql_result->close();
+            return rc;
+          }
+        }
 
-      //   char newline = '\n';
-      //   rc = writer_->writen(&newline, 1);
-      //   if (OB_FAIL(rc)) 
-      //   {
-      //     LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-      //     sql_result->close();
-      //     return rc;
-      //   }
-      // }
+        char newline = '\n';
+        rc = writer_->writen(&newline, 1);
+        if (OB_FAIL(rc)) 
+        {
+          LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+          sql_result->close();
+          return rc;
+        }
+      }
+      
 
     } else {
 

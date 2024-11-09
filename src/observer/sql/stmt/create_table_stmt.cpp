@@ -87,6 +87,7 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
       }
       attr_infos.emplace_back(attr_info);
     }
+    
     if (0 != create_table.attr_infos.size()) {
       if (attr_infos.size() != create_table.attr_infos.size()) {
         LOG_ERROR("field size mismatch with output column size of select_stmt");
@@ -98,10 +99,21 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
           return RC::INVALID_ARGUMENT;
         }
       }
+      AttrInfoSqlNode attr_info;
+      attr_info.name = NULL_FIELD_NAME;
+      attr_info.type = AttrType::INTS;
+      attr_info.length = 4;
+      std::vector<AttrInfoSqlNode> temp=create_table.attr_infos;
+      temp.emplace_back(attr_info);
       // 指定了列属性、带select
-      stmt = new CreateTableStmt(db, create_table.relation_name, create_table.attr_infos, select_stmt,storage_format);
+      stmt = new CreateTableStmt(db, create_table.relation_name, temp, select_stmt,storage_format);
     } else {
       // 未指定列属性、带select
+      AttrInfoSqlNode attr_info;
+      attr_info.name = NULL_FIELD_NAME;
+      attr_info.type = AttrType::INTS;
+      attr_info.length = 4;
+      attr_infos.emplace_back(attr_info);
       stmt = new CreateTableStmt(db, create_table.relation_name, attr_infos, select_stmt,storage_format);
     }
   } else {

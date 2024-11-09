@@ -396,7 +396,6 @@ RC Table::make_record(int value_num, const Value *values, Record &record)
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
     return RC::SCHEMA_FIELD_MISSING;
   }
-
   // 检查字段类型是否一致
   // 当不一致时，要判断该字段是否允许NULL值
   std::vector<int> bit_map(value_num, !NULL_FLAG);

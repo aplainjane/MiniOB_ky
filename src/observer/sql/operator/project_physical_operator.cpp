@@ -82,7 +82,10 @@ RC ProjectPhysicalOperator::tuple_schema(TupleSchema &schema) const
     }
   }
   for (const unique_ptr<Expression> &expression : expressions_) {
-    if(expression->type() == ExprType::FIELD && flag)
+    if(strcmp(expression->alias(), "") != 0){
+      schema.append_cell(expression->alias());
+    }
+    else if(expression->type() == ExprType::FIELD && flag)
     {
       FieldExpr *field_expr = static_cast<FieldExpr *>(expression.get());
       schema.append_cell(field_expr->table_name(),field_expr->name());

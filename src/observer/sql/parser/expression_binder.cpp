@@ -45,7 +45,7 @@ static void wildcard_fields(Table *table, vector<unique_ptr<Expression>> &expres
   }
 }
 
-RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -53,15 +53,15 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
 
   switch (expr->type()) {
     case ExprType::STAR: {
-      return bind_star_expression(expr, bound_expressions);
+      return bind_star_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::UNBOUND_FIELD: {
-      return bind_unbound_field_expression(expr, bound_expressions);
+      return bind_unbound_field_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::UNBOUND_AGGREGATION: {
-      return bind_aggregate_expression(expr, bound_expressions);
+      return bind_aggregate_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::FIELD: {
@@ -85,7 +85,7 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
     } break;
 
     case ExprType::ARITHMETIC: {
-      return bind_arithmetic_expression(expr, bound_expressions);
+      return bind_arithmetic_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::FUNCTION: {
@@ -105,17 +105,27 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
 }
 
 RC ExpressionBinder::bind_star_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,std::unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
   }
 
   auto star_expr = static_cast<StarExpr *>(expr.get());
-
+  string alias=star_expr->alias();
+  if(alias!="")
+  {
+    return RC::INTERNAL;
+  }
   vector<Table *> tables_to_wildcard;
 
   const char *table_name = star_expr->table_name();
+  for (const auto &alias_pair : table_alias) {
+    if (alias_pair.first == table_name) {
+      table_name = alias_pair.second.c_str();  // Update table_name to the corresponding alias
+      break;
+    }
+  }
   if (!is_blank(table_name) && 0 != strcmp(table_name, "*")) {
     Table *table = context_.find_table(table_name);
     if (nullptr == table) {
@@ -137,7 +147,7 @@ RC ExpressionBinder::bind_star_expression(
 }
 
 RC ExpressionBinder::bind_unbound_field_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -146,6 +156,12 @@ RC ExpressionBinder::bind_unbound_field_expression(
   auto unbound_field_expr = static_cast<UnboundFieldExpr *>(expr.get());
 
   const char *table_name = unbound_field_expr->table_name();
+  for (const auto &alias_pair : table_alias) {
+    if (alias_pair.first == table_name) {
+      table_name = alias_pair.second.c_str();  // Update table_name to the corresponding alias
+      break;
+    }
+  }
   const char *field_name = unbound_field_expr->field_name();
 
   Table *table = nullptr;
@@ -176,6 +192,7 @@ RC ExpressionBinder::bind_unbound_field_expression(
     Field      field(table, field_meta);
     FieldExpr *field_expr = new FieldExpr(field);
     field_expr->set_name(field_name);
+    field_expr->set_alias(expr->alias());
     bound_expressions.emplace_back(field_expr);
   }
 
@@ -313,7 +330,7 @@ RC ExpressionBinder::bind_conjunction_expression(
 }
 
 RC ExpressionBinder::bind_arithmetic_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -325,7 +342,7 @@ RC ExpressionBinder::bind_arithmetic_expression(
   unique_ptr<Expression>        &left_expr  = arithmetic_expr->left();
   unique_ptr<Expression>        &right_expr = arithmetic_expr->right();
 
-  RC rc = bind_expression(left_expr, child_bound_expressions);
+  RC rc = bind_expression(left_expr, child_bound_expressions,table_alias);
   if (OB_FAIL(rc)) {
     return rc;
   }
@@ -341,7 +358,7 @@ RC ExpressionBinder::bind_arithmetic_expression(
   }
 
   child_bound_expressions.clear();
-  rc = bind_expression(right_expr, child_bound_expressions);
+  rc = bind_expression(right_expr, child_bound_expressions,table_alias);
   if (OB_FAIL(rc)) {
     return rc;
   }
@@ -355,7 +372,6 @@ RC ExpressionBinder::bind_arithmetic_expression(
   if (right.get() != right_expr.get()) {
     right_expr.reset(right.release());
   }
-
   bound_expressions.emplace_back(std::move(expr));
   return RC::SUCCESS;
 }
@@ -406,7 +422,7 @@ RC check_aggregate_expression(AggregateExpr &expression)
 }
 
 RC ExpressionBinder::bind_aggregate_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -431,7 +447,7 @@ RC ExpressionBinder::bind_aggregate_expression(
     ValueExpr *value_expr = new ValueExpr(Value(1));
     child_expr.reset(value_expr);
   } else {
-    rc = bind_expression(child_expr, child_bound_expressions);
+    rc = bind_expression(child_expr, child_bound_expressions,table_alias);
     if (OB_FAIL(rc)) {
       return rc;
     }
@@ -448,6 +464,7 @@ RC ExpressionBinder::bind_aggregate_expression(
 
   auto aggregate_expr = make_unique<AggregateExpr>(aggregate_type, std::move(child_expr));
   aggregate_expr->set_name(unbound_aggregate_expr->name());
+  aggregate_expr->set_alias(unbound_aggregate_expr->alias());
   rc = check_aggregate_expression(*aggregate_expr);
   if (OB_FAIL(rc)) {
     return rc;

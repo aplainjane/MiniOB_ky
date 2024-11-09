@@ -43,8 +43,11 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
   // collect tables in `from` statement
   vector<Table *>                tables;
   unordered_map<string, Table *> table_map=table_map1;
+  unordered_map<string, string> table_alias;
+  std::unordered_set<std::string> table_alias_set;
   for (size_t i = 0; i < select_sql.relations.size(); i++) {
-    const char *table_name = select_sql.relations[i].c_str();
+    const char *table_name;
+    table_name = select_sql.relations[i].first.c_str();
     if (nullptr == table_name) {
       LOG_WARN("invalid argument. relation name is null. index=%d", i);
       return RC::INVALID_ARGUMENT;
@@ -59,22 +62,43 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
     binder_context.add_table(table);
     tables.push_back(table);
     table_map.insert({table_name, table});
+
     if(select_sql.vec_order_rules.first_attr.relation_name == "")
     {
       select_sql.vec_order_rules.first_attr.relation_name = table_name;
+    }
+    if(select_sql.relations[i].second!="")
+    {
+      string alias=select_sql.relations[i].second.c_str();
+      if (table_alias_set.count(alias) != 0) {
+        return RC::INVALID_ARGUMENT;
+      }
+      table_alias_set.insert(alias);
+      table_alias.insert({alias, table_name});
+      table_map.insert({alias, table});
     }
   }
 
   // collect query fields in `select` statement
   vector<unique_ptr<Expression>> bound_expressions;
   ExpressionBinder expression_binder(binder_context);
-  
-  for (unique_ptr<Expression> &expression : select_sql.expressions) {
-    RC rc = expression_binder.bind_expression(expression, bound_expressions);
+  std::vector<std::string> expression_alias_set;
+  for (int i = 0;i<(int)select_sql.expressions.size();i++) {
+    RC rc = expression_binder.bind_expression(select_sql.expressions[i], bound_expressions,table_alias);
     if (OB_FAIL(rc)) {
       LOG_INFO("bind expression failed. rc=%s", strrc(rc));
       return rc;
     }
+    if(strcmp(bound_expressions[i]->alias(), "") != 0)
+    {
+      string alias=bound_expressions[i]->alias();
+      for(int j =0;j<(int)expression_alias_set.size();j++){
+        if(alias==expression_alias_set[j])
+          return RC::INTERNAL;
+      }
+      expression_alias_set.push_back(alias);
+    }
+    
   }
   for (ConditionSqlNode &condition : select_sql.having_conditions)
   {

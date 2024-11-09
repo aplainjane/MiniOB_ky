@@ -134,6 +134,7 @@ public:
   virtual bool is_tuple_list() { return true;}
   virtual  string getsqlresult(){return nullptr;}
   virtual  std::unordered_map<std::string, Table *> gettable( ){return {};}
+  virtual void set_alias(std::string alias) { alias_ = alias; }
 protected:
   /**
    * @brief 表达式在下层算子返回的 chunk 中的位置
@@ -145,7 +146,7 @@ protected:
 
 private:
   std::string   name_;
-  std::string alias_;
+  std::string   alias_;
 };
 
 class StarExpr : public Expression
@@ -170,6 +171,7 @@ public:
 
 private:
   std::string table_name_;
+  std::string alias_;
 };
 
 class UnboundFieldExpr : public Expression
@@ -199,6 +201,7 @@ public:
 private:
   std::string table_name_;
   std::string field_name_;
+  std::string   alias_;
 };
 
 /**
@@ -240,6 +243,7 @@ public:
   }
 private:
   Field field_;
+  std::string   alias_;
 };
 class SubqueryExpr : public Expression
 {
@@ -338,6 +342,7 @@ public:
 
 private:
   Value value_;
+  std::string alias_;
 };
 
 /**
@@ -373,6 +378,7 @@ private:
 private:
   std::unique_ptr<Expression> child_;      ///< 从这个表达式转换
   AttrType                    cast_type_;  ///< 想要转换成这个类型
+  std::string alias_;
 };
 
 /**
@@ -429,6 +435,7 @@ private:
   CompOp                      comp_;
   std::unique_ptr<Expression> left_;
   std::unique_ptr<Expression> right_;
+  std::string alias_;
 };
 
 /**
@@ -471,6 +478,7 @@ public:
 private:
   Type                                     conjunction_type_;
   std::vector<std::unique_ptr<Expression>> children_;
+  std::string alias_;
 };
 
 /**
@@ -544,6 +552,7 @@ private:
   Type                        arithmetic_type_;
   std::unique_ptr<Expression> left_;
   std::unique_ptr<Expression> right_;
+  std::string   alias_;
 };
 
 class UnboundAggregateExpr : public Expression
@@ -602,6 +611,7 @@ private:
   std::vector<std::unique_ptr<Expression> >* childs_;
   std::unique_ptr<Expression> child_ = nullptr;
   bool                   error_ = false;
+  std::string alias_;
 };
 
 class AggregateExpr : public Expression
@@ -654,6 +664,7 @@ public:
 private:
   Type                        aggregate_type_;
   std::unique_ptr<Expression> child_;
+  std::string alias_;
 };
 
 class FunctionExpr : public Expression {
@@ -711,4 +722,5 @@ public:
 private:
   FuncOp func_type_;
   std::vector<std::unique_ptr<Expression>> params_; 
+  std::string alias_;
 };

@@ -271,6 +271,9 @@ RC ComparisonExpr::get_value(const Tuple &tuple, Value &value) const
     sql_event.table_map=right_->gettable();
     SqlTaskHandler temp;
     rc = temp.handle_sql(&sql_event);
+    if(rc!=RC::SUCCESS){
+      return RC::INTERNAL;
+    }
     SqlResult *sql_result=event->sql_result();
     if(sql_result->operator_.get()!=nullptr){
       sql_result->operator_->set_parent_tuple(&tuple);

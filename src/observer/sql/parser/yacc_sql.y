@@ -787,6 +787,9 @@ expression:
     | '*' {
       $$ = new StarExpr();
     }
+    | ID DOT '*'{
+      $$ = new StarExpr($1);
+    }
     | '-' expression %prec UMINUS {
       $$ = create_arithmetic_expression(ArithmeticExpr::Type::SUB, new ValueExpr(*(new Value(0))), $2, sql_string, &@$);
     }

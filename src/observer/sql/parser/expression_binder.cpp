@@ -53,7 +53,7 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
 
   switch (expr->type()) {
     case ExprType::STAR: {
-      return bind_star_expression(expr, bound_expressions);
+      return bind_star_expression(expr, bound_expressions,table_alias);
     } break;
 
     case ExprType::UNBOUND_FIELD: {
@@ -105,7 +105,7 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
 }
 
 RC ExpressionBinder::bind_star_expression(
-    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions)
+    unique_ptr<Expression> &expr, vector<unique_ptr<Expression>> &bound_expressions,std::unordered_map<string, string> table_alias)
 {
   if (nullptr == expr) {
     return RC::SUCCESS;
@@ -116,6 +116,12 @@ RC ExpressionBinder::bind_star_expression(
   vector<Table *> tables_to_wildcard;
 
   const char *table_name = star_expr->table_name();
+  for (const auto &alias_pair : table_alias) {
+    if (alias_pair.first == table_name) {
+      table_name = alias_pair.second.c_str();  // Update table_name to the corresponding alias
+      break;
+    }
+  }
   if (!is_blank(table_name) && 0 != strcmp(table_name, "*")) {
     Table *table = context_.find_table(table_name);
     if (nullptr == table) {

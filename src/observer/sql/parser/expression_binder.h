@@ -49,7 +49,7 @@ public:
 
 private:
   RC bind_star_expression(
-      std::unique_ptr<Expression> &star_expr, std::vector<std::unique_ptr<Expression>> &bound_expressions);
+      std::unique_ptr<Expression> &star_expr, std::vector<std::unique_ptr<Expression>> &bound_expressions,std::unordered_map<string, string> table_alias);
   RC bind_unbound_field_expression(
       std::unique_ptr<Expression> &unbound_field_expr, std::vector<std::unique_ptr<Expression>> &bound_expressions,std::unordered_map<string, string> table_alias);
   RC bind_field_expression(

@@ -211,7 +211,7 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
     string i = "└─VECTOR_INDEX_SCAN(" + name + " ON " + table_name + ")" + "\n";
     result = i.c_str();
     rc = writer_->writen(result, strlen(result));
-    rc = writer_->writen(&newline, 1);
+    // rc = writer_->writen(&newline, 1);
     if (OB_FAIL(rc)) 
     {
       LOG_WARN("failed to send data to client. err=%s", strerror(errno));
@@ -219,7 +219,8 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
       return rc;
     }
 
-    return rc;
+    need_disconnect = false;
+    return RC::SUCCESS;
   }
 
   if (RC::SUCCESS != sql_result->return_code() || !sql_result->has_operator()) {

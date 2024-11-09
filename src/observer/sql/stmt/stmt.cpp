@@ -123,10 +123,6 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt,SQLStageEvent 
       return CalcStmt::create(sql_node.calc, stmt);
     }
 
-    case SCF_VEC_EXPLAIN:{
-      return RC::SUCCESS;
-    }
-
     default: {
       LOG_INFO("Command::type %d doesn't need to create statement.", sql_node.flag);
     } break;

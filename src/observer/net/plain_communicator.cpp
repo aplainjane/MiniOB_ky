@@ -265,9 +265,39 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
   auto order_rules = sql_result->get_order_rules();
   auto vec_order_rules = sql_result->get_vec_order_rules();
-  /* 为了实现order by， 不得已只能在这里修改了  */
+  auto vec_explain = sql_result->get_vec_explain_rules();
 
-  if (order_rules.size() > 0)
+  if(vec_explain.table_name != "")
+  {
+    const char* result = "Query Plan";
+    rc = writer_->writen(result, strlen(result));
+    char newline = '\n';
+    rc = writer_->writen(&newline, 1);
+    result = "OPERATOR(ORDER_BY_VEC)";
+    rc = writer_->writen(result, strlen(result));
+    rc = writer_->writen(&newline, 1);
+    Table * table = nullptr;
+    Db *db = session_->get_current_db();
+    table = db->find_table(vec_order_rules.first_attr.relation_name.c_str());
+    Index * idx =nullptr;
+    idx = table->find_vec_index_by_fields(vec_order_rules.first_attr.attribute_name.c_str()); 
+    string name = idx->index_meta().name();
+    string field = idx->index_meta().field(0);
+    result = "PROJECT";
+    rc = writer_->writen(result, strlen(result));
+    rc = writer_->writen(&newline, 1);
+    string i = "└─VECTOR_INDEX_SCAN(" + name + "ON" + field + ")";
+    result = i.c_str();
+    rc = writer_->writen(result, strlen(result));
+    rc = writer_->writen(&newline, 1);
+      if (OB_FAIL(rc)) 
+      {
+        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+        sql_result->close();
+        return rc;
+      }
+  }
+  else if (order_rules.size() > 0)
   {
      //std::cout<<"5"<<endl;
     // 获得排序列的索引与标识

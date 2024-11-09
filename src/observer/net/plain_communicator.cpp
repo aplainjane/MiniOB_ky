@@ -437,19 +437,36 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
 
       std::vector<Value> vec_result;
       vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
+
+
+
+      // 取出全部Tuple
+      std::vector<std::vector<Value>> tuple_set_all;
+      while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+        std::vector<Value> temp;
+        int num_cell = tuple->cell_num();
+        for(int i = 0; i < num_cell; i++){
+          Value cell;
+          tuple->cell_at(i, cell);
+          temp.push_back(cell);
+        }
+        tuple_set_all.push_back(temp);    
+      }
+
+
       
       std::vector<std::vector<Value>> tuple_set;
       std::vector<int> havepush(vec_result.size(), 0);
       int current_tuple = 0;
       for(size_t g = 0; g < vec_result.size(); g++){
         current_tuple = 0;
-        while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+        while (current_tuple < tuple_set_all.size()) {
+          vector<Value> tuple = tuple_set_all[current_tuple];
           std::vector<Value> temp;
-          int num_cell = tuple->cell_num();
+          int num_cell = tuple.size();
           bool find = false;
           for(int i = 0; i < num_cell; i++){
-            Value cell;
-            tuple->cell_at(i, cell);
+            Value cell = tuple[i];
             temp.push_back(cell);
             if(i == order_index){
               if(cell.compare(vec_result[g]) == 0 && havepush[current_tuple] == 0){

@@ -630,6 +630,7 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
   LOG_TRACE("read packet header. length=%d, sequence_id=%d, payload_length=%d, fd=%d",
             sizeof(packet_header), packet_header.sequence_id, packet_header.payload_length, fd_);
   sequence_id_ = packet_header.sequence_id + 1;
+  LOG_INFO("read id %d",sequence_id_);
 
   vector<char> buf(packet_header.payload_length);
   ret = common::readn(fd_, buf.data(), packet_header.payload_length);
@@ -650,6 +651,7 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
     // send ok packet and return
     OkPacket ok_packet;
     ok_packet.packet_header.sequence_id = sequence_id_;
+    LOG_INFO("shakehand id %d",sequence_id_);
 
     rc = send_packet(ok_packet);
     if (rc != RC::SUCCESS) {
@@ -686,9 +688,11 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
 
     event = new SessionEvent(this);
     event->set_query(query_packet.query);
+
   } else {
     /// 其它的非文本请求，暂时不支持
     OkPacket ok_packet(sequence_id_);
+    LOG_INFO("no text id %d",sequence_id_);
     rc = send_packet(ok_packet);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to send ok packet. command=%d, addr=%s, error=%s", command_type, addr(), strrc(rc));
@@ -726,7 +730,9 @@ RC MysqlCommunicator::write_state(SessionEvent *event, bool &need_disconnect)
     err_packet.error_code                = static_cast<int>(sql_result->return_code());
     err_packet.error_message             = buf;
     rc                                   = send_packet(err_packet);
+    LOG_INFO("Send error packet what . rc=%s", strrc(rc));
   }
+
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to send ok packet to client. addr=%s, error=%s", addr(), strrc(rc));
     need_disconnect = true;
@@ -750,6 +756,7 @@ RC MysqlCommunicator::write_result(SessionEvent *event, bool &need_disconnect)
     const char *response = "Unexpected error: no result";
     const int   len      = strlen(response);
     OkPacket    ok_packet;  // TODO if error occurs, we should send an error packet to client
+    LOG_INFO("see see %d",static_cast<int>(ok_packet.packet_header.sequence_id));
     ok_packet.info.assign(response, len);
     rc = send_packet(ok_packet);
     if (rc != RC::SUCCESS) {
@@ -765,16 +772,19 @@ RC MysqlCommunicator::write_result(SessionEvent *event, bool &need_disconnect)
 
     // send result set
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset.html
+    LOG_INFO("what happen?1");
     RC rc = sql_result->open();
     if (rc != RC::SUCCESS) {
       sql_result->set_return_code(rc);
+      LOG_INFO("a?");
       return write_state(event, need_disconnect);
     }
-
+    LOG_INFO("what happen?2");
     const TupleSchema &tuple_schema = sql_result->tuple_schema();
     const int          cell_num     = tuple_schema.cell_num();
     if (cell_num == 0) {
       // maybe a dml that send nothing to client
+      LOG_INFO("Empty result set is sent to client");
     } else {
 
       // send metadata : Column Definition
@@ -785,6 +795,7 @@ RC MysqlCommunicator::write_result(SessionEvent *event, bool &need_disconnect)
       }
     }
 
+    LOG_INFO("Send result rows");
     rc = send_result_rows(event, sql_result, cell_num == 0, need_disconnect);
   }
 
@@ -842,6 +853,7 @@ RC MysqlCommunicator::send_column_definition(SqlResult *sql_result, bool &need_d
 
   pos += 3;
   store_int1(buf + pos, sequence_id_++);
+  LOG_INFO("send_column_defin id %d",sequence_id_);
   pos += 1;
 
   if (client_capabilities_flag_ & CLIENT_OPTIONAL_RESULTSET_METADATA) {
@@ -872,6 +884,7 @@ RC MysqlCommunicator::send_column_definition(SqlResult *sql_result, bool &need_d
 
     pos += 3;
     store_int1(buf + pos, sequence_id_++);
+    LOG_INFO("a for id %d",sequence_id_);
     pos += 1;
 
     const TupleCellSpec &spec      = tuple_schema.cell_at(i);
@@ -955,26 +968,28 @@ RC MysqlCommunicator::send_result_rows(SessionEvent *event, SqlResult *sql_resul
   int    affected_rows = 0;
   if (event->session()->get_execution_mode() == ExecutionMode::CHUNK_ITERATOR
       && event->session()->used_chunk_mode()) {
+    LOG_INFO("chunk iterator mode");
     rc = write_chunk_result(sql_result, packet, affected_rows, need_disconnect);
   } else {
+    LOG_INFO("tuple mode");
     rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
   }
 
   // 所有行发送完成后，发送一个EOF或OK包
   if ((client_capabilities_flag_ & CLIENT_DEPRECATE_EOF) || no_column_def) {
-    LOG_TRACE("client has CLIENT_DEPRECATE_EOF or has empty column, send ok packet");
+    LOG_INFO("client has CLIENT_DEPRECATE_EOF or has empty column, send ok packet");
     OkPacket ok_packet;
     ok_packet.packet_header.sequence_id = sequence_id_++;
     ok_packet.affected_rows             = affected_rows;
     rc                                  = send_packet(ok_packet);
   } else {
-    LOG_TRACE("send eof packet to client");
+    LOG_INFO("send eof packet to client");
     EofPacket eof_packet;
     eof_packet.packet_header.sequence_id = sequence_id_++;
     rc                                   = send_packet(eof_packet);
   }
 
-  LOG_TRACE("send rows to client done");
+  LOG_INFO("send rows to client done");
   need_disconnect = false;
   return rc;
 }

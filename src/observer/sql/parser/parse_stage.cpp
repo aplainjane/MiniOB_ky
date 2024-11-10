@@ -54,6 +54,7 @@ RC ParseStage::handle_request(SQLStageEvent *sql_event)
     // set error information to event
     rc = RC::SQL_SYNTAX;
     sql_result->set_return_code(rc);
+    LOG_INFO("syntax error: %s",sql_node->error.error_msg);
     sql_result->set_state_string("Failed to parse sql");
     return rc;
   }

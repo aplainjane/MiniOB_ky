@@ -533,6 +533,8 @@ RC decode_query_packet(vector<char> &net_packet, QueryPacket &query_packet)
   // query field is a null terminated string
   query_packet.query.assign(net_packet.data() + 1, net_packet.size() - 1);
   query_packet.query.append(1, ';');
+
+  LOG_INFO("receive query: %s", query_packet.query.c_str());
   return RC::SUCCESS;
 }
 
@@ -664,6 +666,7 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
 
   /// 已经做过握手，接收普通的消息包
   if (command_type == 0x03) {  // COM_QUERY，这是一个普通的文本请求
+    LOG_INFO("recv query command from client");
     QueryPacket query_packet;
     rc = decode_query_packet(buf, query_packet);
     if (rc != RC::SUCCESS) {
@@ -673,6 +676,10 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
 
     LOG_TRACE("query command: %s", query_packet.query.c_str());
     if (query_packet.query.find("select @@version_comment") != string::npos) {
+      bool need_disconnect;
+      return handle_version_comment(need_disconnect);
+    }
+    if (query_packet.query.find("SET NAMES utf8mb4;") != string::npos) {
       bool need_disconnect;
       return handle_version_comment(need_disconnect);
     }

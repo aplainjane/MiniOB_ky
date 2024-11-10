@@ -94,6 +94,7 @@ public:
       }
 
       RC rc = task_handler_.handle_event(communicator_);
+      LOG_INFO("handle event. 2");
       if (OB_FAIL(rc)) {
         LOG_ERROR("handle error. rc = %s", strrc(rc));
         break;

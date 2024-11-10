@@ -21,7 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/field/field.h"
 #include "sql/expr/aggregator.h"
 #include "storage/common/chunk.h"
-
+#include "sql/expr/tuple_cell.h"
 
 
 class Tuple;
@@ -212,8 +212,11 @@ class FieldExpr : public Expression
 {
 public:
   FieldExpr() = default;
-  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {}
-  FieldExpr(const Field &field) : field_(field) {}
+  FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field) {
+    spec_ = TupleCellSpec(table_name(), field_name());
+  }
+  FieldExpr(const Field &field) : field_(field) { spec_ = TupleCellSpec(table_name(), field_name()); }
+
 
   virtual ~FieldExpr() = default;
 
@@ -244,6 +247,7 @@ public:
 private:
   Field field_;
   std::string   alias_;
+  TupleCellSpec spec_;
 };
 class SubqueryExpr : public Expression
 {

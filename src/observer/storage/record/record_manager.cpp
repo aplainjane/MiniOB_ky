@@ -171,7 +171,7 @@ RC RecordPageHandler::init_empty_page(
 
   int column_num = 0;
   // only pax format need column index
-  if (table_meta != nullptr && storage_format_ == StorageFormat::PAX_FORMAT) {
+  if (table_meta != nullptr) {
     column_num = table_meta->field_num();
   }
   page_header_->record_num       = 0;

@@ -262,12 +262,9 @@ char *substr(const char *s, int n1, int n2)
   return sp;
 }
 
-/**
- * double to string
- * @param v
- * @return
- */
 std::string double_to_str(double v) {
+    // 四舍五入，舍弃小数点后第 3 位为 5 的情况
+    v = std::floor(v * 100 + 0.4999) / 100;
 
     char buf[256];
     snprintf(buf, sizeof(buf), "%.2f", v);

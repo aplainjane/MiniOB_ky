@@ -99,13 +99,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
     else{
       if(tuple_list.size()>1)
       {
-        string temp=tuple_list[0].to_string();
-        for(long unsigned int i = 1;i<tuple_list.size();i++)
-        {
-          if(tuple_list[i].to_string()!=temp){
-            flag=false;
-          }
-        }
+        flag=false;
       }
       if(flag){
         new_values.insert(new_values.begin()+update_sql.record[i],tuple_list[0]);

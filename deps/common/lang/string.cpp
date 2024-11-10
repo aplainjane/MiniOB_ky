@@ -263,8 +263,8 @@ char *substr(const char *s, int n1, int n2)
 }
 
 std::string double_to_str(double v) {
-    // 四舍五入，舍弃小数点后第 3 位为 5 的情况
-    v = std::floor(v * 100 + 0.4999) / 100;
+    // 四舍五入到两位小数
+    v = std::round(v * 100) / 100;
 
     char buf[256];
     snprintf(buf, sizeof(buf), "%.2f", v);
@@ -281,4 +281,5 @@ std::string double_to_str(double v) {
 
     return std::string(buf, len);
 }
+
 }  // namespace common

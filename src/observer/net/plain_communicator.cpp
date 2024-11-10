@@ -317,124 +317,108 @@ RC PlainCommunicator::write_result_internal(SessionEvent *event, bool &need_disc
   auto order_rules = sql_result->get_order_rules();
   auto vec_order_rules = sql_result->get_vec_order_rules();
 
-  if (order_rules.size() > 0)
-  {
-     //std::cout<<"5"<<endl;
-    // 获得排序列的索引与标识
+  if (!order_rules.empty()) {
+    // 使用 unordered_map 提高查找效率
+    std::unordered_map<std::string, int> column_index_map;
+    for (int i = 0; i < cell_num; i++) {
+        const TupleCellSpec &spec = schema.cell_at(i);
+        std::string column_name = strlen(spec.table_name()) == 0 ? spec.alias() : std::string(spec.table_name()) + "." + spec.field_name();
+        column_index_map[column_name] = i;
+    }
+
+    // 获取排序列的索引与标识
     std::vector<int> order_index;
     std::vector<OrderOp> order_op;
+    order_index.reserve(order_rules.size());
+    order_op.reserve(order_rules.size());
 
-    for(std::pair<RelAttrSqlNode, OrderOp> it: order_rules) 
-    {
-      order_op.push_back(it.second);
-      for(int i = 0; i < cell_num; i++){
-        const TupleCellSpec &spec = schema.cell_at(i);
-        if(  (strlen(spec.table_name()) == 0 && strcmp(spec.alias(), it.first.attribute_name.c_str()) == 0 )
-          || ((strcmp(spec.table_name(), it.first.relation_name.c_str()) == 0) && strcmp(spec.field_name(), it.first.attribute_name.c_str()) == 0)
-          
-        )
-        {
-          order_index.push_back(i);
-          break;
+    for (const auto &[attr, op] : order_rules) {
+        std::string column_name = attr.relation_name.empty() ? attr.attribute_name : attr.relation_name + "." + attr.attribute_name;
+        if (column_index_map.find(column_name) != column_index_map.end()) {
+            order_index.push_back(column_index_map[column_name]);
+            order_op.push_back(op);
         }
-      }
     }
 
-    // 取出全部Tuple
+    // 提取所有 Tuple
     std::vector<std::vector<Value>> tuple_set;
+    tuple_set.reserve(100); // 预估初始容量
     while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
-      std::vector<Value> temp;
-      int num_cell = tuple->cell_num();
-      for(int i = 0; i < num_cell; i++){
-        Value cell;
-        tuple->cell_at(i, cell);
-        temp.push_back(cell);
-      }
-      tuple_set.push_back(temp);    
+        std::vector<Value> temp;
+        temp.reserve(tuple->cell_num());
+        for (int i = 0; i < tuple->cell_num(); i++) {
+            Value cell;
+            tuple->cell_at(i, cell);
+            temp.push_back(cell);
+        }
+        tuple_set.push_back(std::move(temp));
     }
-    if(rc==RC::INTERNAL)
-    {
-      sql_result->set_return_code(RC::INTERNAL);
-      sql_result->close();
-      rc = writer_->clear();
-      return write_state(event, need_disconnect);
+
+    if (rc == RC::INTERNAL) {
+        sql_result->set_return_code(RC::INTERNAL);
+        sql_result->close();
+        rc = writer_->clear();
+        return write_state(event, need_disconnect);
     }
+
     // 排序
-    std::sort(tuple_set.begin(), tuple_set.end(), 
-      [order_index, order_op](const std::vector<Value>& t1, const std::vector<Value>& t2) {
-        for (size_t i = 0; i < order_index.size(); i++) {
-          int target_index = order_index[i];
-          const Value& v1 = t1[target_index];
-          const Value& v2 = t2[target_index];
-          
-          // 如果两者均为NULL，跳过当前字段
-          if (v1.attr_type() == AttrType::NULLS && v2.attr_type() == AttrType::NULLS) {
-            continue;
-          }
-          bool isAscending = (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT);
+    std::sort(tuple_set.begin(), tuple_set.end(),
+        [order_index, order_op](const std::vector<Value> &t1, const std::vector<Value> &t2) {
+            for (size_t i = 0; i < order_index.size(); i++) {
+                int target_index = order_index[i];
+                const Value &v1 = t1[target_index];
+                const Value &v2 = t2[target_index];
 
+                if (v1.attr_type() == AttrType::NULLS && v2.attr_type() == AttrType::NULLS) continue;
 
-          // 如果一个为NULL，决定顺序：这里假设NULL值排在最后
-          if (v1.attr_type() == AttrType::NULLS) return isAscending ? true : false;
-          if (v2.attr_type() == AttrType::NULLS) return isAscending ? false : true;
+                bool isAscending = (order_op[i] == ORDER_ASC || order_op[i] == ORDER_DEFAULT);
 
-          int ret = v1.compare(v2);
-          if (ret != 0) {
-            // 根据排序方向决定顺序    
-            return isAscending ? ret < 0 : ret > 0;
-          }
+                if (v1.attr_type() == AttrType::NULLS) return isAscending;
+                if (v2.attr_type() == AttrType::NULLS) return !isAscending;
+
+                int ret = v1.compare(v2);
+                if (ret != 0) return isAscending ? ret < 0 : ret > 0;
+            }
+            return false;
+        });
+
+    // 输出结果
+    auto should_ignore = [&](int index) {
+        return std::find(ignored_index.begin(), ignored_index.end(), index) != ignored_index.end();
+    };
+
+    for (const auto &tuple : tuple_set) {
+        for (size_t j = 0; j < tuple.size(); j++) {
+            if (should_ignore(j)) continue;
+
+            if (j != 0) {
+                const char *delim = " | ";
+                rc = writer_->writen(delim, strlen(delim));
+                if (OB_FAIL(rc)) {
+                    LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+                    sql_result->close();
+                    return rc;
+                }
+            }
+
+            std::string cell_str = tuple[j].to_string();
+            rc = writer_->writen(cell_str.data(), cell_str.size());
+            if (OB_FAIL(rc)) {
+                LOG_WARN("failed to send data to client. err=%s", strerror(errno));
+                sql_result->close();
+                return rc;
+            }
         }
-        // 如果所有字段都相等，返回false表示保持当前顺序
-        return false;
-      }
-    );
 
-    // 输出
-    for(int i = 0; i < tuple_set.size(); i++){
-      for(int j = 0; j < tuple_set[i].size(); j++)
-      {
-
-        // 忽略bitmap列
-        bool need_ignore = false;
-        for (int t = 0; t < ignored_index.size(); t++) {
-          if (j == ignored_index[t]) {
-            need_ignore = true;
-            break;
-          }
-        }
-        if(need_ignore)
-          continue;
-
-
-        if (j != 0) {
-          const char *delim = " | ";
-          rc = writer_->writen(delim, strlen(delim));
-          if (OB_FAIL(rc)) {
+        char newline = '\n';
+        rc = writer_->writen(&newline, 1);
+        if (OB_FAIL(rc)) {
             LOG_WARN("failed to send data to client. err=%s", strerror(errno));
             sql_result->close();
             return rc;
-          }
         }
-
-        std::string cell_str = tuple_set[i][j].to_string();
-        rc = writer_->writen(cell_str.data(), cell_str.size());
-        if (OB_FAIL(rc)) {
-          LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-          sql_result->close();
-          return rc;
-        }
-      }
-
-      char newline = '\n';
-      rc = writer_->writen(&newline, 1);
-      if (OB_FAIL(rc)) 
-      {
-        LOG_WARN("failed to send data to client. err=%s", strerror(errno));
-        sql_result->close();
-        return rc;
-      }
     }
-  }
+}
   else if (vec_order_rules.type != NO_Func)
   {
     // 获得排序列的索引与标识

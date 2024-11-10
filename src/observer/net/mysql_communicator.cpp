@@ -670,11 +670,20 @@ RC MysqlCommunicator::read_event(SessionEvent *&event)
       LOG_WARN("failed to decode query packet. packet length=%ld, addr=%s, error=%s", buf.size(), addr(), strrc(rc));
       return rc;
     }
+    LOG_INFO("query command: %s", query_packet.query.c_str());
 
     LOG_TRACE("query command: %s", query_packet.query.c_str());
     if (query_packet.query.find("select @@version_comment") != string::npos) {
       bool need_disconnect;
       return handle_version_comment(need_disconnect);
+    }
+    LOG_TRACE("query command: %s", query_packet.query.c_str());
+    if (query_packet.query.find("SET NAME") != string::npos) {
+      bool need_disconnect = false;
+      SessionEvent session_event(this);
+      session_event.sql_result()->set_return_code(RC::SUCCESS);
+      rc = write_result(&session_event, need_disconnect);
+      return rc;
     }
 
     event = new SessionEvent(this);

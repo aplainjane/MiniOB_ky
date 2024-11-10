@@ -268,8 +268,6 @@ char *substr(const char *s, int n1, int n2)
  * @return
  */
 std::string double_to_str(double v) {
-    // 四舍五入到两位小数
-    v = std::round(v * 100) / 100;
 
     char buf[256];
     snprintf(buf, sizeof(buf), "%.2f", v);

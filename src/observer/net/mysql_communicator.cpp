@@ -1045,6 +1045,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       )
       {
         order_index = i;
+        LOG_INFO("order index is %d",order_index);
         if(vec_order_rules.first_attr.relation_name != "")
           table = db->find_table(vec_order_rules.first_attr.relation_name.c_str());
         else
@@ -1124,7 +1125,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       // search with function result
       // 取出全部Tuple
       Value cmp_value = vec_order_rules.value;
-      std::vector<std::vector<Value>> tuple_set;
+      LOG_INFO("tuple_set.size begin( %d ) \n",tuple_set.size());
       while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
         std::vector<Value> temp;
         int num_cell = tuple->cell_num();
@@ -1135,6 +1136,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
         }
         tuple_set.push_back(temp);    
       }
+      LOG_INFO("tuple_set.size end( %d ) \n",tuple_set.size());
       if(rc==RC::INTERNAL)
       {
         sql_result->set_return_code(rc);
@@ -1167,6 +1169,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
               
               LOG_INFO("debug:9.3.0.1 \n");
               vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              LOG_INFO("debug:9.3.0.111 \n");
               vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
               LOG_INFO("debug:9.3.0.2 \n");
 
@@ -1174,6 +1177,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
               if (left_vec1.size() != right_vec1.size()) {
                   LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
                           left_vec1.size(), right_vec1.size());
+                  LOG_INFO("debug:enter \n");
                   return false;
               }
               

@@ -42,6 +42,11 @@ RC SqlTaskHandler::handle_event(Communicator *communicator)
 
   bool need_disconnect = false;
 
+  SessionEvent *session_event = sql_event.session_event();
+  SqlResult* sql_result = session_event->sql_result();
+  sql_result->get_order_rules() = (*(sql_event.sql_node())).selection.order_rules;
+  sql_result->get_having_stmt() = (*(sql_event.sql_node())).selection.having_conditions;
+
   rc = communicator->write_result(event, need_disconnect);
   LOG_INFO("write result return %s", strrc(rc));
   event->session()->set_current_request(nullptr);

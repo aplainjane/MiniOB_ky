@@ -458,6 +458,8 @@ bool Value::get_boolean() const
 vector<ElementType> Value::get_vector() const
 {
   ASSERT(attr_type_ == AttrType::VECTORS, "attr type is not VECTORS");
+
+  LOG_INFO("get_vector: %d" , vector_values_.size());
   return vector_values_;
 }
 

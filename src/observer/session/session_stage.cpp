@@ -46,6 +46,10 @@ void SessionStage::handle_request(SessionEvent *sev)
 
   Communicator *communicator    = sev->get_communicator();
   bool          need_disconnect = false;
+  SessionEvent *session_event = sql_event.session_event();
+  SqlResult* sql_result = session_event->sql_result();
+  sql_result->get_order_rules() = (*(sql_event.sql_node())).selection.order_rules;
+  sql_result->get_having_stmt() = (*(sql_event.sql_node())).selection.having_conditions;
   RC            rc              = communicator->write_result(sev, need_disconnect);
   LOG_INFO("write result return %s", strrc(rc));
   if (need_disconnect) {
@@ -95,6 +99,8 @@ RC SessionStage::handle_sql(SQLStageEvent *sql_event)
   SqlResult* sql_result = session_event->sql_result();
   sql_result->get_order_rules() = (*(sql_event->sql_node())).selection.order_rules;
   sql_result->get_having_stmt() = (*(sql_event->sql_node())).selection.having_conditions;
+  sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
+  LOG_INFO("vec order_rules:%s,%s", sql_result->get_vec_order_rules().type,(*(sql_event->sql_node())).selection.vec_order_rules.type);
 
   rc = resolve_stage_.handle_request(sql_event);
   if (OB_FAIL(rc)) {
@@ -102,7 +108,6 @@ RC SessionStage::handle_sql(SQLStageEvent *sql_event)
     return rc;
   }
 
-  sql_result->get_vec_order_rules() = (*(sql_event->sql_node())).selection.vec_order_rules;
   sql_result->get_vec_explain_rules() = (*(sql_event->sql_node())).vec_explain;
 
   rc = optimize_stage_.handle_request(sql_event);

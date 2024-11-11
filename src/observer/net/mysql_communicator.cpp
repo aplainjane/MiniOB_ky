@@ -22,6 +22,9 @@ See the Mulan PSL v2 for more details. */
 #include "net/buffered_writer.h"
 #include "net/mysql_communicator.h"
 #include "sql/operator/string_list_physical_operator.h"
+#include "storage/db/db.h"
+#include "storage/index/ivfflat_index.h"
+#include <float.h>
 
 /**
  * @brief MySQL协议相关实现
@@ -958,8 +961,10 @@ RC MysqlCommunicator::send_result_rows(SessionEvent *event, SqlResult *sql_resul
   if (event->session()->get_execution_mode() == ExecutionMode::CHUNK_ITERATOR
       && event->session()->used_chunk_mode()) {
     rc = write_chunk_result(sql_result, packet, affected_rows, need_disconnect);
+    LOG_INFO("send chunk result to client");
   } else {
     rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
+    LOG_INFO("send tuple result to client");
   }
 
   // 所有行发送完成后，发送一个EOF或OK包
@@ -985,16 +990,327 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 {
   Tuple *tuple         = nullptr;
   RC rc = RC::SUCCESS;
-  while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
-    assert(tuple != nullptr);
+  int min_size = 0;
+  std::vector<std::vector<Value>> tuple_set;
+  
+  const TupleSchema &schema = sql_result->tuple_schema();
+  int cell_num = schema.cell_num();
 
-    affected_rows++;
+  // 增加bitmap列后，如果是联表查询，那么结果会出现多个bitmap列
+  // 存储每个bitmap的索引，后续投影时忽略
+  std::vector<int> ignored_index;
+  int bit_map_null = 0;
 
-    const int cell_num = tuple->cell_num();
-    if (cell_num == 0) {
-      continue;
+  for (int i = 0; i < cell_num; i++) {
+    const TupleCellSpec &spec = schema.cell_at(i);
+    const char *alias = spec.alias();
+    // std::cout  << spec.table_name() << " & " << spec.field_name() << " & " << spec.alias() << std::endl;
+
+    if (strcmp(alias, NULL_FIELD_NAME.c_str()) == 0 || strcmp(spec.field_name(), NULL_FIELD_NAME.c_str()) == 0){
+      ignored_index.push_back(i);
+      bit_map_null +=1;
     }
 
+    if(sql_result->get_having_stmt().size()!=0)
+    {
+      if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null )
+      {
+        ignored_index.push_back(i);
+      }
+    }   
+  }
+
+  auto order_rules = sql_result->get_order_rules();
+  auto vec_order_rules = sql_result->get_vec_order_rules();
+
+
+  if (vec_order_rules.type != NO_Func)
+  {
+    // 获得排序列的索引与标识
+    int order_index = -1;
+    FuncOp order_op;
+
+    order_op = vec_order_rules.type;
+    bool have_index =false;
+    Index * idx =nullptr;
+
+    Table * table = nullptr;
+    Db *db = session_->get_current_db();
+
+    for(long unsigned int i = 0; i < cell_num; i++){
+      const TupleCellSpec &spec = schema.cell_at(i);
+      if(  (strlen(spec.table_name()) == 0 && strcmp(spec.alias(), vec_order_rules.first_attr.attribute_name.c_str()) == 0 )
+        || ((strcmp(spec.table_name(), vec_order_rules.first_attr.relation_name.c_str()) == 0) && strcmp(spec.field_name(), vec_order_rules.first_attr.attribute_name.c_str()) == 0)
+        
+      )
+      {
+        order_index = i;
+        if(vec_order_rules.first_attr.relation_name != "")
+          table = db->find_table(vec_order_rules.first_attr.relation_name.c_str());
+        else
+        {
+          break;
+        }
+        if (nullptr == table) {
+          LOG_WARN("no such table for vec search.");
+          return RC::SCHEMA_TABLE_NOT_EXIST;
+        }
+        idx = table->find_vec_index_by_fields(vec_order_rules.first_attr.attribute_name.c_str()); 
+        if (nullptr != idx) {
+          have_index = true;
+        }
+        break;
+      }
+    }
+
+    //std::cout<<have_index<<endl;
+    IvfflatIndex * ivf_idx = nullptr;    
+    if (nullptr!= idx){
+      ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
+      if (ivf_idx->distance_name() != vec_order_rules.type) have_index = false;
+    }
+
+    if (have_index) {
+      // use ann search
+      //std::cout<<"1"<<endl;
+
+      std::vector<Value> vec_result;
+      vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
+
+
+
+      // 取出全部Tuple
+      std::vector<std::vector<Value>> tuple_set_all;
+      while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+        std::vector<Value> temp;
+        int num_cell = tuple->cell_num();
+        for(long unsigned int i = 0; i < num_cell; i++){
+          Value cell;
+          tuple->cell_at(i, cell);
+          temp.push_back(cell);
+        }
+        tuple_set_all.push_back(temp);    
+      }
+
+
+      std::vector<int> havepush(vec_result.size(), 0);
+      // 使用哈希表来加速查找
+      std::unordered_map<std::string, int> tuple_map;
+      for (int i = 0; i < tuple_set_all.size(); i++) {
+        const std::string &key = tuple_set_all[i][order_index].to_string();
+        tuple_map[key] = i;
+      }
+
+      for (const Value &vec_val : vec_result) {
+        const std::string &key = vec_val.to_string();
+        if (tuple_map.find(key) != tuple_map.end() && havepush[tuple_map[key]] == 0) {
+            havepush[tuple_map[key]] = 1;
+            tuple_set.push_back(tuple_set_all[tuple_map[key]]);
+        }
+      }
+
+
+      if(rc==RC::INTERNAL)
+      {
+        sql_result->set_return_code(rc);
+      }
+
+      min_size = (tuple_set.size() > vec_order_rules.limit) ? vec_order_rules.limit : tuple_set.size();
+      
+    } else {
+
+      //std::cout<<"2"<<endl;
+      // search with function result
+      // 取出全部Tuple
+      Value cmp_value = vec_order_rules.value;
+      std::vector<std::vector<Value>> tuple_set;
+      while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
+        std::vector<Value> temp;
+        int num_cell = tuple->cell_num();
+        for(int i = 0; i < num_cell; i++){
+          Value cell;
+          tuple->cell_at(i, cell);
+          temp.push_back(cell);
+        }
+        tuple_set.push_back(temp);    
+      }
+      if(rc==RC::INTERNAL)
+      {
+        sql_result->set_return_code(rc);
+      }
+
+      // 获取函数结果
+      // 排序
+      std::sort(tuple_set.begin(), tuple_set.end(), 
+        [order_index, order_op, cmp_value](const std::vector<Value>& t1, const std::vector<Value>& t2) {
+
+          int target_index = order_index;
+          const Value& v1 = t1[target_index];
+          const Value& v2 = t2[target_index];
+
+          Value v1_float;
+          v1_float.set_float(FLT_MAX);
+          Value v2_float;
+          v2_float.set_float(FLT_MAX);
+
+          switch (order_op)
+          {
+            case I2_DISTANCE:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              for (int i = 0; i < left_vec1.size(); i++) {
+                std::visit([&result, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec1[i]));
+                
+                  result += pow(left_float - right_float, 2);
+                }, left_vec1[i]);
+              }
+              result = sqrt(result);
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              for (int i = 0; i < left_vec2.size(); i++) {
+                std::visit([&result, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec2[i]));
+                
+                  result += pow(left_float - right_float, 2);
+                }, left_vec2[i]);
+              }
+              result = sqrt(result);
+              v2_tmp = result;
+
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+            } break;
+            case COSINE_DISTANCE:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              float sumA2 = 0.0f;
+              float sumB2 = 0.0f;
+              float sumAB = 0.0f;
+              for (long unsigned int i = 0; i < left_vec1.size(); i++) {
+                std::visit([&sumA2, &sumB2, &sumAB, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec1[i]));
+                
+                  sumA2 += left_float * left_float;
+                  sumB2 += right_float * right_float;
+                  sumAB += left_float * right_float;
+                }, left_vec1[i]);
+              }
+              result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              sumA2 = 0.0f;
+              sumB2 = 0.0f;
+              sumAB = 0.0f;
+              for (long unsigned int i = 0; i < left_vec2.size(); i++) {
+                std::visit([&sumA2, &sumB2, &sumAB, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  float right_float = static_cast<float>(std::visit([](auto&& right_val) {
+                    return static_cast<float>(right_val);
+                  }, right_vec2[i]));
+                
+                  sumA2 += left_float * left_float;
+                  sumB2 += right_float * right_float;
+                  sumAB += left_float * right_float;
+                }, left_vec2[i]);
+              }
+              result = 1 - sumAB / (sqrt(sumA2) * sqrt(sumB2));
+              v2_tmp = result;
+
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+            } break;
+            case INNER_PRODUCT:
+            {
+              float v1_tmp = FLT_MAX;
+              float v2_tmp = FLT_MAX;
+              
+              vector<std::variant<int, float>> left_vec1 = v1.get_vector();
+              vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              float result = 0.0f;
+              for (int i = 0; i < left_vec1.size(); i++) {
+                std::visit([&result, &right_vec1, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  std::visit([&result, left_float](auto&& right_val) {
+                    float right_float = static_cast<float>(right_val);
+                    result += (left_float * right_float);
+                  }, right_vec1[i]);
+                }, left_vec1[i]);
+              }
+              v1_tmp = result;
+
+              vector<std::variant<int, float>> left_vec2 = v2.get_vector();
+              vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              result = 0.0f;
+              for (int i = 0; i < left_vec2.size(); i++) {
+                std::visit([&result, &right_vec2, i](auto&& left_val) {
+                  float left_float = static_cast<float>(left_val);
+                  std::visit([&result, left_float](auto&& right_val) {
+                    float right_float = static_cast<float>(right_val);
+                    result += (left_float * right_float);
+                  }, right_vec2[i]);
+                }, left_vec2[i]);
+              }
+              v2_tmp = result;
+
+              v1_float.set_float(v1_tmp);
+              v2_float.set_float(v2_tmp);
+            } break;
+            default:
+              break;
+          }
+          if (v1_float.get_float() == FLT_MAX || v2_float.get_float() == FLT_MAX){
+            LOG_WARN("failed to cast to float");
+            return false;
+          }
+          int ret = v1_float.compare(v2_float);
+          if (ret != 0) {
+            // 根据排序方向决定顺序    
+            return ret < 0;
+          }
+      
+          // 如果所有字段都相等，返回false表示保持当前顺序
+          return false;
+        }
+      );
+ 
+    }
+  }
+
+  for(long unsigned int i = 0; i < min_size; i++){
+    
+    affected_rows++;
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset.html
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset_row.html
     // note: if some field is null, send a 0xFB
@@ -1004,15 +1320,20 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
     pos += 3;
     pos += store_int1(buf + pos, sequence_id_++);
 
-    Value value;
-    for (int i = 0; i < cell_num; i++) {
-      rc = tuple->cell_at(i, value);
+    const int cell_num = tuple_set[i].size();
+    if (cell_num == 0) {
+      continue;
+    }
+
+    for(long unsigned int j = 0; j < tuple_set[i].size(); j++){
+
+      Value cell = tuple_set[i][j];
       if (rc != RC::SUCCESS) {
         sql_result->set_return_code(rc);
         break;  // TODO send error packet
       }
 
-      pos += store_lenenc_string(buf + pos, value.to_string().c_str());
+      pos += store_lenenc_string(buf + pos, cell.to_string().c_str());
     }
 
     int payload_length = pos - 4;

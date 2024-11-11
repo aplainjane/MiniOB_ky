@@ -34,6 +34,7 @@ SessionStage::~SessionStage() {}
 // TODO remove me
 void SessionStage::handle_request(SessionEvent *sev)
 {
+  LOG_INFO("handle request HERE SESSIONG");
   string sql = sev->query();
   if (common::is_blank(sql.c_str())) {
     return;
@@ -50,7 +51,8 @@ void SessionStage::handle_request(SessionEvent *sev)
   SqlResult* sql_result = session_event->sql_result();
   sql_result->get_order_rules() = (*(sql_event.sql_node())).selection.order_rules;
   sql_result->get_having_stmt() = (*(sql_event.sql_node())).selection.having_conditions;
-  RC            rc              = communicator->write_result(sev, need_disconnect);
+  sql_result->get_vec_order_rules() = (*(sql_event.sql_node())).selection.vec_order_rules;
+  RC            rc              = communicator->write_result(session_event, need_disconnect);
   LOG_INFO("write result return %s", strrc(rc));
   if (need_disconnect) {
     // do nothing

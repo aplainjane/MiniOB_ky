@@ -1011,9 +1011,16 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       bit_map_null +=1;
     }
 
-    if(sql_result->get_having_stmt().size()!=0)
+    if(sql_result->get_having_stmt().size()!=0 || sql_result->get_vec_order_rules().first_attr.attribute_name != "")
     {
-      if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null )
+      if(sql_result->get_vec_order_rules().first_attr.attribute_name != "")
+      {
+        if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null -1)
+        {
+          ignored_index.push_back(i);
+        }
+      }
+      else if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null )
       {
         ignored_index.push_back(i);
       }
@@ -1039,6 +1046,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
     for(long unsigned int i = 0; i < cell_num; i++){
       const TupleCellSpec &spec = schema.cell_at(i);
+      LOG_INFO("spec is %s, %s, %s",spec.table_name(),spec.field_name(),spec.alias());
       if(  (strlen(spec.table_name()) == 0 && strcmp(spec.alias(), vec_order_rules.first_attr.attribute_name.c_str()) == 0 )
         || ((strcmp(spec.table_name(), vec_order_rules.first_attr.relation_name.c_str()) == 0) && strcmp(spec.field_name(), vec_order_rules.first_attr.attribute_name.c_str()) == 0)
         

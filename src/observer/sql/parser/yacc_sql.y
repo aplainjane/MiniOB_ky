@@ -1108,6 +1108,8 @@ vec_order_by:
     $$->first_attr = *$5;
     $$->value = *$7;
     $$->limit = $10; 
+    $$->expr = new UnboundFieldExpr($$->first_attr.relation_name, $$->first_attr.attribute_name);
+    $$->expr->set_name(token_name(sql_string, &@$));
   }
   | ORDER BY func_op LBRACE value COMMA rel_attr RBRACE LIMIT number
   {
@@ -1116,6 +1118,8 @@ vec_order_by:
     $$->first_attr = *$7;
     $$->value = *$5;
     $$->limit = $10;
+    $$->expr = new UnboundFieldExpr($$->first_attr.relation_name, $$->first_attr.attribute_name);
+    $$->expr->set_name(token_name(sql_string, &@$));
   }
   ;
 

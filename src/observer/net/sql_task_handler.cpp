@@ -20,6 +20,7 @@ See the Mulan PSL v2 for more details. */
 
 RC SqlTaskHandler::handle_event(Communicator *communicator)
 {
+  LOG_INFO("handle request HERE TASK");
   SessionEvent *event = nullptr;
   RC rc = communicator->read_event(event);
   if (OB_FAIL(rc)) {
@@ -46,8 +47,8 @@ RC SqlTaskHandler::handle_event(Communicator *communicator)
   SqlResult* sql_result = session_event->sql_result();
   sql_result->get_order_rules() = (*(sql_event.sql_node())).selection.order_rules;
   sql_result->get_having_stmt() = (*(sql_event.sql_node())).selection.having_conditions;
-
-  rc = communicator->write_result(event, need_disconnect);
+  sql_result->get_vec_order_rules() = (*(sql_event.sql_node())).selection.vec_order_rules;
+  rc = communicator->write_result(session_event, need_disconnect);
   LOG_INFO("write result return %s", strrc(rc));
   event->session()->set_current_request(nullptr);
   Session::set_current_session(nullptr);

@@ -111,6 +111,14 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       return rc;
     }
   }
+  if(select_sql.vec_order_rules.first_attr.relation_name != "")
+  {
+    unique_ptr<Expression> tmp_expr = std::unique_ptr<Expression>(select_sql.vec_order_rules.expr);
+    RC rc = expression_binder.bind_expression(tmp_expr, bound_expressions);
+    if (OB_FAIL(rc)) {
+      LOG_INFO("bind expression failed. rc=%s", strrc(rc));
+    }
+  } 
 
 
   vector<unique_ptr<Expression>> group_by_expressions;

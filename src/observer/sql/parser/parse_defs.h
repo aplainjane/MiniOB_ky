@@ -91,6 +91,7 @@ struct VecOrderByNode
   Value  value;
   RelAttrSqlNode first_attr;
   int    limit;
+  Expression* expr;
   //std::vector<std::string,std::string>    vector_table_name;           ///< limit clause  
 };
 

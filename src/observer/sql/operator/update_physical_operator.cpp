@@ -54,17 +54,13 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     RowTuple *row_tuple = static_cast<RowTuple *>(tuple);
     Record   &record    = row_tuple->record();
 
-    // rc = trx_->update_record(table_, record);
-    // 修改record
     Record old_record = record;
     // rc = trx_->delete_record(table_, record);
     rc = table_->delete_record(record);
-    //delete_records.emplace_back(record);
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
       return rc;
     } else {
-      // 定位列名索引
       const std::vector<FieldMeta> *table_field_metas = table_->table_meta().field_metas();
       std::vector<int> field_idx;
 
@@ -76,7 +72,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         int target_index = -1;
         for (int i=0; i<meta_num; ++i){
           FieldMeta fieldmeta = (*table_field_metas)[i];
-          // FieldMeta *fieldmeta = table_field_metas[i];
           const char *field_name = fieldmeta.name();
           if (0 == strcmp(field_name, target_field_name)){
             target_index = i;
@@ -92,10 +87,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         field_idx.emplace_back(target_index);
       }
 
-      //std::cout << "target field_name \t" << target_field_name << std::endl;
-
-      // 重新构造record
-      // 1. Values
       std::vector<Value> values;
       int cell_num = row_tuple->cell_num() - 1;
       for (int i = table_->table_meta().sys_field_num(); i < cell_num; ++i){
@@ -105,7 +96,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         for (long unsigned int k=0;k<field_idx.size();++k){
           int target_index = field_idx[k];
           if (target_index == i){
-            // cell.set_value(values_[k]);
             find_flag = k;
             break;
           } 
@@ -119,7 +109,7 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
         values.emplace_back(cell);
       }
-      // 2. Record
+
       Record new_record;
       RC rc = table_->make_record(static_cast<int>(values.size()), values.data(), new_record);
       if (rc != RC::SUCCESS) {
@@ -128,8 +118,6 @@ RC UpdatePhysicalOperator::open(Trx *trx)
         table_->insert_record(old_record);
         return rc;
       }
-      //new_record.set_rid(delete_records[delete_records.size()-1].rid());
-      // rc = trx_->insert_record(table_, new_record);
       rc = table_->insert_record(new_record);
       //insert_records.emplace_back(new_record);
       if (rc != RC::SUCCESS) {      
@@ -138,41 +126,11 @@ RC UpdatePhysicalOperator::open(Trx *trx)
       }
     }
     
-    //std::cout << "insert_record:" << insert_records.size() << std::endl;
   }
 
   child->close();
 
-  /*for (long unsigned int i = 0; i < insert_records.size(); ++i) {
-    
-    rc = trx_->update_record(table_, delete_records[i], insert_records[i]);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to update record: %s", strrc(rc));
-      return rc;
-    }
-  }*/
-
-  /*for (Record &record_d : delete_records) {    
-    rc = trx_->delete_record(table_, record_d);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to delete record: %s", strrc(rc));
-      return rc;
-    }     
-  }
-
-  for (Record &record_i : insert_records) {
-    rc = trx_->insert_record(table_, record_i);
-    if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to insert record: %s", strrc(rc));
-    return rc;
-    }
-  }
-
-  insert_records.clear();
-  delete_records.clear();*/
-  
   return RC::SUCCESS;
-
 }
 
 RC UpdatePhysicalOperator::next()

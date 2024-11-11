@@ -138,7 +138,7 @@ private:
   string             base_dir_;
   TableMeta          table_meta_;
   DiskBufferPool    *data_buffer_pool_ = nullptr;  /// 数据文件关联的buffer pool
-  DiskBufferPool    *text_buffer_pool_ = nullptr;   /// text文件关联的buffer pool
+  DiskBufferPool    *text_buffer_pool_ = nullptr;  /// TEXT的buffer pool
   RecordFileHandler *record_handler_   = nullptr;  /// 记录操作
   vector<Index *>    indexes_;
   vector<Index *>    vec_indexes_;

@@ -126,8 +126,7 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt)
   for(int i = 0;i<(int)fields.size();i++) {
     const FieldMeta *field_meta = table->table_meta().field(update_sql.attribute_names[i].c_str());
     if (field_meta->type() == AttrType::TEXTS && update_sql.values[i].attr_type() == AttrType::CHARS) {
-      if (update_sql.values[i].length() > MAX_TEXT_LENGTH) {
-        LOG_WARN("Text length:%d, over max_length 65535", update_sql.values[i].length());
+      if (update_sql.values[i].length() > 65535) {
         return RC::INVALID_ARGUMENT;
       }
     }

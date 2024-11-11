@@ -46,8 +46,6 @@ private:
   Table *table_ = nullptr;
   std::vector<Field> fields_;
   std::vector<Value> values_;
-  //std::vector<Record> delete_records;
-  //std::vector<Record> insert_records;
   Trx *trx_ = nullptr;
   bool flag_;
   std::mutex mutex_; // 互斥锁

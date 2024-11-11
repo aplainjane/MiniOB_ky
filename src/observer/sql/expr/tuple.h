@@ -214,13 +214,14 @@ public:
     if ((field_meta->type() == AttrType::TEXTS) || 
         (field_meta->type() == AttrType::VECTORS && field_meta->len() == 16)) {
       cell.set_type(AttrType::CHARS);
-      int64_t offset = *(int64_t*)(record_->data() + field_meta->offset());
-      int64_t length = *(int64_t*)(record_->data() + field_meta->offset() + sizeof(int64_t));
+      
+      int64_t* data_ptr = reinterpret_cast<int64_t*>(record_->data() + field_meta->offset());
+      int64_t offset = data_ptr[0];
+      int64_t length = data_ptr[1];
+ 
       char *text = (char*)malloc(length);
-      // RC rc = RC::SUCCESS;
       RC rc = table_->read_text(offset, length, text);
       if (RC::SUCCESS != rc) {
-        LOG_WARN("Failed to read text from table, rc=%s", strrc(rc));
         return rc;
       }
       cell.set_data(text, length);

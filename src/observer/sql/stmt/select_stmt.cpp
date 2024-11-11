@@ -111,7 +111,7 @@ RC SelectStmt::create(Db *db, SelectSqlNode &select_sql, Stmt *&stmt,const unord
       return rc;
     }
   }
-  if(select_sql.vec_order_rules.first_attr.relation_name != "")
+  if(select_sql.vec_order_rules.type != NO_Func)
   {
     unique_ptr<Expression> tmp_expr = std::unique_ptr<Expression>(select_sql.vec_order_rules.expr);
     RC rc = expression_binder.bind_expression(tmp_expr, bound_expressions);

@@ -37,8 +37,8 @@ class ArithmeticExpr;
  */
 struct RelAttrSqlNode
 {
-  std::string relation_name;   ///< relation name (may be NULL) 表名
-  std::string attribute_name;  ///< attribute name              属性名
+  std::string relation_name = "";   ///< relation name (may be NULL) 表名
+  std::string attribute_name = "";  ///< attribute name              属性名
 };
 
 /**

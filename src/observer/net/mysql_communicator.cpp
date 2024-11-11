@@ -1382,31 +1382,33 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
   for(long unsigned int i = 0; i < min_size; i++){
     LOG_INFO("debug:11 \n");
+    
     affected_rows++;
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset.html
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset_row.html
     // note: if some field is null, send a 0xFB
+
+    if (cell_num == 0) {
+      continue;
+    }
+
     char *buf = packet.data();
     int   pos = 0;
 
     pos += 3;
     pos += store_int1(buf + pos, sequence_id_++);
 
-    if (cell_num == 0) {
-      continue;
-    }
+    
 
     for(long unsigned int j = 0; j < tuple_set[i].size(); j++){
-      LOG_INFO("12 \n");
       Value &cell = tuple_set[i][j];
       if (rc != RC::SUCCESS) {
         sql_result->set_return_code(rc);
         break;  // TODO send error packet
       }
-
       pos += store_lenenc_string(buf + pos, cell.to_string().c_str());
     }
-    LOG_INFO("13 \n");
+    
     int payload_length = pos - 4;
     store_int3(buf, payload_length);
     rc = writer_->writen(buf, pos);
@@ -1415,8 +1417,8 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       need_disconnect = true;
       return rc;
     }
-    LOG_INFO("14 \n");
   }
+  LOG_INFO(" final min_size: %d \n",min_size);
   return rc;
 }
 RC MysqlCommunicator::write_chunk_result(SqlResult *sql_result, vector<char> &packet, int &affected_rows, bool &need_disconnect)

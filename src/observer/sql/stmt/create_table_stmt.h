@@ -22,9 +22,8 @@ See the Mulan PSL v2 for more details. */
 class Db;
 class Expression;
 /**
- * @brief 表示创建表的语句
+ * @brief 创建表的语句
  * @ingroup Statement
- * @details 虽然解析成了stmt，但是与原始的SQL解析后的数据也差不多
  */
 class CreateTableStmt : public Stmt
 {
@@ -51,7 +50,8 @@ public:
 
   static RC create(Db *db, const CreateTableSqlNode &create_table, Stmt *&stmt, SelectSqlNode &select_sql);
   Db *get_db() const { return db_; }
-  Stmt *get_create_table_select_stmt() const { return select_stmt_; }
+  Stmt *get_stmt() const { return select_stmt_; }
+  
   static StorageFormat get_storage_format(const char *format_str);
 
 private:

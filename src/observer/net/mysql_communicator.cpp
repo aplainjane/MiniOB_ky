@@ -1087,43 +1087,48 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
 
       LOG_INFO("debug: 5 \n");
-
+      
       // 取出全部Tuple
-
-
-      LOG_INFO("debug: 6 \n");
-      std::vector<int> havepush(vec_result.size(), 0);
+      std::vector<std::vector<Value>> tuple_set_all;
       while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
         std::vector<Value> temp;
         int num_cell = tuple->cell_num();
-        bool found = false;
-
-        for (int i = 0; i < num_cell; i++) {
-            Value cell;
-            tuple->cell_at(i, cell);
-            temp.push_back(cell);
-
-            // 检查是否是排序字段并匹配 vec_result
-            if (i == order_index) {
-                for (size_t g = 0; g < vec_result.size(); g++) {
-                    if (cell.compare(vec_result[g]) == 0 && havepush[g] == 0) {
-                        havepush[g] = 1;
-                        found = true;
-                        break;
-                    }
-                }
-            }
+        for(int i = 0; i < num_cell; i++){
+          Value cell;
+          tuple->cell_at(i, cell);
+          temp.push_back(cell);
         }
+        tuple_set_all.push_back(temp);    
+      }
+      LOG_INFO("debug: 6 \n");
 
-          // 只在找到匹配时插入
-        if (found) {
-            tuple_set.push_back(temp);
-        }
-
-        LOG_INFO("debug: 7 \n");
-        // 如果达到限制，停止处理
-        if (tuple_set.size() > vec_order_rules.limit) {
+      
+      std::vector<std::vector<Value>> tuple_set;
+      std::vector<int> havepush(vec_result.size(), 0);
+      int current_tuple = 0;
+      int min_num = tuple_set_all.size() > vec_result.size() ? vec_result.size() : tuple_set_all.size();
+      for(size_t g = 0; g < min_num; g++){
+        current_tuple = 0;
+        while (current_tuple < tuple_set_all.size()) {
+          if(current_tuple >= tuple_set_all.size())
             break;
+          vector<Value> &tuple = tuple_set_all[current_tuple];
+          bool find = false;
+          for(int i = 0; i < cell_num; i++){
+            Value &cell = tuple[i];
+            if(i == order_index){
+              if(cell.compare(vec_result[g]) == 0 && havepush[current_tuple] == 0){
+                havepush[current_tuple] = 1;
+                find = true;
+              }
+            }
+          }
+          if(find)
+          {
+            tuple_set.push_back(tuple);
+            break;  
+          }
+          current_tuple += 1;   
         }
       }
       LOG_INFO("tuple_set.size end( %d ) \n",tuple_set.size());

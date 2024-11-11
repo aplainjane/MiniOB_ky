@@ -1127,7 +1127,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
         }
       }
       LOG_INFO("tuple_set.size end( %d ) \n",tuple_set.size());
-      min_size = vec_order_rules.limit;
+      min_size = vec_order_rules.limit > tuple_set.size() ? tuple_set.size() : vec_order_rules.limit;
       
     } else {
       

@@ -1398,7 +1398,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
     for(long unsigned int j = 0; j < tuple_set[i].size(); j++){
       LOG_INFO("12 \n");
-      Value cell = tuple_set[i][j];
+      Value &cell = tuple_set[i][j];
       if (rc != RC::SUCCESS) {
         sql_result->set_return_code(rc);
         break;  // TODO send error packet

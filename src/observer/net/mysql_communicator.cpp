@@ -960,11 +960,11 @@ RC MysqlCommunicator::send_result_rows(SessionEvent *event, SqlResult *sql_resul
   int    affected_rows = 0;
   if (event->session()->get_execution_mode() == ExecutionMode::CHUNK_ITERATOR
       && event->session()->used_chunk_mode()) {
-    rc = write_chunk_result(sql_result, packet, affected_rows, need_disconnect);
     LOG_INFO("send chunk result to client");
+    rc = write_chunk_result(sql_result, packet, affected_rows, need_disconnect);  
   } else {
-    rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
     LOG_INFO("send tuple result to client");
+    rc = write_tuple_result(sql_result, packet, affected_rows, need_disconnect);
   }
 
   // 所有行发送完成后，发送一个EOF或OK包
@@ -1077,7 +1077,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       std::vector<Value> vec_result;
       vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
 
-
+      LOG_INFO("5 \n");
 
       // 取出全部Tuple
       std::vector<std::vector<Value>> tuple_set_all;
@@ -1092,7 +1092,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
         tuple_set_all.push_back(temp);    
       }
 
-
+      LOG_INFO("6 \n");
       std::vector<int> havepush(vec_result.size(), 0);
       // 使用哈希表来加速查找
       std::unordered_map<std::string, int> tuple_map;
@@ -1109,7 +1109,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
         }
       }
 
-
+      LOG_INFO("7 \n");
       if(rc==RC::INTERNAL)
       {
         sql_result->set_return_code(rc);
@@ -1118,7 +1118,8 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       min_size = (tuple_set.size() > vec_order_rules.limit) ? vec_order_rules.limit : tuple_set.size();
       
     } else {
-
+      
+      LOG_INFO("8 \n");
       //std::cout<<"2"<<endl;
       // search with function result
       // 取出全部Tuple
@@ -1139,6 +1140,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
         sql_result->set_return_code(rc);
       }
 
+      LOG_INFO("debug:9 \n");
       // 获取函数结果
       // 排序
       std::sort(tuple_set.begin(), tuple_set.end(), 
@@ -1147,21 +1149,35 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
           int target_index = order_index;
           const Value& v1 = t1[target_index];
           const Value& v2 = t2[target_index];
+          LOG_INFO("debug:9.1 \n");
 
           Value v1_float;
           v1_float.set_float(FLT_MAX);
           Value v2_float;
           v2_float.set_float(FLT_MAX);
+          LOG_INFO("debug:9.2 \n");
 
           switch (order_op)
           {
             case I2_DISTANCE:
             {
+              LOG_INFO("debug:9.3 \n");
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
               
+              LOG_INFO("debug:9.3.0.1 \n");
               vector<std::variant<int, float>> left_vec1 = v1.get_vector();
               vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+              LOG_INFO("debug:9.3.0.2 \n");
+
+
+              if (left_vec1.size() != right_vec1.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec1.size(), right_vec1.size());
+                  return false;
+              }
+              
+              LOG_INFO("debug:9.3.1 \n");
 
               float result = 0.0f;
               for (int i = 0; i < left_vec1.size(); i++) {
@@ -1174,11 +1190,20 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
                   result += pow(left_float - right_float, 2);
                 }, left_vec1[i]);
               }
+              LOG_INFO("debug:9.3.2 \n");
               result = sqrt(result);
               v1_tmp = result;
 
               vector<std::variant<int, float>> left_vec2 = v2.get_vector();
               vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              if (left_vec2.size() != right_vec2.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec2.size(), right_vec2.size());
+                  return false;
+              }
+
+              LOG_INFO("debug:9.3.4 \n");
 
               result = 0.0f;
               for (int i = 0; i < left_vec2.size(); i++) {
@@ -1191,19 +1216,31 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
                   result += pow(left_float - right_float, 2);
                 }, left_vec2[i]);
               }
+
+              LOG_INFO("debug:9.3.5 \n");
+
               result = sqrt(result);
               v2_tmp = result;
+
+              LOG_INFO("debug:9.3.6 \n");
 
               v1_float.set_float(v1_tmp);
               v2_float.set_float(v2_tmp);
             } break;
             case COSINE_DISTANCE:
             {
+              LOG_INFO("debug:9.4 \n");
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
               
               vector<std::variant<int, float>> left_vec1 = v1.get_vector();
               vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              if (left_vec1.size() != right_vec1.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec1.size(), right_vec1.size());
+                  return false;
+              }
 
               float result = 0.0f;
               float sumA2 = 0.0f;
@@ -1226,6 +1263,12 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
               vector<std::variant<int, float>> left_vec2 = v2.get_vector();
               vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              if (left_vec2.size() != right_vec2.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec2.size(), right_vec2.size());
+                  return false;
+              }
 
               result = 0.0f;
               sumA2 = 0.0f;
@@ -1251,11 +1294,18 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
             } break;
             case INNER_PRODUCT:
             {
+              LOG_INFO("debug:9.5 \n");
               float v1_tmp = FLT_MAX;
               float v2_tmp = FLT_MAX;
               
               vector<std::variant<int, float>> left_vec1 = v1.get_vector();
               vector<std::variant<int, float>> right_vec1 = cmp_value.get_vector();
+
+              if (left_vec1.size() != right_vec1.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec1.size(), right_vec1.size());
+                  return false;
+              }
 
               float result = 0.0f;
               for (int i = 0; i < left_vec1.size(); i++) {
@@ -1271,6 +1321,12 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
               vector<std::variant<int, float>> left_vec2 = v2.get_vector();
               vector<std::variant<int, float>> right_vec2 = cmp_value.get_vector();
+
+              if (left_vec2.size() != right_vec2.size()) {
+                  LOG_WARN("Vector sizes do not match: left_vec1.size() = %lu, right_vec1.size() = %lu\n",
+                          left_vec2.size(), right_vec2.size());
+                  return false;
+              }
 
               result = 0.0f;
               for (int i = 0; i < left_vec2.size(); i++) {
@@ -1304,12 +1360,13 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
           return false;
         }
       );
+      LOG_INFO("debug:10 \n");
  
     }
   }
 
   for(long unsigned int i = 0; i < min_size; i++){
-    
+    LOG_INFO("debug:11 \n");
     affected_rows++;
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset.html
     // https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_com_query_response_text_resultset_row.html
@@ -1320,13 +1377,12 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
     pos += 3;
     pos += store_int1(buf + pos, sequence_id_++);
 
-    const int cell_num = tuple_set[i].size();
     if (cell_num == 0) {
       continue;
     }
 
     for(long unsigned int j = 0; j < tuple_set[i].size(); j++){
-
+      LOG_INFO("12 \n");
       Value cell = tuple_set[i][j];
       if (rc != RC::SUCCESS) {
         sql_result->set_return_code(rc);
@@ -1335,7 +1391,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
       pos += store_lenenc_string(buf + pos, cell.to_string().c_str());
     }
-
+    LOG_INFO("13 \n");
     int payload_length = pos - 4;
     store_int3(buf, payload_length);
     rc = writer_->writen(buf, pos);
@@ -1344,6 +1400,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       need_disconnect = true;
       return rc;
     }
+    LOG_INFO("14 \n");
   }
   return rc;
 }

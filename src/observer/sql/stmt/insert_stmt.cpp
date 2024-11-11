@@ -60,8 +60,7 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
       return RC::INVALID_ARGUMENT;
     }
     if (fie->type() == AttrType::TEXTS) {
-      if (values[i].length() > MAX_TEXT_LENGTH) {
-        LOG_WARN("Text length:%d, over max_length 65535", values[i].length());
+      if (values[i].length() > 65535) {
         return RC::INVALID_ARGUMENT;
       }
     }

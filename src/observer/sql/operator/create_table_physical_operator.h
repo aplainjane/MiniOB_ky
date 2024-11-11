@@ -4,7 +4,7 @@ class Db;
 class Trx;
 class CreateTableStmt;
 /**
- * @brief 物理算子，建表
+ * @brief 物理算子，用于执行create-select语句
  * @ingroup PhysicalOperator
  */
 class CreateTablePhysicalOperator : public PhysicalOperator

@@ -23,7 +23,6 @@ RC CreateTablePhysicalOperator::open(Trx *trx)
   if (!children_.empty()) {
     Table *table = db_->find_table(table_name_.c_str());
     if (nullptr == table) {
-      // unexpected error
       LOG_ERROR("failed to find table %s", table_name_.c_str());
       return RC::SCHEMA_TABLE_NOT_EXIST;
     }
@@ -54,7 +53,9 @@ RC CreateTablePhysicalOperator::open(Trx *trx)
         return rc;
       }
     }
-    if (RC::RECORD_EOF == rc) rc = RC::SUCCESS;
+    if (rc == RC::RECORD_EOF) {
+      rc = RC::SUCCESS;
+    }
   }
   return rc;
 }

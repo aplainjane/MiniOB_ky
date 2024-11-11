@@ -37,9 +37,8 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
     }
   }
   
-    RC rc = RC::SUCCESS;
-  // create table select
-  if (0 != select_sql.expressions.size()) {
+  RC rc = RC::SUCCESS;
+  if (select_sql.expressions.size() != 0) {
     Stmt *select_stmt = nullptr;
     std::vector<AttrInfoSqlNode> attr_infos;
     rc = SelectStmt::create(db, select_sql, select_stmt);
@@ -70,19 +69,8 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
         if (ExprType::VALUE == attr_expr->type()) {
           ValueExpr *value_expr = dynamic_cast<ValueExpr*>(attr_expr.get());
           attr_info.length = value_expr->get_value().length();
-        // } else {
-        //   attr_info.length = ATTR_TYPE_LENGTH[attr_expr->value_type()];
          }
-        // 遍历子表达式，有nullable的FieldExpr时，才允许为NULL
         bool nullable = true;
-        // auto check_expr_nullable = [&nullable](Expression *expr) {
-        //   if (ExprType::FIELD == expr->type()) {
-        //     FieldMeta field = static_cast<FieldExpr*>(expr)->get_field_meta();
-        //     if (field.nullable()) {
-        //       nullable = true;
-        //     } 
-        //   }
-        // };
         attr_info.isnull = nullable;
       }
       attr_infos.emplace_back(attr_info);
@@ -105,10 +93,8 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
       attr_info.length = 4;
       std::vector<AttrInfoSqlNode> temp=create_table.attr_infos;
       temp.emplace_back(attr_info);
-      // 指定了列属性、带select
       stmt = new CreateTableStmt(db, create_table.relation_name, temp, select_stmt,storage_format);
     } else {
-      // 未指定列属性、带select
       AttrInfoSqlNode attr_info;
       attr_info.name = NULL_FIELD_NAME;
       attr_info.type = AttrType::INTS;
@@ -117,7 +103,6 @@ RC CreateTableStmt::create(Db *db, const CreateTableSqlNode &create_table, Stmt 
       stmt = new CreateTableStmt(db, create_table.relation_name, attr_infos, select_stmt,storage_format);
     }
   } else {
-    // 指定了列属性、不带select
     stmt = new CreateTableStmt(db, create_table.relation_name, create_table.attr_infos, nullptr,storage_format);
   }
   sql_debug("create table statement: table name %s", create_table.relation_name.c_str());

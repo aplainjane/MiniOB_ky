@@ -1,7 +1,7 @@
 #include "sql/operator/logical_operator.h"
 class Db;
 /**
- * @brief CreateTable逻辑算子
+ * @brief 逻辑算子，用于执行create_select语句
  * @ingroup LogicalOperator
  */
 class CreateTableLogicalOperator : public LogicalOperator 

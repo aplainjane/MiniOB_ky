@@ -104,7 +104,7 @@ RC LogicalPlanGenerator::create_plan(CreateTableStmt *create_stmt, std::unique_p
 {
   RC rc = RC::SUCCESS;
   std::unique_ptr<LogicalOperator> select_oper;
-  Stmt *create_select_stmt =  create_stmt->get_create_table_select_stmt();
+  Stmt *create_select_stmt =  create_stmt->get_stmt();
   if (nullptr != create_select_stmt) {
     SelectStmt *select_stmt = static_cast<SelectStmt*>(create_select_stmt);
     rc = create_plan(select_stmt, select_oper);

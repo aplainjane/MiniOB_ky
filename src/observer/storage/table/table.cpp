@@ -481,7 +481,7 @@ RC Table::write_text(int64_t &offset, int64_t length, const char *data)
 {
   RC rc = RC::SUCCESS;
   rc = text_buffer_pool_->append_data(offset, length, data);
-  if (RC::SUCCESS != rc) {
+  if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to append text into disk_buffer_pool, rc=%s", strrc(rc));
     offset = -1;
     length = -1;
@@ -489,15 +489,16 @@ RC Table::write_text(int64_t &offset, int64_t length, const char *data)
   LOG_INFO("write text to disk_buffer_pool, offset=%ld, length=%ld", offset, length);
   return rc;
 }
+
 RC Table::read_text(int64_t offset, int64_t length, char *data) const
 {
   RC rc = RC::SUCCESS;
   if (offset < 0 || length < 0) {
-    LOG_ERROR("Invalid param: text offset %ld, length %ld", offset, length);
+    LOG_ERROR("something wrong");
     return RC::INVALID_ARGUMENT;
   }
   rc = text_buffer_pool_->get_data(offset, length, data);
-  if (RC::SUCCESS != rc) {
+  if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to get text from disk_buffer_pool, rc=%s", strrc(rc));
   }
   return rc;

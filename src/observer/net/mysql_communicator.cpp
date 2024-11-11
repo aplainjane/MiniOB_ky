@@ -1011,9 +1011,9 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       bit_map_null +=1;
     }
 
-    if(sql_result->get_having_stmt().size()!=0 || sql_result->get_vec_order_rules().first_attr.attribute_name != "")
+    if(sql_result->get_having_stmt().size()!=0 || sql_result->get_vec_order_rules().type != NO_Func)
     {
-      if(sql_result->get_vec_order_rules().first_attr.attribute_name != "")
+      if(sql_result->get_vec_order_rules().type != NO_Func)
       {
         if( i >= cell_num - sql_result->get_having_stmt().size() - bit_map_null -1)
         {

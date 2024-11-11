@@ -1104,9 +1104,12 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
 
       
       std::vector<std::vector<Value>> tuple_set;
-      std::vector<int> havepush(vec_result.size(), 0);
+      
       int current_tuple = 0;
       int min_num = tuple_set_all.size() > vec_result.size() ? vec_result.size() : tuple_set_all.size();
+      int max_num = tuple_set_all.size() < vec_result.size() ? vec_result.size() : tuple_set_all.size();
+      std::vector<int> havepush(max_num, 0);
+      
       for(size_t g = 0; g < min_num; g++){
         current_tuple = 0;
         while (current_tuple < tuple_set_all.size()) {

@@ -1078,7 +1078,7 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       ivf_idx = dynamic_cast<IvfflatIndex*>(idx);
       if (ivf_idx->distance_name() != vec_order_rules.type) have_index = false;
     }
-
+    LOG_INFO("debug: 4 \n");
     if (have_index) {
       // use ann search
       //std::cout<<"1"<<endl;
@@ -1086,45 +1086,48 @@ RC MysqlCommunicator::write_tuple_result(SqlResult *sql_result, vector<char> &pa
       std::vector<Value> vec_result;
       vec_result = ivf_idx->ann_search(vec_order_rules.value, vec_order_rules.limit);
 
-      LOG_INFO("5 \n");
+      LOG_INFO("debug: 5 \n");
 
       // 取出全部Tuple
-      std::vector<std::vector<Value>> tuple_set_all;
+
+
+      LOG_INFO("debug: 6 \n");
+      std::vector<int> havepush(vec_result.size(), 0);
       while (RC::SUCCESS == (rc = sql_result->next_tuple(tuple))) {
         std::vector<Value> temp;
         int num_cell = tuple->cell_num();
-        for(long unsigned int i = 0; i < num_cell; i++){
-          Value cell;
-          tuple->cell_at(i, cell);
-          temp.push_back(cell);
+        bool found = false;
+
+        for (int i = 0; i < num_cell; i++) {
+            Value cell;
+            tuple->cell_at(i, cell);
+            temp.push_back(cell);
+
+            // 检查是否是排序字段并匹配 vec_result
+            if (i == order_index) {
+                for (size_t g = 0; g < vec_result.size(); g++) {
+                    if (cell.compare(vec_result[g]) == 0 && havepush[g] == 0) {
+                        havepush[g] = 1;
+                        found = true;
+                        break;
+                    }
+                }
+            }
         }
-        tuple_set_all.push_back(temp);    
-      }
 
-      LOG_INFO("6 \n");
-      std::vector<int> havepush(vec_result.size(), 0);
-      // 使用哈希表来加速查找
-      std::unordered_map<std::string, int> tuple_map;
-      for (int i = 0; i < tuple_set_all.size(); i++) {
-        const std::string &key = tuple_set_all[i][order_index].to_string();
-        tuple_map[key] = i;
-      }
+          // 只在找到匹配时插入
+        if (found) {
+            tuple_set.push_back(temp);
+        }
 
-      for (const Value &vec_val : vec_result) {
-        const std::string &key = vec_val.to_string();
-        if (tuple_map.find(key) != tuple_map.end() && havepush[tuple_map[key]] == 0) {
-            havepush[tuple_map[key]] = 1;
-            tuple_set.push_back(tuple_set_all[tuple_map[key]]);
+        LOG_INFO("debug: 7 \n");
+        // 如果达到限制，停止处理
+        if (tuple_set.size() > vec_order_rules.limit) {
+            break;
         }
       }
-
-      LOG_INFO("7 \n");
-      if(rc==RC::INTERNAL)
-      {
-        sql_result->set_return_code(rc);
-      }
-
-      min_size = (tuple_set.size() > vec_order_rules.limit) ? vec_order_rules.limit : tuple_set.size();
+      LOG_INFO("tuple_set.size end( %d ) \n",tuple_set.size());
+      min_size = vec_order_rules.limit;
       
     } else {
       

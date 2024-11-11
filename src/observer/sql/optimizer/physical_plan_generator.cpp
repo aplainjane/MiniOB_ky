@@ -351,7 +351,6 @@ RC PhysicalPlanGenerator::create_plan(CreateTableLogicalOperator &logical_oper, 
                                               std::move(logical_oper.table_name()), 
                                               std::move(logical_oper.attr_infos()),
                                               std::move(logical_oper.storage_format())));
-  // create_table_select
   unique_ptr<PhysicalOperator> select_oper;
   vector<unique_ptr<LogicalOperator>> &child_opers = logical_oper.children();
   if (!child_opers.empty()) {
